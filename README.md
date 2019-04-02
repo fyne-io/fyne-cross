@@ -4,7 +4,7 @@ This repo contains a Dockerfile for building an image which is used to cross com
 
 Built on top of [golang-cross](https://hub.docker.com/r/dockercore/golang-cross/), it includes the MinGW compiler for windows, and an OSX SDK, along the Fyne requirements.
 
-This image is available from https://hub.docker.com/lucor/fyne-cross.
+This image is available from https://hub.docker.com/r/lucor/fyne-cross.
 
 ## Usage
 
@@ -15,9 +15,9 @@ Cross compiling build can be done using the commands below:
 ### linux
 
     docker run --rm -ti -v $GOPATH:/go -w /go/src/fyne-example \
-        -e CGO_ENABLED=1 -e GOOS=linux -e CC=gcc \
+        -e CGO_ENABLED=1 -e GOOS=linux -e CC=gcc -GOARCH=arm -GOARM=5\
         lucor/fyne-cross \
-        bash -c "go get -v ./...; go build -o fyne-example-linux"
+        bash -c "go get -v ./...; go build -o fyne-example-arm"
 
 ### osx
 
