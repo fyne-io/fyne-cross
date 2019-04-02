@@ -15,7 +15,7 @@ Cross compiling build can be done using the commands below:
 ### linux
 
     docker run --rm -ti -v $GOPATH:/go -w /go/src/fyne-example \
-        -e CGO_ENABLED=1 -e GOOS=linux -e CC=gcc -GOARCH=arm -GOARM=5\
+        -e CGO_ENABLED=1 -e GOOS=linux -e CC=gcc \
         lucor/fyne-cross \
         bash -c "go get -v ./...; go build -o fyne-example-arm"
 
