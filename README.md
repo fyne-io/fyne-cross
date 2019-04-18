@@ -1,34 +1,36 @@
-# Fyne Cross Compile Docker Image
+# Fyne Cross
 
-This repo contains a Dockerfile for building an image which is used to cross compile [Fyne](https://fyne.io) applications. 
+fyne-cross is a simple tool to cross compile [Fyne](https://fyne.io) applications.
 
-Built on top of [golang-cross](https://hub.docker.com/r/dockercore/golang-cross/), it includes the MinGW compiler for windows, and an OSX SDK, along the Fyne requirements.
+It uses a docker image built on top of golang-cross (https://hub.docker.com/r/dockercore/golang-cross/),
+that includes the MinGW compiler for windows, and an OSX SDK, along the Fyne requirements.
 
-This image is available from https://hub.docker.com/r/lucor/fyne-cross.
+Supported targets are:
+  -  windows/386
+  -  darwin/amd64
+  -  darwin/386
+  -  linux/amd64
+  -  linux/386
+  -  windows/amd64
+
+The docker image is available from https://hub.docker.com/r/lucor/fyne-cross.
+
+## Installation
+
+        go get github.com/lucor/fyne-cross
 
 ## Usage
 
-Assuming the [fyne app](https://fyne.io/develop/) is located under: `$GOPATH/fyne-example`
+        fyne-cross --targets=linux/amd64,windows/amd64,darwin/amd64 package
 
-Cross compiling build can be done using the commands below:
+> Use `fyne-cross help` for more informations
 
-### linux
+## Example
 
-    docker run --rm -ti -v $GOPATH:/go -w /go/src/fyne-example \
-        -e CGO_ENABLED=1 -e GOOS=linux -e CC=gcc \
-        lucor/fyne-cross \
-        bash -c "go get -v ./...; go build -o fyne-example-arm"
+The example below cross build the [fyne examples application](https://github.com/fyne-io/examples)
 
-### osx
+        git clone https://github.com/fyne-io/examples.git
+        cd examples
+        fyne-cross --targets=linux/amd64,windows/amd64,darwin/amd64 github.com/fyne-io/examples
 
-    docker run --rm -ti -v $GOPATH:/go -w /go/src/fyne-example \
-        -e CGO_ENABLED=1 -e GOOS=darwin -e CC=o32-clang \
-        lucor/fyne-cross \
-        bash -c "go get -v ./...; go build -o fyne-example-osx"
-
-### windows
-
-    docker run --rm -ti -v $GOPATH:/go -w /go/src/fyne-example \
-        -e CGO_ENABLED=1 -e GOOS=windows -e CC=x86_64-w64-mingw32-gcc \
-        lucor/fyne-cross \
-        bash -c "go get -v ./...; go build -o fyne-example-windows.exe"
+Builds for the specified targets will be available under the `build` folder
