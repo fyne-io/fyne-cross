@@ -4,7 +4,6 @@ import (
 	"flag"
 	"fmt"
 	"go/build"
-	"log"
 	"os"
 	"os/exec"
 	"os/user"
@@ -97,17 +96,25 @@ func (b *builder) run(args []string) {
 		verbose: verbose,
 	}
 
+	err = db.checkRequirements()
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+
 	fmt.Println("Downloading dependencies")
 	err = db.goGet()
 	if err != nil {
-		log.Fatal(err)
+		fmt.Println(err)
+		os.Exit(1)
 	}
 
 	for _, target := range targets {
 		fmt.Printf("Building for %s\n", target)
 		err = db.goBuild(target)
 		if err != nil {
-			log.Fatal(err)
+			fmt.Println(err)
+			os.Exit(1)
 		}
 		fmt.Printf("Built as %s\n", db.targetOutput(target))
 	}
@@ -120,6 +127,15 @@ type dockerBuilder struct {
 	pkg     string
 	workDir string
 	verbose bool
+}
+
+// checkRequirements checks if all the build requirements are satisfied
+func (d *dockerBuilder) checkRequirements() error {
+	err := exec.Command("docker", "version").Run()
+	if err != nil {
+		return fmt.Errorf("Missed requirement: docker binary not found in PATH")
+	}
+	return nil
 }
 
 // goGet downloads the application dependencies via go get
