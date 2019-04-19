@@ -19,9 +19,18 @@ func main() {
 	flag.Parse()
 
 	args := flag.Args()
-	if len(args) != 1 || args[0] == "help" {
+	if len(args) > 1 {
 		printUsage()
-		os.Exit(2) // consistent with flag.Parse() with -help
+		os.Exit(2)
+	}
+
+	if len(args) == 0 {
+		args = append(args, ".")
+	}
+
+	if args[0] == "help" {
+		printUsage()
+		os.Exit(2)
 	}
 
 	provider.run(args)

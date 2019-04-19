@@ -72,10 +72,11 @@ func Test_dockerBuilder_targetOutput(t *testing.T) {
 		target string
 	}
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   string
+		name    string
+		fields  fields
+		args    args
+		want    string
+		wantErr bool
 	}{
 		{
 			name: "default *nix plaform",
@@ -128,7 +129,12 @@ func Test_dockerBuilder_targetOutput(t *testing.T) {
 				output: tt.fields.output,
 				pkg:    tt.fields.pkg,
 			}
-			if got := d.targetOutput(tt.args.target); got != tt.want {
+			got, err := d.targetOutput(tt.args.target)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("dockerBuilder.targetOutput() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("dockerBuilder.targetOutput() = %v, want %v", got, tt.want)
 			}
 		})
@@ -201,8 +207,8 @@ func Test_dockerBuilder_defaultArgs(t *testing.T) {
 			},
 			want: []string{
 				"run", "--rm", "-t",
-				"-w", "/app/fyne-io/fyne-example",
-				"-v", wd + ":/app/fyne-io/fyne-example",
+				"-w", "/app",
+				"-v", wd + ":/app",
 				"-v", cd + "/fyne-cross:/go",
 				"-e", "fyne_uid=" + uid,
 			},
@@ -216,8 +222,8 @@ func Test_dockerBuilder_defaultArgs(t *testing.T) {
 			},
 			want: []string{
 				"run", "--rm", "-t",
-				"-w", "/app/fyne-io/fyne-example",
-				"-v", "/home/fyne:/app/fyne-io/fyne-example",
+				"-w", "/app",
+				"-v", "/home/fyne:/app",
 				"-v", "/tmp/cache/fyne-cross:/go",
 				"-e", "fyne_uid=" + uid,
 			},
@@ -287,10 +293,11 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 	}
 
 	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   []string
+		name    string
+		fields  fields
+		args    args
+		want    []string
+		wantErr bool
 	}{
 		{
 			name: "verbosity enabled, linux",
@@ -353,7 +360,12 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 				workDir: tt.fields.workDir,
 				verbose: tt.fields.verbose,
 			}
-			if got := d.goBuildArgs(tt.args.target); !reflect.DeepEqual(got, tt.want) {
+			got, err := d.goBuildArgs(tt.args.target)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("dockerBuilder.goBuildArgs() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("dockerBuilder.goBuildArgs() = %v, want %v", got, tt.want)
 			}
 		})

@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
+	"path/filepath"
 	"strings"
 )
 
@@ -54,7 +55,12 @@ func (b *builder) printHelp(indent string) {
 	fmt.Println("Usage: fyne-cross [parameters] package")
 	fmt.Println()
 	fmt.Println("Cross compile a Fyne application")
+	fmt.Println()
 
+	fmt.Println("Package is the relative path to main.go file or main package. Default to '.'")
+	fmt.Println()
+
+	fmt.Println("Optional parameters:")
 	flag.PrintDefaults()
 	fmt.Println()
 
@@ -64,16 +70,11 @@ func (b *builder) printHelp(indent string) {
 	}
 	fmt.Println()
 
-	fmt.Println("Example: fyne-cross --targets=linux/amd64,windows/amd64 --output=test cmd/hello")
+	fmt.Println("Example: fyne-cross --targets=linux/amd64,windows/amd64 --output=test ./cmd/test")
 }
 
 func (b *builder) run(args []string) {
 	var err error
-
-	if len(args) != 1 {
-		fmt.Println("Missing required package argument after flags")
-		os.Exit(1)
-	}
 
 	flag.Parse()
 
@@ -99,8 +100,17 @@ func (b *builder) run(args []string) {
 		}
 	}
 
+	pkg := args[0]
+	if pkg == "" {
+		pkg, err = os.Getwd()
+		if err != nil {
+			fmt.Printf("Cannot get the path for current directory %s", err)
+			os.Exit(1)
+		}
+	}
+
 	db := dockerBuilder{
-		pkg:      args[0],
+		pkg:      pkg,
 		workDir:  pkgRootDir,
 		cacheDir: cacheDir,
 		targets:  targets,
@@ -121,6 +131,7 @@ func (b *builder) run(args []string) {
 		os.Exit(1)
 	}
 
+	fmt.Printf("Build output folder: %s/build\n", db.workDir)
 	for _, target := range targets {
 		fmt.Printf("Building for %s\n", target)
 		err = db.goBuild(target)
@@ -128,7 +139,8 @@ func (b *builder) run(args []string) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Printf("Built as %s\n", db.targetOutput(target))
+		t, _ := db.targetOutput(target)
+		fmt.Printf("Built as %s\n", t)
 	}
 }
 
@@ -165,7 +177,12 @@ func (d *dockerBuilder) goGet() error {
 
 // goBuild runs the go build for target
 func (d *dockerBuilder) goBuild(target string) error {
-	args := append(d.defaultArgs(), d.goBuildArgs(target)...)
+	buildArgs, err := d.goBuildArgs(target)
+	if err != nil {
+		return err
+	}
+
+	args := append(d.defaultArgs(), buildArgs...)
 	if d.verbose {
 		fmt.Printf("docker %s\n", strings.Join(args, " "))
 	}
@@ -178,11 +195,23 @@ func (d *dockerBuilder) goBuild(target string) error {
 // targetOutput returns the output file for the specified target.
 // Default prefix is the package name. To override use the output option.
 // Example: fyne-linux-amd64
-func (d *dockerBuilder) targetOutput(target string) string {
+func (d *dockerBuilder) targetOutput(target string) (string, error) {
 	output := d.output
 	if output == "" {
-		parts := strings.Split(d.pkg, "/")
-		output = parts[len(parts)-1]
+		if d.pkg == "." {
+			files, err := filepath.Glob("./*.go")
+			if err != nil {
+				return "", err
+			}
+			if len(files) == 0 {
+				return "", fmt.Errorf("Cannot found go files in current dir")
+			}
+
+			output = strings.TrimSuffix(files[0], ".go")
+		} else {
+			parts := strings.Split(d.pkg, "/")
+			output = parts[len(parts)-1]
+		}
 	}
 
 	normalizedTarget := strings.ReplaceAll(target, "/", "-")
@@ -191,7 +220,7 @@ func (d *dockerBuilder) targetOutput(target string) string {
 	if strings.HasPrefix(target, "windows") {
 		ext = ".exe"
 	}
-	return fmt.Sprintf("%s-%s%s", output, normalizedTarget, ext)
+	return fmt.Sprintf("%s-%s%s", output, normalizedTarget, ext), nil
 }
 
 // verbosityFlag returns the string used to set verbosity with go commands
@@ -214,10 +243,10 @@ func (d *dockerBuilder) defaultArgs() []string {
 	}
 
 	// set workdir
-	args = append(args, "-w", fmt.Sprintf("/app/%s", d.pkg))
+	args = append(args, "-w", fmt.Sprintf("/app"))
 
 	// mount root dir package under image GOPATH/src
-	args = append(args, "-v", fmt.Sprintf("%s:/app/%s", d.workDir, d.pkg))
+	args = append(args, "-v", fmt.Sprintf("%s:/app", d.workDir))
 
 	// mount the cache user dir. Used to cache package dependencies (GOROOT/pkg and GOROOT/src)
 	args = append(args, "-v", fmt.Sprintf("%s/fyne-cross:/go", d.cacheDir))
@@ -238,8 +267,7 @@ func (d *dockerBuilder) goGetArgs() []string {
 }
 
 // goGetArgs returns the arguments for the "go build" command for target
-func (d *dockerBuilder) goBuildArgs(target string) []string {
-
+func (d *dockerBuilder) goBuildArgs(target string) ([]string, error) {
 	// enable CGO
 	args := []string{"-e", "CGO_ENABLED=1"}
 
@@ -250,11 +278,14 @@ func (d *dockerBuilder) goBuildArgs(target string) []string {
 		}
 	}
 
-	output := d.targetOutput(target)
+	targetOutput, err := d.targetOutput(target)
+	if err != nil {
+		return args, err
+	}
 
-	buildCmd := fmt.Sprintf("go build -o build/%s -a %s %s", output, d.verbosityFlag(), d.pkg)
+	buildCmd := fmt.Sprintf("go build -o build/%s -a %s %s", targetOutput, d.verbosityFlag(), d.pkg)
 
-	return append(args, dockerImage, buildCmd)
+	return append(args, dockerImage, buildCmd), nil
 }
 
 // parseTargets parse comma separated target list and validate against the supported targets
