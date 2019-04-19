@@ -174,13 +174,18 @@ func Test_dockerBuilder_verbosityFlag(t *testing.T) {
 func Test_dockerBuilder_defaultArgs(t *testing.T) {
 	// current work dir
 	wd, _ := os.Getwd()
+
+	// cache dir
+	cd, _ := os.UserCacheDir()
+
 	// current user id
 	u, _ := user.Current()
 	uid := u.Uid
 
 	type fields struct {
-		pkg     string
-		workDir string
+		pkg      string
+		workDir  string
+		cacheDir string
 	}
 	tests := []struct {
 		name   string
@@ -190,28 +195,30 @@ func Test_dockerBuilder_defaultArgs(t *testing.T) {
 		{
 			name: "default workdir",
 			fields: fields{
-				pkg:     "fyne-io/fyne-example",
-				workDir: wd,
+				pkg:      "fyne-io/fyne-example",
+				workDir:  wd,
+				cacheDir: cd,
 			},
 			want: []string{
 				"run", "--rm", "-t",
 				"-w", "/app/fyne-io/fyne-example",
 				"-v", wd + ":/app/fyne-io/fyne-example",
-				"-v", os.TempDir() + "/fyne-cross-cache:/go",
+				"-v", cd + "/fyne-cross:/go",
 				"-e", "fyne_uid=" + uid,
 			},
 		},
 		{
 			name: "custom workdir",
 			fields: fields{
-				pkg:     "fyne-io/fyne-example",
-				workDir: "/home/fyne",
+				pkg:      "fyne-io/fyne-example",
+				workDir:  "/home/fyne",
+				cacheDir: "/tmp/cache",
 			},
 			want: []string{
 				"run", "--rm", "-t",
 				"-w", "/app/fyne-io/fyne-example",
 				"-v", "/home/fyne:/app/fyne-io/fyne-example",
-				"-v", os.TempDir() + "/fyne-cross-cache:/go",
+				"-v", "/tmp/cache/fyne-cross:/go",
 				"-e", "fyne_uid=" + uid,
 			},
 		},
@@ -219,8 +226,9 @@ func Test_dockerBuilder_defaultArgs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			d := &dockerBuilder{
-				pkg:     tt.fields.pkg,
-				workDir: tt.fields.workDir,
+				pkg:      tt.fields.pkg,
+				workDir:  tt.fields.workDir,
+				cacheDir: tt.fields.cacheDir,
 			}
 			if got := d.defaultArgs(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("dockerBuilder.defaultArgs() = %v, want %v", got, tt.want)

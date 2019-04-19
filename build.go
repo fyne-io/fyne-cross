@@ -32,6 +32,8 @@ var (
 	pkg string
 	// pkgRootDir represents the package root directory
 	pkgRootDir string
+	// cacheDir represents the cache directory
+	cacheDir string
 	// verbosity represents the verbosity setting
 	verbose bool
 )
@@ -44,6 +46,7 @@ func (b *builder) addFlags() {
 	flag.StringVar(&targetList, "targets", defautlTarget, fmt.Sprintf("The list of targets to build separated by comma. Default to current GOOS/GOARCH %s", defautlTarget))
 	flag.StringVar(&output, "output", "", "The named output file. Default to package name")
 	flag.StringVar(&pkgRootDir, "dir", "", "The package root directory. Default current dir")
+	flag.StringVar(&cacheDir, "cache-dir", "", "The directory used to cache package dependencies. Default to system cache root directory (i.e. $HOME/.cache)")
 	flag.BoolVar(&verbose, "v", false, "Enable verbosity flag for go commands. Default to false")
 }
 
@@ -88,12 +91,21 @@ func (b *builder) run(args []string) {
 		}
 	}
 
+	if cacheDir == "" {
+		cacheDir, err = os.UserCacheDir()
+		if err != nil {
+			fmt.Printf("Cannot get the path for cache directory %s", err)
+			os.Exit(1)
+		}
+	}
+
 	db := dockerBuilder{
-		pkg:     args[0],
-		workDir: pkgRootDir,
-		targets: targets,
-		output:  output,
-		verbose: verbose,
+		pkg:      args[0],
+		workDir:  pkgRootDir,
+		cacheDir: cacheDir,
+		targets:  targets,
+		output:   output,
+		verbose:  verbose,
 	}
 
 	err = db.checkRequirements()
@@ -122,11 +134,12 @@ func (b *builder) run(args []string) {
 
 // dockerBuilder represents the docker builder
 type dockerBuilder struct {
-	targets []string
-	output  string
-	pkg     string
-	workDir string
-	verbose bool
+	targets  []string
+	output   string
+	pkg      string
+	workDir  string
+	cacheDir string
+	verbose  bool
 }
 
 // checkRequirements checks if all the build requirements are satisfied
@@ -206,8 +219,8 @@ func (d *dockerBuilder) defaultArgs() []string {
 	// mount root dir package under image GOPATH/src
 	args = append(args, "-v", fmt.Sprintf("%s:/app/%s", d.workDir, d.pkg))
 
-	// mount a temporary cache dir for dependencies (GOROOT/pkg and GOROOT/src)
-	args = append(args, "-v", fmt.Sprintf("%s/fyne-cross-cache:/go", os.TempDir()))
+	// mount the cache user dir. Used to cache package dependencies (GOROOT/pkg and GOROOT/src)
+	args = append(args, "-v", fmt.Sprintf("%s/fyne-cross:/go", d.cacheDir))
 
 	// attempt to set fyne user id as current user id to handle mount permissions
 	u, err := user.Current()
