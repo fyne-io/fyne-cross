@@ -19,7 +19,7 @@ var targetWithBuildOpts = map[string][]string{
 	"darwin/amd64":  []string{"GOOS=darwin", "GOARCH=amd64", "CC=o32-clang"},
 	"darwin/386":    []string{"GOOS=darwin", "GOARCH=386", "CC=o32-clang"},
 	"linux/amd64":   []string{"GOOS=linux", "GOARCH=amd64", "CC=gcc"},
-	"linux/386":     []string{"GOOS=linux", "GOARCH=386   CC=gcc"},
+	"linux/386":     []string{"GOOS=linux", "GOARCH=386",   "CC=gcc"},
 	"windows/amd64": []string{"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
 	"windows/386":   []string{"GOOS=windows", "GOARCH=386", "CC=x86_64-w64-mingw32-gcc"},
 }
