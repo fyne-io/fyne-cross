@@ -19,7 +19,7 @@ var targetWithBuildOpts = map[string][]string{
 	"darwin/amd64":  []string{"GOOS=darwin", "GOARCH=amd64", "CC=o32-clang"},
 	"darwin/386":    []string{"GOOS=darwin", "GOARCH=386", "CC=o32-clang"},
 	"linux/amd64":   []string{"GOOS=linux", "GOARCH=amd64", "CC=gcc"},
-	"linux/386":     []string{"GOOS=linux", "GOARCH=386",   "CC=gcc"},
+	"linux/386":     []string{"GOOS=linux", "GOARCH=386", "CC=gcc"},
 	"windows/amd64": []string{"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
 	"windows/386":   []string{"GOOS=windows", "GOARCH=386", "CC=x86_64-w64-mingw32-gcc"},
 }
@@ -37,18 +37,22 @@ var (
 	cacheDir string
 	// verbosity represents the verbosity setting
 	verbose bool
+	// ldflags represents the flags to pass to the external linker
+	ldflags string
 )
 
 // builder is the command implementing the fyne app command interface
 type builder struct{}
 
 func (b *builder) addFlags() {
-	defautlTarget := strings.Join([]string{build.Default.GOOS, build.Default.GOARCH}, "/")
-	flag.StringVar(&targetList, "targets", defautlTarget, fmt.Sprintf("The list of targets to build separated by comma. Default to current GOOS/GOARCH %s", defautlTarget))
+	defaultTarget := strings.Join([]string{build.Default.GOOS, build.Default.GOARCH}, "/")
+	flag.StringVar(&targetList, "targets", defaultTarget, fmt.Sprintf("The list of targets to build separated by comma. Default to current GOOS/GOARCH %s", defaultTarget))
 	flag.StringVar(&output, "output", "", "The named output file. Default to package name")
 	flag.StringVar(&pkgRootDir, "dir", "", "The package root directory. Default current dir")
 	flag.StringVar(&cacheDir, "cache-dir", "", "The directory used to cache package dependencies. Default to system cache root directory (i.e. $HOME/.cache)")
 	flag.BoolVar(&verbose, "v", false, "Enable verbosity flag for go commands. Default to false")
+	flag.StringVar(&ldflags, "ldflags", "", "flags to pass to the external linker")
+
 }
 
 func (b *builder) printHelp(indent string) {
@@ -116,6 +120,7 @@ func (b *builder) run(args []string) {
 		targets:  targets,
 		output:   output,
 		verbose:  verbose,
+		ldflags:  ldflags,
 	}
 
 	err = db.checkRequirements()
@@ -152,6 +157,7 @@ type dockerBuilder struct {
 	workDir  string
 	cacheDir string
 	verbose  bool
+	ldflags  string
 }
 
 // checkRequirements checks if all the build requirements are satisfied
@@ -269,7 +275,10 @@ func (d *dockerBuilder) goGetArgs() []string {
 // goGetArgs returns the arguments for the "go build" command for target
 func (d *dockerBuilder) goBuildArgs(target string) ([]string, error) {
 	// enable CGO
-	args := []string{"-e", "CGO_ENABLED=1"}
+	args := []string{
+		"-e", "CGO_ENABLED=1",
+		"-e", fmt.Sprintf("FLAG_LDFLAGS=%s", d.ldflags),
+	}
 
 	// add compile target options
 	if buildOpts, ok := targetWithBuildOpts[target]; ok {
