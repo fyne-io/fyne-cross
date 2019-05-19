@@ -287,6 +287,7 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 		pkg     string
 		workDir string
 		verbose bool
+		ldflags string
 	}
 	type args struct {
 		target string
@@ -312,6 +313,7 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 			},
 			want: []string{
 				"-e", "CGO_ENABLED=1",
+				"-e", "FLAG_LDFLAGS=",
 				"-e", "GOOS=linux", "-e", "GOARCH=amd64", "-e", "CC=gcc",
 				dockerImage,
 				"go build -o build/test-linux-amd64 -a -v fyne-io/fyne-example",
@@ -330,6 +332,7 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 			},
 			want: []string{
 				"-e", "CGO_ENABLED=1",
+				"-e", "FLAG_LDFLAGS=",
 				"-e", "GOOS=windows", "-e", "GOARCH=amd64", "-e", "CC=x86_64-w64-mingw32-gcc",
 				dockerImage,
 				"go build -o build/test-windows-amd64.exe -a  fyne-io/fyne-example",
@@ -345,9 +348,30 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 			},
 			want: []string{
 				"-e", "CGO_ENABLED=1",
+				"-e", "FLAG_LDFLAGS=",
 				"-e", "GOOS=darwin", "-e", "GOARCH=amd64", "-e", "CC=o32-clang",
 				dockerImage,
 				"go build -o build/fyne-example-darwin-amd64 -a  fyne-io/fyne-example",
+			},
+		},
+		{
+			name: "ldflags, linux",
+			fields: fields{
+				verbose: true,
+				pkg:     "fyne-io/fyne-example",
+				workDir: "/code/test",
+				output:  "test",
+				ldflags: "flags",
+			},
+			args: args{
+				target: "linux/amd64",
+			},
+			want: []string{
+				"-e", "CGO_ENABLED=1",
+				"-e", "FLAG_LDFLAGS=flags",
+				"-e", "GOOS=linux", "-e", "GOARCH=amd64", "-e", "CC=gcc",
+				dockerImage,
+				"go build -o build/test-linux-amd64 -a -v fyne-io/fyne-example",
 			},
 		},
 	}
@@ -359,6 +383,7 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 				pkg:     tt.fields.pkg,
 				workDir: tt.fields.workDir,
 				verbose: tt.fields.verbose,
+				ldflags: tt.fields.ldflags,
 			}
 			got, err := d.goBuildArgs(tt.args.target)
 			if (err != nil) != tt.wantErr {
