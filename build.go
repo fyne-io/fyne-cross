@@ -24,6 +24,13 @@ var targetWithBuildOpts = map[string][]string{
 	"windows/386":   []string{"GOOS=windows", "GOARCH=386", "CC=x86_64-w64-mingw32-gcc"},
 }
 
+// targetLdflags represents the list of default ldflags to pass on build
+// for a specified GOOS/GOARCH
+var targetLdflags = map[string]string{
+	"windows/amd64": "-H windowsgui",
+	"windows/386":   "-H windowsgui",
+}
+
 var (
 	// targetList represents a list of target to build on separated by comma
 	targetList string
@@ -52,7 +59,6 @@ func (b *builder) addFlags() {
 	flag.StringVar(&cacheDir, "cache-dir", "", "The directory used to cache package dependencies. Default to system cache root directory (i.e. $HOME/.cache)")
 	flag.BoolVar(&verbose, "v", false, "Enable verbosity flag for go commands. Default to false")
 	flag.StringVar(&ldflags, "ldflags", "", "flags to pass to the external linker")
-
 }
 
 func (b *builder) printHelp(indent string) {
@@ -74,13 +80,17 @@ func (b *builder) printHelp(indent string) {
 	}
 	fmt.Println()
 
+	fmt.Println("Default ldflags per target:")
+	for target, ldflags := range targetLdflags {
+		fmt.Println(indent, "- ", target, ldflags)
+	}
+	fmt.Println()
+
 	fmt.Println("Example: fyne-cross --targets=linux/amd64,windows/amd64 --output=test ./cmd/test")
 }
 
 func (b *builder) run(args []string) {
 	var err error
-
-	flag.Parse()
 
 	targets, err := parseTargets(targetList)
 	if err != nil {
@@ -274,27 +284,59 @@ func (d *dockerBuilder) goGetArgs() []string {
 
 // goGetArgs returns the arguments for the "go build" command for target
 func (d *dockerBuilder) goBuildArgs(target string) ([]string, error) {
-	// enable CGO
+	// Start adding env variables
 	args := []string{
+		// enable CGO
 		"-e", "CGO_ENABLED=1",
-		"-e", fmt.Sprintf("FLAG_LDFLAGS=%s", d.ldflags),
 	}
 
-	// add compile target options
+	// add default compile target options env variables
 	if buildOpts, ok := targetWithBuildOpts[target]; ok {
 		for _, o := range buildOpts {
 			args = append(args, "-e", o)
 		}
 	}
 
-	targetOutput, err := d.targetOutput(target)
-	if err != nil {
-		return args, err
+	// add docker image
+	args = append(args, dockerImage)
+
+	// add go build command
+	args = append(args, "go", "build")
+
+	// Start adding ldflags
+	ldflags := []string{}
+	// add defaults
+	if ldflagsDefault, ok := targetLdflags[target]; ok {
+		ldflags = append(ldflags, ldflagsDefault)
+	}
+	// add custom ldflags
+	if d.ldflags != "" {
+		ldflags = append(ldflags, d.ldflags)
 	}
 
-	buildCmd := fmt.Sprintf("go build -o build/%s -a %s %s", targetOutput, d.verbosityFlag(), d.pkg)
+	// add ldflags to command, if any
+	if len(ldflags) > 0 {
+		args = append(args, "-ldflags", fmt.Sprintf("'%s'", strings.Join(ldflags, " ")))
+	}
 
-	return append(args, dockerImage, buildCmd), nil
+	// add target output
+	targetOutput, err := d.targetOutput(target)
+	if err != nil {
+		return []string{}, err
+	}
+	args = append(args, "-o", fmt.Sprintf("build/%s", targetOutput))
+
+	// add force compile option
+	args = append(args, "-a")
+
+	// add force compile option
+	if d.verbose {
+		args = append(args, "-v")
+	}
+
+	// add package
+	args = append(args, d.pkg)
+	return args, nil
 }
 
 // parseTargets parse comma separated target list and validate against the supported targets
