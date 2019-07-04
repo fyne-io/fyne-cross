@@ -40,8 +40,8 @@ var (
 	pkg string
 	// pkgRootDir represents the package root directory
 	pkgRootDir string
-	// cacheDir represents the cache directory
-	cacheDir string
+	// goPath represents the GOPATH to mount into container. It will be used to share/cache sources and dependencies
+	goPath string
 	// verbosity represents the verbosity setting
 	verbose bool
 	// ldflags represents the flags to pass to the external linker
@@ -56,7 +56,7 @@ func (b *builder) addFlags() {
 	flag.StringVar(&targetList, "targets", defaultTarget, fmt.Sprintf("The list of targets to build separated by comma. Default to current GOOS/GOARCH %s", defaultTarget))
 	flag.StringVar(&output, "output", "", "The named output file. Default to package name")
 	flag.StringVar(&pkgRootDir, "dir", "", "The package root directory. Default current dir")
-	flag.StringVar(&cacheDir, "cache-dir", "", "The directory used to cache package dependencies. Default to system cache root directory (i.e. $HOME/.cache)")
+	flag.StringVar(&goPath, "gopath", "", "The local GOPATH to mount into container, used to share/cache sources and dependencies. Default to system cache directory (i.e. $HOME/.cache/fyne-cross)")
 	flag.BoolVar(&verbose, "v", false, "Enable verbosity flag for go commands. Default to false")
 	flag.StringVar(&ldflags, "ldflags", "", "flags to pass to the external linker")
 }
@@ -106,10 +106,16 @@ func (b *builder) run(args []string) {
 		}
 	}
 
-	if cacheDir == "" {
-		cacheDir, err = os.UserCacheDir()
+	if goPath == "" {
+		userCacheDir, err := os.UserCacheDir()
 		if err != nil {
-			fmt.Printf("Cannot get the path for cache directory %s", err)
+			fmt.Printf("Cannot get the path for the system cache directory %s", err)
+			os.Exit(1)
+		}
+		goPath = filepath.Join(userCacheDir, "fyne-cross")
+		err = os.MkdirAll(goPath, 0755)
+		if err != nil {
+			fmt.Printf("Cannot create the fyne-cross GOPATH under the system cache directory %s", err)
 			os.Exit(1)
 		}
 	}
@@ -124,13 +130,13 @@ func (b *builder) run(args []string) {
 	}
 
 	db := dockerBuilder{
-		pkg:      pkg,
-		workDir:  pkgRootDir,
-		cacheDir: cacheDir,
-		targets:  targets,
-		output:   output,
-		verbose:  verbose,
-		ldflags:  ldflags,
+		pkg:     pkg,
+		workDir: pkgRootDir,
+		goPath:  goPath,
+		targets: targets,
+		output:  output,
+		verbose: verbose,
+		ldflags: ldflags,
 	}
 
 	err = db.checkRequirements()
@@ -161,13 +167,13 @@ func (b *builder) run(args []string) {
 
 // dockerBuilder represents the docker builder
 type dockerBuilder struct {
-	targets  []string
-	output   string
-	pkg      string
-	workDir  string
-	cacheDir string
-	verbose  bool
-	ldflags  string
+	targets []string
+	output  string
+	pkg     string
+	workDir string
+	goPath  string
+	verbose bool
+	ldflags string
 }
 
 // checkRequirements checks if all the build requirements are satisfied
@@ -261,11 +267,11 @@ func (d *dockerBuilder) defaultArgs() []string {
 	// set workdir
 	args = append(args, "-w", fmt.Sprintf("/app"))
 
-	// mount root dir package under image GOPATH/src
+	// mount root dir package under /app
 	args = append(args, "-v", fmt.Sprintf("%s:/app", d.workDir))
 
 	// mount the cache user dir. Used to cache package dependencies (GOROOT/pkg and GOROOT/src)
-	args = append(args, "-v", fmt.Sprintf("%s/fyne-cross:/go", d.cacheDir))
+	args = append(args, "-v", fmt.Sprintf("%s:/go", d.goPath))
 
 	// attempt to set fyne user id as current user id to handle mount permissions
 	u, err := user.Current()

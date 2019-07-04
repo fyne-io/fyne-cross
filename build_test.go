@@ -189,9 +189,9 @@ func Test_dockerBuilder_defaultArgs(t *testing.T) {
 	uid := u.Uid
 
 	type fields struct {
-		pkg      string
-		workDir  string
-		cacheDir string
+		pkg     string
+		workDir string
+		goPath  string
 	}
 	tests := []struct {
 		name   string
@@ -201,30 +201,30 @@ func Test_dockerBuilder_defaultArgs(t *testing.T) {
 		{
 			name: "default workdir",
 			fields: fields{
-				pkg:      "fyne-io/fyne-example",
-				workDir:  wd,
-				cacheDir: cd,
+				pkg:     "fyne-io/fyne-example",
+				workDir: wd,
+				goPath:  cd,
 			},
 			want: []string{
 				"run", "--rm", "-t",
 				"-w", "/app",
 				"-v", wd + ":/app",
-				"-v", cd + "/fyne-cross:/go",
+				"-v", cd + ":/go",
 				"-e", "fyne_uid=" + uid,
 			},
 		},
 		{
 			name: "custom workdir",
 			fields: fields{
-				pkg:      "fyne-io/fyne-example",
-				workDir:  "/home/fyne",
-				cacheDir: "/tmp/cache",
+				pkg:     "fyne-io/fyne-example",
+				workDir: "/home/fyne",
+				goPath:  "/tmp/cache",
 			},
 			want: []string{
 				"run", "--rm", "-t",
 				"-w", "/app",
 				"-v", "/home/fyne:/app",
-				"-v", "/tmp/cache/fyne-cross:/go",
+				"-v", "/tmp/cache:/go",
 				"-e", "fyne_uid=" + uid,
 			},
 		},
@@ -232,9 +232,9 @@ func Test_dockerBuilder_defaultArgs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			d := &dockerBuilder{
-				pkg:      tt.fields.pkg,
-				workDir:  tt.fields.workDir,
-				cacheDir: tt.fields.cacheDir,
+				pkg:     tt.fields.pkg,
+				workDir: tt.fields.workDir,
+				goPath:  tt.fields.goPath,
 			}
 			if got := d.defaultArgs(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("dockerBuilder.defaultArgs() = %v, want %v", got, tt.want)
