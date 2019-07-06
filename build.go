@@ -16,12 +16,12 @@ const dockerImage = "lucor/fyne-cross"
 // targetWithBuildOpts represents the list of supported GOOS/GOARCH with the relative
 // options to build
 var targetWithBuildOpts = map[string][]string{
-	"darwin/amd64":  []string{"GOOS=darwin", "GOARCH=amd64", "CC=o32-clang"},
-	"darwin/386":    []string{"GOOS=darwin", "GOARCH=386", "CC=o32-clang"},
-	"linux/amd64":   []string{"GOOS=linux", "GOARCH=amd64", "CC=gcc"},
-	"linux/386":     []string{"GOOS=linux", "GOARCH=386", "CC=gcc"},
-	"windows/amd64": []string{"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
-	"windows/386":   []string{"GOOS=windows", "GOARCH=386", "CC=x86_64-w64-mingw32-gcc"},
+	"darwin/amd64":  {"GOOS=darwin", "GOARCH=amd64", "CC=o32-clang"},
+	"darwin/386":    {"GOOS=darwin", "GOARCH=386", "CC=o32-clang"},
+	"linux/amd64":   {"GOOS=linux", "GOARCH=amd64", "CC=gcc"},
+	"linux/386":     {"GOOS=linux", "GOARCH=386", "CC=gcc"},
+	"windows/amd64": {"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
+	"windows/386":   {"GOOS=windows", "GOARCH=386", "CC=x86_64-w64-mingw32-gcc"},
 }
 
 // targetLdflags represents the list of default ldflags to pass on build
