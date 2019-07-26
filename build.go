@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"os/user"
 	"path/filepath"
+	"runtime"
 	"strings"
 )
 
@@ -274,9 +275,12 @@ func (d *dockerBuilder) defaultArgs() []string {
 	args = append(args, "-v", fmt.Sprintf("%s:/go", d.goPath))
 
 	// attempt to set fyne user id as current user id to handle mount permissions
-	u, err := user.Current()
-	if err == nil {
-		args = append(args, "-e", fmt.Sprintf("fyne_uid=%s", u.Uid))
+	// on linux and MacOS
+	if runtime.GOOS != "windows" {
+		u, err := user.Current()
+		if err == nil {
+			args = append(args, "-e", fmt.Sprintf("fyne_uid=%s", u.Uid))
+		}
 	}
 
 	return args
