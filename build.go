@@ -13,6 +13,7 @@ import (
 )
 
 const dockerImage = "lucor/fyne-cross"
+const version = "dev"
 
 // targetWithBuildOpts represents the list of supported GOOS/GOARCH with the relative
 // options to build
@@ -47,6 +48,8 @@ var (
 	verbose bool
 	// ldflags represents the flags to pass to the external linker
 	ldflags string
+	// printVersion if true will print the fyne-cross version
+	printVersion bool
 )
 
 // builder is the command implementing the fyne app command interface
@@ -60,6 +63,7 @@ func (b *builder) addFlags() {
 	flag.StringVar(&goPath, "gopath", "", "The local GOPATH to mount into container, used to share/cache sources and dependencies. Default to system cache directory (i.e. $HOME/.cache/fyne-cross)")
 	flag.BoolVar(&verbose, "v", false, "Enable verbosity flag for go commands. Default to false")
 	flag.StringVar(&ldflags, "ldflags", "", "flags to pass to the external linker")
+	flag.BoolVar(&printVersion, "version", false, "Print fyne-cross version")
 }
 
 func (b *builder) printHelp(indent string) {
@@ -92,6 +96,11 @@ func (b *builder) printHelp(indent string) {
 
 func (b *builder) run(args []string) {
 	var err error
+
+	if printVersion == true {
+		fmt.Printf("fyne-cross version %s\n", version)
+		os.Exit(2)
+	}
 
 	targets, err := parseTargets(targetList)
 	if err != nil {
