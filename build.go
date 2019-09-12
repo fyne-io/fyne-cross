@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-const dockerImage = "lucor/fyne-cross"
+const dockerImage = "lucor/fyne-cross:develop"
 const version = "dev"
 
 // targetWithBuildOpts represents the list of supported GOOS/GOARCH with the relative
@@ -22,6 +22,8 @@ var targetWithBuildOpts = map[string][]string{
 	"darwin/386":    {"GOOS=darwin", "GOARCH=386", "CC=o32-clang"},
 	"linux/amd64":   {"GOOS=linux", "GOARCH=amd64", "CC=gcc"},
 	"linux/386":     {"GOOS=linux", "GOARCH=386", "CC=gcc"},
+	"linux/arm":     {"GOOS=linux", "GOARCH=arm", "CC=arm-linux-gnueabihf-gcc", "GOARM=7"},
+	"linux/arm64":   {"GOOS=linux", "GOARCH=arm64", "CC=aarch64-linux-gnu-gcc"},
 	"windows/amd64": {"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
 	"windows/386":   {"GOOS=windows", "GOARCH=386", "CC=x86_64-w64-mingw32-gcc"},
 }
@@ -31,6 +33,13 @@ var targetWithBuildOpts = map[string][]string{
 var targetLdflags = map[string]string{
 	"windows/amd64": "-H windowsgui",
 	"windows/386":   "-H windowsgui",
+}
+
+// targetTags represents the list of default tags to pass on build
+// for a specified GOOS/GOARCH
+var targetTags = map[string]string{
+	"linux/arm":   "gles",
+	"linux/arm64": "gles",
 }
 
 var (
@@ -323,7 +332,10 @@ func (d *dockerBuilder) goBuildArgs(target string) ([]string, error) {
 	args = append(args, "go", "build")
 
 	// Start adding ldflags
-	ldflags := []string{}
+	ldflags := []string{
+		"-w",
+		"-s",
+	}
 	// add defaults
 	if ldflagsDefault, ok := targetLdflags[target]; ok {
 		ldflags = append(ldflags, ldflagsDefault)
@@ -336,6 +348,19 @@ func (d *dockerBuilder) goBuildArgs(target string) ([]string, error) {
 	// add ldflags to command, if any
 	if len(ldflags) > 0 {
 		args = append(args, "-ldflags", fmt.Sprintf("'%s'", strings.Join(ldflags, " ")))
+	}
+
+	// Start adding ldflags
+	tags := []string{}
+
+	// add defaults
+	if tagsDefault, ok := targetTags[target]; ok {
+		tags = append(tags, tagsDefault)
+	}
+
+	// add tags to command, if any
+	if len(tags) > 0 {
+		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, " ")))
 	}
 
 	// add target output
