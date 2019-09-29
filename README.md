@@ -14,10 +14,18 @@ Supported targets are:
   -  linux/386
   -  windows/amd64
   -  windows/386
+  -  linux/arm
+  -  linux/arm64
 
 ## Installation
 
         go get github.com/lucor/fyne-cross
+
+### Development release
+
+To install a preview of the next version or help in testing:
+
+        go get github.com/lucor/fyne-cross@develop
 
 ## Usage
 
@@ -34,3 +42,9 @@ The example below cross build the [fyne examples application](https://github.com
         fyne-cross --targets=linux/amd64,windows/amd64,darwin/amd64 github.com/fyne-io/examples
 
 Builds for the specified targets will be available under the `build` folder
+
+## Contribute
+
+- Fork and clone the repository
+- Make and test your changes
+- Open a pull request against the `develop` branch
