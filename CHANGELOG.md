@@ -1,5 +1,7 @@
 # Changelog
 
+## Unreleased
+
 ## [1.1.0] - 2019-09-29
 
 - Added support to `linux/arm` and `linux/arm64` targets
