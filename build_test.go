@@ -282,12 +282,13 @@ func Test_dockerBuilder_goGetArgs(t *testing.T) {
 }
 func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 	type fields struct {
-		targets []string
-		output  string
-		pkg     string
-		workDir string
-		verbose bool
-		ldflags string
+		targets    []string
+		output     string
+		pkg        string
+		workDir    string
+		verbose    bool
+		ldflags    string
+		stripDebug bool
 	}
 	type args struct {
 		target string
@@ -303,10 +304,11 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 		{
 			name: "verbosity enabled, linux",
 			fields: fields{
-				verbose: true,
-				pkg:     "fyne-io/fyne-example",
-				workDir: "/code/test",
-				output:  "test",
+				verbose:    true,
+				pkg:        "fyne-io/fyne-example",
+				workDir:    "/code/test",
+				output:     "test",
+				stripDebug: true,
 			},
 			args: args{
 				target: "linux/amd64",
@@ -340,7 +342,7 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 				"-e", "GOOS=windows", "-e", "GOARCH=amd64", "-e", "CC=x86_64-w64-mingw32-gcc",
 				dockerImage,
 				"go", "build",
-				"-ldflags", "'-w -s -H windowsgui -X main.version=1.0.0'",
+				"-ldflags", "'-H windowsgui -X main.version=1.0.0'",
 				"-o", "build/test-windows-amd64.exe",
 				"-a",
 				"fyne-io/fyne-example",
@@ -359,7 +361,6 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 				"-e", "GOOS=darwin", "-e", "GOARCH=amd64", "-e", "CC=o32-clang",
 				dockerImage,
 				"go", "build",
-				"-ldflags", "'-w -s'",
 				"-o", "build/fyne-example-darwin-amd64",
 				"-a",
 				"fyne-io/fyne-example",
@@ -368,11 +369,12 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 		{
 			name: "ldflags, linux",
 			fields: fields{
-				verbose: true,
-				pkg:     "fyne-io/fyne-example",
-				workDir: "/code/test",
-				output:  "test",
-				ldflags: "-X main.version=1.0.0",
+				verbose:    true,
+				pkg:        "fyne-io/fyne-example",
+				workDir:    "/code/test",
+				output:     "test",
+				ldflags:    "-X main.version=1.0.0",
+				stripDebug: true,
 			},
 			args: args{
 				target: "linux/amd64",
@@ -405,7 +407,6 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 				"-e", "GOOS=linux", "-e", "GOARCH=arm", "-e", "CC=arm-linux-gnueabihf-gcc", "-e", "GOARM=7",
 				dockerImage,
 				"go", "build",
-				"-ldflags", "'-w -s'",
 				"-tags", "'gles'",
 				"-o", "build/test-linux-arm",
 				"-a",
@@ -429,7 +430,6 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 				"-e", "GOOS=linux", "-e", "GOARCH=arm64", "-e", "CC=aarch64-linux-gnu-gcc",
 				dockerImage,
 				"go", "build",
-				"-ldflags", "'-w -s'",
 				"-tags", "'gles'",
 				"-o", "build/test-linux-arm64",
 				"-a",
@@ -441,12 +441,13 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			d := &dockerBuilder{
-				targets: tt.fields.targets,
-				output:  tt.fields.output,
-				pkg:     tt.fields.pkg,
-				workDir: tt.fields.workDir,
-				verbose: tt.fields.verbose,
-				ldflags: tt.fields.ldflags,
+				targets:    tt.fields.targets,
+				output:     tt.fields.output,
+				pkg:        tt.fields.pkg,
+				workDir:    tt.fields.workDir,
+				verbose:    tt.fields.verbose,
+				ldflags:    tt.fields.ldflags,
+				stripDebug: tt.fields.stripDebug,
 			}
 			got, err := d.goBuildArgs(tt.args.target)
 			if (err != nil) != tt.wantErr {
