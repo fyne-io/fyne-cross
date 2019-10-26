@@ -37,6 +37,12 @@ func Test_parseTargets(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name:    "Invalid target 3",
+			args:    args{targetList: "linux/*amd64"},
+			want:    []string{},
+			wantErr: true,
+		},
+		{
 			name:    "Valid target",
 			args:    args{targetList: "linux/amd64"},
 			want:    []string{"linux/amd64"},
@@ -46,6 +52,12 @@ func Test_parseTargets(t *testing.T) {
 			name:    "Valid targets trim space",
 			args:    args{targetList: "linux/amd64, darwin/386"},
 			want:    []string{"linux/amd64", "darwin/386"},
+			wantErr: false,
+		},
+		{
+			name:    "Valid wildcard targets",
+			args:    args{targetList: "linux/*"},
+			want:    []string{"linux/amd64", "linux/386", "linux/arm", "linux/arm64"},
 			wantErr: false,
 		},
 	}

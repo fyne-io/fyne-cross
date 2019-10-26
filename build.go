@@ -15,6 +15,13 @@ import (
 const version = "develop"
 const dockerImage = "lucor/fyne-cross:" + version
 
+// goosWithArch represents the list of supported GOARCH for a GOOS
+var goosWithArch = map[string][]string{
+	"darwin":  {"amd64", "386"},
+	"linux":   {"amd64", "386", "arm", "arm64"},
+	"windows": {"amd64", "386"},
+}
+
 // targetWithBuildOpts represents the list of supported GOOS/GOARCH with the relative
 // options to build
 var targetWithBuildOpts = map[string][]string{
@@ -399,12 +406,24 @@ func parseTargets(targetList string) ([]string, error) {
 		target = strings.TrimSpace(target)
 
 		var isValid bool
-		for oktarget := range targetWithBuildOpts {
-			if target == oktarget {
-				isValid = true
-				targets = append(targets, target)
-				break
+		osAndArch := strings.Split(target, "/")
+		if len(osAndArch) != 2 {
+			return targets, fmt.Errorf("Unsupported target %q", target)
+		}
+
+		targetOs, targetArch := osAndArch[0], osAndArch[1]
+		if targetArch == "*" {
+			okArchs, ok := goosWithArch[targetOs]
+			if !ok {
+				return targets, fmt.Errorf("Unsupported os %q", targetOs)
 			}
+			isValid = true
+			for _, arch := range okArchs {
+				targets = append(targets, strings.Join([]string{targetOs, arch}, "/"))
+			}
+		} else if _, ok := targetWithBuildOpts[target]; ok {
+			targets = append(targets, target)
+			isValid = true
 		}
 
 		if isValid == false {
