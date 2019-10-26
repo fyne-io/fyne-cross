@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unreleased
-- 
+- Add wildcard support for goarch [#15](https://github.com/lucor/fyne-cross/issues/15)
 
 ## [1.2.1] - 2019-10-26
 - Fix fyne-cross docker image build tag
