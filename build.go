@@ -405,7 +405,6 @@ func parseTargets(targetList string) ([]string, error) {
 	for _, target := range strings.Split(targetList, ",") {
 		target = strings.TrimSpace(target)
 
-		var isValid bool
 		osAndArch := strings.Split(target, "/")
 		if len(osAndArch) != 2 {
 			return targets, fmt.Errorf("Unsupported target %q", target)
@@ -417,18 +416,18 @@ func parseTargets(targetList string) ([]string, error) {
 			if !ok {
 				return targets, fmt.Errorf("Unsupported os %q", targetOs)
 			}
-			isValid = true
+
 			for _, arch := range okArchs {
 				targets = append(targets, strings.Join([]string{targetOs, arch}, "/"))
 			}
-		} else if _, ok := targetWithBuildOpts[target]; ok {
-			targets = append(targets, target)
-			isValid = true
+			continue
 		}
 
-		if isValid == false {
+		if _, ok := targetWithBuildOpts[target]; !ok {
 			return targets, fmt.Errorf("Unsupported target %q", target)
 		}
+
+		targets = append(targets, target)
 	}
 
 	return targets, nil
