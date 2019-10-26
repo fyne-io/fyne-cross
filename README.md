@@ -33,6 +33,18 @@ To install a preview of the next version or help in testing:
 
 > Use `fyne-cross help` for more informations
 
+### Wildcards
+
+The `targets` flag support wildcards in case want to compile against all supported GOARCH for a specified GOOS
+
+Example:
+
+        fyne-cross --targets=linux/*
+
+is equivalent to
+
+       fyne-cross --targets=linux/amd64,linux/386,linux/arm64,linux/arm
+
 ## Example
 
 The example below cross build the [fyne examples application](https://github.com/fyne-io/examples)
@@ -48,3 +60,7 @@ Builds for the specified targets will be available under the `build` folder
 - Fork and clone the repository
 - Make and test your changes
 - Open a pull request against the `develop` branch
+
+### Contributors
+
+See [contributors](https://github.com/lucor/fyne-cross/graphs/contributors) page
