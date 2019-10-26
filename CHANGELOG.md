@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- 
+
 ## [1.2.1] - 2019-10-26
 - Fix fyne-cross docker image build tag
 
