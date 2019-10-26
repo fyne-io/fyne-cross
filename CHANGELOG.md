@@ -1,6 +1,9 @@
 # Changelog
 
-## Unreleased
+## [1.2.1] - 2019-10-26
+- Fix fyne-cross docker image build tag
+
+## [1.2.0] - 2019-10-26
 
 - Fix UID is already in use [#12](https://github.com/lucor/fyne-cross/issues/12)
 - Update docker image to golang-cross:1.12.12
