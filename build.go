@@ -12,8 +12,8 @@ import (
 	"strings"
 )
 
-const dockerImage = "lucor/fyne-cross:develop"
-const version = "1.2.0"
+const version = "1.2.1"
+const dockerImage = "lucor/fyne-cross:" + version
 
 // targetWithBuildOpts represents the list of supported GOOS/GOARCH with the relative
 // options to build
