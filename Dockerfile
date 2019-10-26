@@ -1,4 +1,4 @@
-FROM dockercore/golang-cross:1.12.10
+FROM dockercore/golang-cross:1.12.12
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \

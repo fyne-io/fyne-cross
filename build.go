@@ -13,7 +13,7 @@ import (
 )
 
 const dockerImage = "lucor/fyne-cross:develop"
-const version = "1.1.0"
+const version = "1.2.0"
 
 // targetWithBuildOpts represents the list of supported GOOS/GOARCH with the relative
 // options to build
@@ -59,6 +59,8 @@ var (
 	ldflags string
 	// printVersion if true will print the fyne-cross version
 	printVersion bool
+	// noStripDebug if true will not strip debug information from binaries
+	noStripDebug bool
 )
 
 // builder is the command implementing the fyne app command interface
@@ -71,7 +73,8 @@ func (b *builder) addFlags() {
 	flag.StringVar(&pkgRootDir, "dir", "", "The package root directory. Default current dir")
 	flag.StringVar(&goPath, "gopath", "", "The local GOPATH to mount into container, used to share/cache sources and dependencies. Default to system cache directory (i.e. $HOME/.cache/fyne-cross)")
 	flag.BoolVar(&verbose, "v", false, "Enable verbosity flag for go commands. Default to false")
-	flag.StringVar(&ldflags, "ldflags", "", "flags to pass to the external linker")
+	flag.StringVar(&ldflags, "ldflags", "", "Flags to pass to the external linker")
+	flag.BoolVar(&noStripDebug, "no-strip", false, "If set will not strip debug information from binaries")
 	flag.BoolVar(&printVersion, "version", false, "Print fyne-cross version")
 }
 
@@ -149,13 +152,14 @@ func (b *builder) run(args []string) {
 	}
 
 	db := dockerBuilder{
-		pkg:     pkg,
-		workDir: pkgRootDir,
-		goPath:  goPath,
-		targets: targets,
-		output:  output,
-		verbose: verbose,
-		ldflags: ldflags,
+		pkg:        pkg,
+		workDir:    pkgRootDir,
+		goPath:     goPath,
+		targets:    targets,
+		output:     output,
+		verbose:    verbose,
+		ldflags:    ldflags,
+		stripDebug: !noStripDebug,
 	}
 
 	err = db.checkRequirements()
@@ -186,13 +190,14 @@ func (b *builder) run(args []string) {
 
 // dockerBuilder represents the docker builder
 type dockerBuilder struct {
-	targets []string
-	output  string
-	pkg     string
-	workDir string
-	goPath  string
-	verbose bool
-	ldflags string
+	targets    []string
+	output     string
+	pkg        string
+	workDir    string
+	goPath     string
+	verbose    bool
+	ldflags    string
+	stripDebug bool
 }
 
 // checkRequirements checks if all the build requirements are satisfied
@@ -332,10 +337,13 @@ func (d *dockerBuilder) goBuildArgs(target string) ([]string, error) {
 	args = append(args, "go", "build")
 
 	// Start adding ldflags
-	ldflags := []string{
-		"-w",
-		"-s",
+	ldflags := []string{}
+
+	// Strip debug information
+	if d.stripDebug {
+		ldflags = append(ldflags, "-w", "-s")
 	}
+
 	// add defaults
 	if ldflagsDefault, ok := targetLdflags[target]; ok {
 		ldflags = append(ldflags, ldflagsDefault)

@@ -1,5 +1,11 @@
 # Changelog
 
+## [1.2.0] - 2019-10-26
+
+- Fix UID is already in use [#12](https://github.com/lucor/fyne-cross/issues/12)
+- Update docker image to golang-cross:1.12.12
+- Add `--no-strip` flag. Since 1.1.0 by default the -w and -s flags are passed to the linker to strip binaries size omitting the symbol table, debug information and the DWARF symbol table. Specify this flag to add debug info. [#13](https://github.com/lucor/fyne-cross/issues/13)
+
 ## [1.1.0] - 2019-09-29
 
 - Added support to `linux/arm` and `linux/arm64` targets
