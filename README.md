@@ -12,10 +12,15 @@ Supported targets are:
   -  darwin/386
   -  linux/amd64
   -  linux/386
-  -  windows/amd64
-  -  windows/386
   -  linux/arm
   -  linux/arm64
+  -  windows/amd64
+  -  windows/386
+
+## Requirements
+
+- go
+- docker
 
 ## Installation
 
