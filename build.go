@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"go/build"
@@ -209,9 +210,17 @@ type dockerBuilder struct {
 
 // checkRequirements checks if all the build requirements are satisfied
 func (d *dockerBuilder) checkRequirements() error {
-	err := exec.Command("docker", "version").Run()
+	_, err := exec.LookPath("docker")
 	if err != nil {
 		return fmt.Errorf("Missed requirement: docker binary not found in PATH")
+	}
+
+	var stderr bytes.Buffer
+	cmd := exec.Command("docker", "version")
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		return fmt.Errorf("%s", stderr.Bytes())
 	}
 	return nil
 }
