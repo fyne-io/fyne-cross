@@ -37,6 +37,12 @@ func Test_parseTargets(t *testing.T) {
 			wantErr: true,
 		},
 		{
+			name:    "Invalid target 3",
+			args:    args{targetList: "linux/*amd64"},
+			want:    []string{},
+			wantErr: true,
+		},
+		{
 			name:    "Valid target",
 			args:    args{targetList: "linux/amd64"},
 			want:    []string{"linux/amd64"},
@@ -46,6 +52,12 @@ func Test_parseTargets(t *testing.T) {
 			name:    "Valid targets trim space",
 			args:    args{targetList: "linux/amd64, darwin/386"},
 			want:    []string{"linux/amd64", "darwin/386"},
+			wantErr: false,
+		},
+		{
+			name:    "Valid wildcard targets",
+			args:    args{targetList: "linux/*"},
+			want:    []string{"linux/amd64", "linux/386", "linux/arm", "linux/arm64"},
 			wantErr: false,
 		},
 	}
@@ -326,7 +338,7 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 			},
 		},
 		{
-			name: "verbosity disabled, windows",
+			name: "verbosity disabled, windows/amd64",
 			fields: fields{
 				verbose: false,
 				pkg:     "fyne-io/fyne-example",
@@ -344,6 +356,29 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 				"go", "build",
 				"-ldflags", "'-H windowsgui -X main.version=1.0.0'",
 				"-o", "build/test-windows-amd64.exe",
+				"-a",
+				"fyne-io/fyne-example",
+			},
+		},
+		{
+			name: "verbosity disabled, windows/386",
+			fields: fields{
+				verbose: false,
+				pkg:     "fyne-io/fyne-example",
+				workDir: "/code/test",
+				output:  "test",
+				ldflags: "-X main.version=1.0.0",
+			},
+			args: args{
+				target: "windows/386",
+			},
+			want: []string{
+				"-e", "CGO_ENABLED=1",
+				"-e", "GOOS=windows", "-e", "GOARCH=386", "-e", "CC=i686-w64-mingw32-gcc",
+				dockerImage,
+				"go", "build",
+				"-ldflags", "'-H windowsgui -X main.version=1.0.0'",
+				"-o", "build/test-windows-386.exe",
 				"-a",
 				"fyne-io/fyne-example",
 			},

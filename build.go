@@ -1,6 +1,7 @@
 package main
 
 import (
+	"bytes"
 	"flag"
 	"fmt"
 	"go/build"
@@ -12,8 +13,15 @@ import (
 	"strings"
 )
 
-const version = "1.2.1"
+const version = "1.2.2"
 const dockerImage = "lucor/fyne-cross:" + version
+
+// goosWithArch represents the list of supported GOARCH for a GOOS
+var goosWithArch = map[string][]string{
+	"darwin":  {"amd64", "386"},
+	"linux":   {"amd64", "386", "arm", "arm64"},
+	"windows": {"amd64", "386"},
+}
 
 // targetWithBuildOpts represents the list of supported GOOS/GOARCH with the relative
 // options to build
@@ -25,7 +33,7 @@ var targetWithBuildOpts = map[string][]string{
 	"linux/arm":     {"GOOS=linux", "GOARCH=arm", "CC=arm-linux-gnueabihf-gcc", "GOARM=7"},
 	"linux/arm64":   {"GOOS=linux", "GOARCH=arm64", "CC=aarch64-linux-gnu-gcc"},
 	"windows/amd64": {"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
-	"windows/386":   {"GOOS=windows", "GOARCH=386", "CC=x86_64-w64-mingw32-gcc"},
+	"windows/386":   {"GOOS=windows", "GOARCH=386", "CC=i686-w64-mingw32-gcc"},
 }
 
 // targetLdflags represents the list of default ldflags to pass on build
@@ -202,9 +210,17 @@ type dockerBuilder struct {
 
 // checkRequirements checks if all the build requirements are satisfied
 func (d *dockerBuilder) checkRequirements() error {
-	err := exec.Command("docker", "version").Run()
+	_, err := exec.LookPath("docker")
 	if err != nil {
 		return fmt.Errorf("Missed requirement: docker binary not found in PATH")
+	}
+
+	var stderr bytes.Buffer
+	cmd := exec.Command("docker", "version")
+	cmd.Stderr = &stderr
+	err = cmd.Run()
+	if err != nil {
+		return fmt.Errorf("%s", stderr.Bytes())
 	}
 	return nil
 }
@@ -398,18 +414,29 @@ func parseTargets(targetList string) ([]string, error) {
 	for _, target := range strings.Split(targetList, ",") {
 		target = strings.TrimSpace(target)
 
-		var isValid bool
-		for oktarget := range targetWithBuildOpts {
-			if target == oktarget {
-				isValid = true
-				targets = append(targets, target)
-				break
-			}
-		}
-
-		if isValid == false {
+		osAndArch := strings.Split(target, "/")
+		if len(osAndArch) != 2 {
 			return targets, fmt.Errorf("Unsupported target %q", target)
 		}
+
+		targetOs, targetArch := osAndArch[0], osAndArch[1]
+		if targetArch == "*" {
+			okArchs, ok := goosWithArch[targetOs]
+			if !ok {
+				return targets, fmt.Errorf("Unsupported os %q", targetOs)
+			}
+
+			for _, arch := range okArchs {
+				targets = append(targets, strings.Join([]string{targetOs, arch}, "/"))
+			}
+			continue
+		}
+
+		if _, ok := targetWithBuildOpts[target]; !ok {
+			return targets, fmt.Errorf("Unsupported target %q", target)
+		}
+
+		targets = append(targets, target)
 	}
 
 	return targets, nil
