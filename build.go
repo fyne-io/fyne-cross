@@ -33,7 +33,7 @@ var targetWithBuildOpts = map[string][]string{
 	"linux/arm":     {"GOOS=linux", "GOARCH=arm", "CC=arm-linux-gnueabihf-gcc", "GOARM=7"},
 	"linux/arm64":   {"GOOS=linux", "GOARCH=arm64", "CC=aarch64-linux-gnu-gcc"},
 	"windows/amd64": {"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
-	"windows/386":   {"GOOS=windows", "GOARCH=386", "CC=x86_64-w64-mingw32-gcc"},
+	"windows/386":   {"GOOS=windows", "GOARCH=386", "CC=i686-w64-mingw32-gcc"},
 }
 
 // targetLdflags represents the list of default ldflags to pass on build
