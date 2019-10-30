@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-const version = "1.2.2"
+const version = "develop"
 const dockerImage = "lucor/fyne-cross:" + version
 
 // goosWithArch represents the list of supported GOARCH for a GOOS

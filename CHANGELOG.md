@@ -1,5 +1,8 @@
 # Changelog
 
+## Unreleased
+- 
+
 ## [1.2.2] - 2019-10-29
 - Add wildcard support for goarch [#15](https://github.com/lucor/fyne-cross/issues/15)
 - Fix misleading error message when docker daemon is not available [#19](https://github.com/lucor/fyne-cross/issues/19)
