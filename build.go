@@ -159,46 +159,55 @@ func (b *builder) run(args []string) {
 		}
 	}
 
-	db := dockerBuilder{
-		pkg:        pkg,
-		workDir:    pkgRootDir,
-		goPath:     goPath,
-		targets:    targets,
-		output:     output,
-		verbose:    verbose,
-		ldflags:    ldflags,
-		stripDebug: !noStripDebug,
-	}
-
-	err = db.checkRequirements()
+	err = checkRequirements()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
 	}
 
-	fmt.Println("Downloading dependencies")
-	err = db.goGet()
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
-	}
+	fmt.Printf("Build output folder: %s/build\n", pkgRootDir)
 
-	fmt.Printf("Build output folder: %s/build\n", db.workDir)
 	for _, target := range targets {
-		fmt.Printf("Building for %s\n", target)
-		err = db.goBuild(target)
+		fmt.Printf("Target %s\n", target)
+
+		osAndarch := strings.Split(target, "/")
+		db := dockerBuilder{
+			pkg:        pkg,
+			workDir:    pkgRootDir,
+			goPath:     goPath,
+			output:     output,
+			verbose:    verbose,
+			ldflags:    ldflags,
+			stripDebug: !noStripDebug,
+			target:     target,
+			os:         osAndarch[0],
+			arch:       osAndarch[1],
+		}
+
+		// if project does not support modules, download deps with go get
+		goModPath := filepath.Join(db.workDir, "go.mod")
+		if _, err := os.Stat(goModPath); os.IsNotExist(err) {
+			fmt.Println("No module found. Downloading dependencies using go get")
+			err = db.goGet()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+		}
+
+		fmt.Println("Building...")
+		err = db.goBuild()
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		t, _ := db.targetOutput(target)
+		t, _ := db.targetOutput()
 		fmt.Printf("Built as %s\n", t)
 	}
 }
 
 // dockerBuilder represents the docker builder
 type dockerBuilder struct {
-	targets    []string
 	output     string
 	pkg        string
 	workDir    string
@@ -206,10 +215,13 @@ type dockerBuilder struct {
 	verbose    bool
 	ldflags    string
 	stripDebug bool
+	target     string
+	os         string
+	arch       string
 }
 
 // checkRequirements checks if all the build requirements are satisfied
-func (d *dockerBuilder) checkRequirements() error {
+func checkRequirements() error {
 	_, err := exec.LookPath("docker")
 	if err != nil {
 		return fmt.Errorf("Missed requirement: docker binary not found in PATH")
@@ -227,7 +239,8 @@ func (d *dockerBuilder) checkRequirements() error {
 
 // goGet downloads the application dependencies via go get
 func (d *dockerBuilder) goGet() error {
-	args := append(d.defaultArgs(), d.goGetArgs()...)
+	args := append(d.defaultArgs(), d.goEnvArgs()...)
+	args = append(args, d.goGetArgs()...)
 	if d.verbose {
 		fmt.Printf("docker %s\n", strings.Join(args, " "))
 	}
@@ -238,13 +251,15 @@ func (d *dockerBuilder) goGet() error {
 }
 
 // goBuild runs the go build for target
-func (d *dockerBuilder) goBuild(target string) error {
-	buildArgs, err := d.goBuildArgs(target)
+func (d *dockerBuilder) goBuild() error {
+	args := append(d.defaultArgs(), d.goEnvArgs()...)
+
+	buildArgs, err := d.goBuildArgs()
 	if err != nil {
 		return err
 	}
 
-	args := append(d.defaultArgs(), buildArgs...)
+	args = append(args, buildArgs...)
 	if d.verbose {
 		fmt.Printf("docker %s\n", strings.Join(args, " "))
 	}
@@ -257,7 +272,7 @@ func (d *dockerBuilder) goBuild(target string) error {
 // targetOutput returns the output file for the specified target.
 // Default prefix is the package name. To override use the output option.
 // Example: fyne-linux-amd64
-func (d *dockerBuilder) targetOutput(target string) (string, error) {
+func (d *dockerBuilder) targetOutput() (string, error) {
 	output := d.output
 	if output == "" {
 		if d.pkg == "." {
@@ -276,10 +291,10 @@ func (d *dockerBuilder) targetOutput(target string) (string, error) {
 		}
 	}
 
-	normalizedTarget := strings.ReplaceAll(target, "/", "-")
+	normalizedTarget := strings.ReplaceAll(d.target, "/", "-")
 
 	ext := ""
-	if strings.HasPrefix(target, "windows") {
+	if d.os == "windows" {
 		ext = ".exe"
 	}
 	return fmt.Sprintf("%s-%s%s", output, normalizedTarget, ext), nil
@@ -331,8 +346,7 @@ func (d *dockerBuilder) goGetArgs() []string {
 	return []string{dockerImage, buildCmd}
 }
 
-// goGetArgs returns the arguments for the "go build" command for target
-func (d *dockerBuilder) goBuildArgs(target string) ([]string, error) {
+func (d *dockerBuilder) goEnvArgs() []string {
 	// Start adding env variables
 	args := []string{
 		// enable CGO
@@ -340,11 +354,18 @@ func (d *dockerBuilder) goBuildArgs(target string) ([]string, error) {
 	}
 
 	// add default compile target options env variables
-	if buildOpts, ok := targetWithBuildOpts[target]; ok {
+	if buildOpts, ok := targetWithBuildOpts[d.target]; ok {
 		for _, o := range buildOpts {
 			args = append(args, "-e", o)
 		}
 	}
+
+	return args
+}
+
+// goGetArgs returns the arguments for the "go build" command for target
+func (d *dockerBuilder) goBuildArgs() ([]string, error) {
+	args := []string{}
 
 	// add docker image
 	args = append(args, dockerImage)
@@ -361,7 +382,7 @@ func (d *dockerBuilder) goBuildArgs(target string) ([]string, error) {
 	}
 
 	// add defaults
-	if ldflagsDefault, ok := targetLdflags[target]; ok {
+	if ldflagsDefault, ok := targetLdflags[d.target]; ok {
 		ldflags = append(ldflags, ldflagsDefault)
 	}
 	// add custom ldflags
@@ -378,7 +399,7 @@ func (d *dockerBuilder) goBuildArgs(target string) ([]string, error) {
 	tags := []string{}
 
 	// add defaults
-	if tagsDefault, ok := targetTags[target]; ok {
+	if tagsDefault, ok := targetTags[d.target]; ok {
 		tags = append(tags, tagsDefault)
 	}
 
@@ -388,7 +409,7 @@ func (d *dockerBuilder) goBuildArgs(target string) ([]string, error) {
 	}
 
 	// add target output
-	targetOutput, err := d.targetOutput(target)
+	targetOutput, err := d.targetOutput()
 	if err != nil {
 		return []string{}, err
 	}
