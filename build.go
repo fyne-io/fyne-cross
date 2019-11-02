@@ -15,12 +15,14 @@ import (
 
 const version = "develop"
 const dockerImage = "lucor/fyne-cross:" + version
+const dockerAndroid = "lucor/fyne-cross:android"
 
 // goosWithArch represents the list of supported GOARCH for a GOOS
 var goosWithArch = map[string][]string{
 	"darwin":  {"amd64", "386"},
 	"linux":   {"amd64", "386", "arm", "arm64"},
 	"windows": {"amd64", "386"},
+	"android": {"amd64", "386", "arm", "arm64"},
 }
 
 // targetWithBuildOpts represents the list of supported GOOS/GOARCH with the relative
@@ -34,6 +36,11 @@ var targetWithBuildOpts = map[string][]string{
 	"linux/arm64":   {"GOOS=linux", "GOARCH=arm64", "CC=aarch64-linux-gnu-gcc"},
 	"windows/amd64": {"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
 	"windows/386":   {"GOOS=windows", "GOARCH=386", "CC=i686-w64-mingw32-gcc"},
+
+	"android/386":   {"GOOS=android", "GOARCH=386", ndk["386"].clangFlag},
+	"android/amd64": {"GOOS=android", "GOARCH=amd64", ndk["amd64"].clangFlag},
+	"android/arm":   {"GOOS=android", "GOARCH=arm", ndk["arm"].clangFlag, "GOARM=7"},
+	"android/arm64": {"GOOS=android", "GOARCH=arm64", ndk["arm64"].clangFlag},
 }
 
 // targetLdflags represents the list of default ldflags to pass on build
@@ -46,8 +53,12 @@ var targetLdflags = map[string]string{
 // targetTags represents the list of default tags to pass on build
 // for a specified GOOS/GOARCH
 var targetTags = map[string]string{
-	"linux/arm":   "gles",
-	"linux/arm64": "gles",
+	"linux/arm":     "gles",
+	"linux/arm64":   "gles",
+	"android/386":   "gles",
+	"android/amd64": "gles",
+	"android/arm":   "gles",
+	"android/arm64": "gles",
 }
 
 var (
@@ -274,6 +285,13 @@ func (d *dockerBuilder) goBuild() error {
 // Example: fyne-linux-amd64
 func (d *dockerBuilder) targetOutput() (string, error) {
 	output := d.output
+
+	if d.os == "android" {
+		abi := ndk[d.arch].abi
+		outputDir := fmt.Sprintf("android/%s", abi)
+		return filepath.Join(outputDir, "libfyne.so"), nil
+	}
+
 	if output == "" {
 		if d.pkg == "." {
 			files, err := filepath.Glob("./*.go")
@@ -368,7 +386,11 @@ func (d *dockerBuilder) goBuildArgs() ([]string, error) {
 	args := []string{}
 
 	// add docker image
-	args = append(args, dockerImage)
+	img := dockerImage
+	if d.os == "android" {
+		img = dockerAndroid
+	}
+	args = append(args, img)
 
 	// add go build command
 	args = append(args, "go", "build")
@@ -406,6 +428,11 @@ func (d *dockerBuilder) goBuildArgs() ([]string, error) {
 	// add tags to command, if any
 	if len(tags) > 0 {
 		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, " ")))
+	}
+
+	// set c-shared build mode for android
+	if d.os == "android" {
+		args = append(args, "-buildmode", "c-shared")
 	}
 
 	// add target output
