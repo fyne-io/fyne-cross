@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.3.0] - 2019-11-02
 - Add Android support [#10](https://github.com/lucor/fyne-cross/issues/10)
 - GOOS is not set for go get when project do not use go modules [#22](https://github.com/lucor/fyne-cross/issues/22)
 - linux/386 does not work with 1.2.x [#24](https://github.com/lucor/fyne-cross/issues/24)
