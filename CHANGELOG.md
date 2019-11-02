@@ -2,6 +2,7 @@
 
 ## Unreleased
 - GOOS is not set for go get when project do not use go modules [#22](https://github.com/lucor/fyne-cross/issues/22)
+- linux/386 does not work with 1.2.x [#24](https://github.com/lucor/fyne-cross/issues/24)
 
 ## [1.2.2] - 2019-10-29
 - Add wildcard support for goarch [#15](https://github.com/lucor/fyne-cross/issues/15)
