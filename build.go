@@ -212,8 +212,8 @@ func (b *builder) run(args []string) {
 		// if project does not support modules, download deps with go get
 		goModPath := filepath.Join(db.workDir, "go.mod")
 		if _, err := os.Stat(goModPath); os.IsNotExist(err) {
-			fmt.Println("No module found. Downloading dependencies using go get")
-			err = db.goGet()
+			fmt.Println("No module found. Creating a temporary one...")
+			err = db.goModInit()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -262,10 +262,10 @@ func checkRequirements() error {
 	return nil
 }
 
-// goGet downloads the application dependencies via go get
-func (d *dockerBuilder) goGet() error {
+// goModInit downloads the application dependencies via go get
+func (d *dockerBuilder) goModInit() error {
 	args := append(d.defaultArgs(), d.goEnvArgs()...)
-	args = append(args, d.goGetArgs()...)
+	args = append(args, d.goModInitArgs()...)
 	if d.verbose {
 		fmt.Printf("docker %s\n", strings.Join(args, " "))
 	}
@@ -353,10 +353,15 @@ func (d *dockerBuilder) defaultArgs() []string {
 	return args
 }
 
-// goGetArgs returns the arguments for the "go get" command
-func (d *dockerBuilder) goGetArgs() []string {
-	buildCmd := fmt.Sprintf("go get %s -d ./...", d.verbosityFlag())
-	return []string{dockerImage, buildCmd}
+// goModInitArgs returns the arguments for the "go get" command
+func (d *dockerBuilder) goModInitArgs() []string {
+	buildCmd := fmt.Sprintf("go mod init %s", d.output)
+	// add docker image
+	img := dockerImage
+	if d.os == "android" {
+		img = dockerAndroid
+	}
+	return []string{img, buildCmd}
 }
 
 func (d *dockerBuilder) goEnvArgs() []string {
