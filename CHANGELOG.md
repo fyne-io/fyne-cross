@@ -1,6 +1,7 @@
 # Changelog
 
 ## [1.3.1] - Unreleased
+- Default binary name should be folder if none is provided [#29](https://github.com/lucor/fyne-cross/issues/10)
 
 ## [1.3.0] - 2019-11-02
 - Add Android support [#10](https://github.com/lucor/fyne-cross/issues/10)
