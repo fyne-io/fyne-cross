@@ -1,5 +1,9 @@
 # Changelog
 
+## [1.3.1] - 2019-12-26
+- Default binary name should be folder if none is provided [#29](https://github.com/lucor/fyne-cross/issues/29)
+- Cannot build android app when not using go modules [#30](https://github.com/lucor/fyne-cross/issues/30)
+
 ## [1.3.0] - 2019-11-02
 - Add Android support [#10](https://github.com/lucor/fyne-cross/issues/10)
 - GOOS is not set for go get when project do not use go modules [#22](https://github.com/lucor/fyne-cross/issues/22)

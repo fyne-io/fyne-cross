@@ -5,7 +5,7 @@
 fyne-cross is a simple tool to cross compile [Fyne](https://fyne.io) applications.
 
 It has been inspired by [xgo](https://github.com/karalabe/xgo) and uses a [docker image](https://hub.docker.com/r/lucor/fyne-cross) built on top of the [golang-cross](https://github.com/docker/golang-cross) image,
-that includes the MinGW compiler for windows, and an OSX SDK, along the Fyne requirements.
+that includes the MinGW compiler for windows, and an OSX SDK, along with the Fyne requirements.
 
 Supported targets are:
   -  darwin/amd64

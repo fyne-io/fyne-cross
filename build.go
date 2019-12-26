@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-const version = "1.3.0"
+const version = "1.3.1"
 const dockerImage = "lucor/fyne-cross:" + version
 const dockerAndroid = "lucor/fyne-cross:android"
 
@@ -146,6 +146,7 @@ func (b *builder) run(args []string) {
 			os.Exit(1)
 		}
 	}
+	fmt.Println("Project root dir:", pkgRootDir)
 
 	if goPath == "" {
 		userCacheDir, err := os.UserCacheDir()
@@ -163,17 +164,30 @@ func (b *builder) run(args []string) {
 
 	pkg := args[0]
 	if pkg == "" {
-		pkg, err = os.Getwd()
-		if err != nil {
-			fmt.Printf("Cannot get the path for current directory %s", err)
-			os.Exit(1)
-		}
+		pkg = "."
 	}
+
+	fmt.Println("Package dir:", pkg)
 
 	err = checkRequirements()
 	if err != nil {
 		fmt.Println(err)
 		os.Exit(1)
+	}
+
+	// output
+	if output == "" {
+		// set binary name as package folder dir
+		wd := pkg
+		if wd == "." {
+			wd, err = os.Getwd()
+			if err != nil {
+				fmt.Printf("Cannot get the path for current directory %s", err)
+				os.Exit(1)
+			}
+		}
+		parts := strings.Split(wd, "/")
+		output = parts[len(parts)-1]
 	}
 
 	fmt.Printf("Build output folder: %s/build\n", pkgRootDir)
@@ -198,8 +212,8 @@ func (b *builder) run(args []string) {
 		// if project does not support modules, download deps with go get
 		goModPath := filepath.Join(db.workDir, "go.mod")
 		if _, err := os.Stat(goModPath); os.IsNotExist(err) {
-			fmt.Println("No module found. Downloading dependencies using go get")
-			err = db.goGet()
+			fmt.Println("No module found. Creating a temporary one...")
+			err = db.goModInit()
 			if err != nil {
 				fmt.Println(err)
 				os.Exit(1)
@@ -248,10 +262,10 @@ func checkRequirements() error {
 	return nil
 }
 
-// goGet downloads the application dependencies via go get
-func (d *dockerBuilder) goGet() error {
+// goModInit downloads the application dependencies via go get
+func (d *dockerBuilder) goModInit() error {
 	args := append(d.defaultArgs(), d.goEnvArgs()...)
-	args = append(args, d.goGetArgs()...)
+	args = append(args, d.goModInitArgs()...)
 	if d.verbose {
 		fmt.Printf("docker %s\n", strings.Join(args, " "))
 	}
@@ -284,29 +298,10 @@ func (d *dockerBuilder) goBuild() error {
 // Default prefix is the package name. To override use the output option.
 // Example: fyne-linux-amd64
 func (d *dockerBuilder) targetOutput() (string, error) {
-	output := d.output
-
 	if d.os == "android" {
 		abi := ndk[d.arch].abi
 		outputDir := fmt.Sprintf("android/%s", abi)
 		return filepath.Join(outputDir, "libfyne.so"), nil
-	}
-
-	if output == "" {
-		if d.pkg == "." {
-			files, err := filepath.Glob("./*.go")
-			if err != nil {
-				return "", err
-			}
-			if len(files) == 0 {
-				return "", fmt.Errorf("Cannot found go files in current dir")
-			}
-
-			output = strings.TrimSuffix(files[0], ".go")
-		} else {
-			parts := strings.Split(d.pkg, "/")
-			output = parts[len(parts)-1]
-		}
 	}
 
 	normalizedTarget := strings.ReplaceAll(d.target, "/", "-")
@@ -315,7 +310,7 @@ func (d *dockerBuilder) targetOutput() (string, error) {
 	if d.os == "windows" {
 		ext = ".exe"
 	}
-	return fmt.Sprintf("%s-%s%s", output, normalizedTarget, ext), nil
+	return fmt.Sprintf("%s-%s%s", d.output, normalizedTarget, ext), nil
 }
 
 // verbosityFlag returns the string used to set verbosity with go commands
@@ -358,10 +353,15 @@ func (d *dockerBuilder) defaultArgs() []string {
 	return args
 }
 
-// goGetArgs returns the arguments for the "go get" command
-func (d *dockerBuilder) goGetArgs() []string {
-	buildCmd := fmt.Sprintf("go get %s -d ./...", d.verbosityFlag())
-	return []string{dockerImage, buildCmd}
+// goModInitArgs returns the arguments for the "go get" command
+func (d *dockerBuilder) goModInitArgs() []string {
+	buildCmd := fmt.Sprintf("go mod init %s", d.output)
+	// add docker image
+	img := dockerImage
+	if d.os == "android" {
+		img = dockerAndroid
+	}
+	return []string{img, buildCmd}
 }
 
 func (d *dockerBuilder) goEnvArgs() []string {
@@ -381,7 +381,7 @@ func (d *dockerBuilder) goEnvArgs() []string {
 	return args
 }
 
-// goGetArgs returns the arguments for the "go build" command for target
+// goBuildArgs returns the arguments for the "go build" command for target
 func (d *dockerBuilder) goBuildArgs() ([]string, error) {
 	args := []string{}
 

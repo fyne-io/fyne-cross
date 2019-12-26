@@ -92,7 +92,7 @@ func Test_dockerBuilder_targetOutput(t *testing.T) {
 		{
 			name: "default *nix plaform",
 			fields: fields{
-				output: "",
+				output: "fyne-example",
 				pkg:    "fyne-io/fyne-example",
 				target: "linux/amd64",
 			},
@@ -101,7 +101,7 @@ func Test_dockerBuilder_targetOutput(t *testing.T) {
 		{
 			name: "default windows plaform",
 			fields: fields{
-				output: "",
+				output: "fyne-example",
 				pkg:    "fyne-io/fyne-example",
 				target: "windows/386",
 			},
@@ -249,44 +249,7 @@ func Test_dockerBuilder_defaultArgs(t *testing.T) {
 		})
 	}
 }
-func Test_dockerBuilder_goGetArgs(t *testing.T) {
-	type fields struct {
-		verbose bool
-		gomod   bool
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   []string
-	}{
-		{
-			name: "verbosity enabled",
-			fields: fields{
-				gomod:   true,
-				verbose: true,
-			},
-			want: []string{dockerImage, "go get -v -d ./..."},
-		},
-		{
-			name: "verbosity disabled",
-			fields: fields{
-				gomod:   false,
-				verbose: false,
-			},
-			want: []string{dockerImage, "go get  -d ./..."},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			d := &dockerBuilder{
-				verbose: tt.fields.verbose,
-			}
-			if got := d.goGetArgs(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("dockerBuilder.goGetArgs() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
+
 func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 	type fields struct {
 		targets    []string
@@ -367,6 +330,7 @@ func Test_dockerBuilder_goBuildArgs(t *testing.T) {
 		{
 			name: "default settings from current dir darwin",
 			fields: fields{
+				output: "fyne-example",
 				pkg:    "fyne-io/fyne-example",
 				target: "darwin/amd64",
 			},
