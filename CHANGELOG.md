@@ -1,6 +1,6 @@
 # Changelog
 
-## [1.3.2] - Unreleased
+## [1.3.2] - 2020-01-08
 - Update to golang-cross:1.12.14 image (go v1.12.14)
 
 ## [1.3.1] - 2019-12-26
