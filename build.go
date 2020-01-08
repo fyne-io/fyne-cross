@@ -13,7 +13,7 @@ import (
 	"strings"
 )
 
-const version = "1.3.1"
+const version = "1.3.2"
 const dockerImage = "lucor/fyne-cross:" + version
 const dockerAndroid = "lucor/fyne-cross:android"
 
