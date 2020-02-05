@@ -80,6 +80,10 @@ var (
 	printVersion bool
 	// noStripDebug if true will not strip debug information from binaries
 	noStripDebug bool
+	// dist if true will also prepare an application for distribution
+	dist bool
+	// icon represents the application icon used for distribution. Default to Icon.png
+	icon string
 )
 
 // builder is the command implementing the fyne app command interface
@@ -95,6 +99,8 @@ func (b *builder) addFlags() {
 	flag.StringVar(&ldflags, "ldflags", "", "Flags to pass to the external linker")
 	flag.BoolVar(&noStripDebug, "no-strip", false, "If set will not strip debug information from binaries")
 	flag.BoolVar(&printVersion, "version", false, "Print fyne-cross version")
+	flag.BoolVar(&dist, "dist", false, "If set will also prepare an application for distribution")
+	flag.StringVar(&icon, "icon", "Icon.png", "Application icon used for distribution. Default to Icon.png")
 }
 
 func (b *builder) printHelp(indent string) {
@@ -192,6 +198,14 @@ func (b *builder) run(args []string) {
 
 	fmt.Printf("Build output folder: %s/build\n", pkgRootDir)
 
+	// dist
+	if dist {
+		fmt.Println("Dist mode enabled", dist)
+		fmt.Printf("Icon app: %s\n", icon)
+		os.Mkdir("dist", 0755)
+		fmt.Printf("Dist output folder: %s/dist\n", pkgRootDir)
+	}
+
 	for _, target := range targets {
 		fmt.Printf("Target %s\n", target)
 
@@ -207,6 +221,20 @@ func (b *builder) run(args []string) {
 			target:     target,
 			os:         osAndarch[0],
 			arch:       osAndarch[1],
+			dist:       dist,
+			icon:       icon,
+		}
+
+		t, _ := db.targetOutput()
+
+		// prepare windows resources if dist is specified
+		if db.dist && db.os == "windows" {
+			err := db.windowsResources()
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			exec.Command("cp", fmt.Sprintf("build/%s", t), "dist/").Run()
 		}
 
 		// if project does not support modules, download deps with go get
@@ -226,8 +254,23 @@ func (b *builder) run(args []string) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		t, _ := db.targetOutput()
+
 		fmt.Printf("Built as %s\n", t)
+
+		// create dist package, if specified
+		if db.dist && (db.os == "linux" || db.os == "darwin") {
+			err := db.distPackage(t)
+			if err != nil {
+				fmt.Println(err)
+				os.Exit(1)
+			}
+			if db.os == "linux" {
+				exec.Command("mv", fmt.Sprintf("%s.tar.gz", t), "dist/").Run()
+			}
+			if db.os == "darwin" {
+				exec.Command("mv", fmt.Sprintf("%s.app", t), "dist/").Run()
+			}
+		}
 	}
 }
 
@@ -243,6 +286,8 @@ type dockerBuilder struct {
 	target     string
 	os         string
 	arch       string
+	dist       bool
+	icon       string
 }
 
 // checkRequirements checks if all the build requirements are satisfied
@@ -260,6 +305,52 @@ func checkRequirements() error {
 		return fmt.Errorf("%s", stderr.Bytes())
 	}
 	return nil
+}
+
+// windowsResources creates the windows resources to be linked during build
+func (d *dockerBuilder) windowsResources() error {
+	args := append(d.defaultArgs(), d.goEnvArgs()...)
+	args = append(args, dockerImage)
+
+	cmdArgs := []string{
+		"gowindres",
+		"-arch", d.arch,
+		"-output", d.output,
+		"-dir", d.pkg,
+	}
+	args = append(args, cmdArgs...)
+
+	cmd := exec.Command("docker", args...)
+	if d.verbose {
+		fmt.Println(cmd)
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
+}
+
+// distPackage creates the distribution package using fyne package
+func (d *dockerBuilder) distPackage(executable string) error {
+	args := append(d.defaultArgs(), d.goEnvArgs()...)
+	args = append(args, dockerImage)
+
+	cmdArgs := []string{
+		"fyne", "package",
+		"-os", d.os,
+		"-icon", d.icon,
+		"-executable", fmt.Sprintf("build/%s", executable),
+		"-name", executable,
+	}
+
+	args = append(args, cmdArgs...)
+
+	cmd := exec.Command("docker", args...)
+	if d.verbose {
+		fmt.Println(cmd)
+	}
+	cmd.Stdout = os.Stdout
+	cmd.Stderr = os.Stderr
+	return cmd.Run()
 }
 
 // goModInit downloads the application dependencies via go get
@@ -369,6 +460,8 @@ func (d *dockerBuilder) goEnvArgs() []string {
 	args := []string{
 		// enable CGO
 		"-e", "CGO_ENABLED=1",
+		// mount GOCACHE to reuse cache between builds
+		"-e", "GOCACHE=/go/go-build",
 	}
 
 	// add default compile target options env variables
@@ -442,10 +535,7 @@ func (d *dockerBuilder) goBuildArgs() ([]string, error) {
 	}
 	args = append(args, "-o", fmt.Sprintf("build/%s", targetOutput))
 
-	// add force compile option
-	args = append(args, "-a")
-
-	// add force compile option
+	// add verbose flag
 	if d.verbose {
 		args = append(args, "-v")
 	}
