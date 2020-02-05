@@ -73,3 +73,9 @@ Builds for the specified targets will be available under the `build` folder
 ### Contributors
 
 See [contributors](https://github.com/lucor/fyne-cross/graphs/contributors) page
+
+## Legal note
+
+OSX/Darwin/Apple builds: 
+**[Please ensure you have read and understood the Xcode license
+   terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
