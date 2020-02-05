@@ -1,7 +1,9 @@
 # Changelog
 
 ## [1.4.0] - Unreleased
-- Update to golang-cross:1.12.15 image (go v1.12.15)
+- Add ability to package with an icon using fyne/cmd [#14](https://github.com/lucor/fyne-cross/issues/14)
+- Update to golang-cross:1.12.16 image (go v1.12.16)
+- GOCACHE folder is now mounted under $HOME/.cache/fyne-cross/go-build to cache build outputs for reuse in future builds.
 
 ## [1.3.2] - 2020-01-08
 - Update to golang-cross:1.12.14 image (go v1.12.14)
