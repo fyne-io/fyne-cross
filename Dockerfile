@@ -1,4 +1,22 @@
-FROM dockercore/golang-cross:1.12.15
+ARG DOCKER_CROSS_VERSION=sha256:8da495c28aaaca9c3f4704a00a690837e4b5da39c6d229915159433feedd9dc3
+ARG FYNE_VERSION=v1.2.2
+
+# Build the fyne command utility
+FROM dockercore/golang-cross@${DOCKER_CROSS_VERSION} AS fyne
+ARG FYNE_VERSION
+RUN GO111MODULE=on go get -v "fyne.io/fyne/cmd/fyne@${FYNE_VERSION}"
+
+# Build the gowindres command utility
+FROM dockercore/golang-cross@${DOCKER_CROSS_VERSION} AS gowindres
+WORKDIR /app
+COPY . .
+RUN GO111MODULE=on go build -o /go/bin/gowindres ./scripts/gowindres
+
+# Build the fyne-cross base image
+FROM dockercore/golang-cross@${DOCKER_CROSS_VERSION}
+
+COPY --from=fyne /go/bin/fyne /usr/local/bin
+COPY --from=gowindres /go/bin/gowindres /usr/local/bin
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
@@ -6,6 +24,8 @@ RUN apt-get update -qq \
         libegl1-mesa-dev \
         xorg-dev \
         gosu \
+        # headers needed by xorg-dev
+        x11proto-dev \ 
     && apt-get -qy autoremove \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*;
@@ -48,7 +68,6 @@ RUN dpkg --add-architecture armhf \
         libxvmc-dev:armhf \
         libxxf86dga-dev:armhf \
         libxxf86vm-dev:armhf \
-        x11proto-dev:armhf \
         xserver-xorg-dev:armhf \
         xtrans-dev:armhf \
     && apt-get clean \
@@ -92,7 +111,6 @@ RUN dpkg --add-architecture arm64 \
         libxvmc-dev:arm64 \
         libxxf86dga-dev:arm64 \
         libxxf86vm-dev:arm64 \
-        x11proto-dev:arm64 \
         xserver-xorg-dev:arm64 \
         xtrans-dev:arm64 \
     && apt-get clean \
@@ -136,7 +154,6 @@ RUN dpkg --add-architecture i386 \
         libxvmc-dev:i386 \
         libxxf86dga-dev:i386 \
         libxxf86vm-dev:i386 \
-        x11proto-dev:i386 \
         xserver-xorg-dev:i386 \
         xtrans-dev:i386 \
     && apt-get clean \
