@@ -317,6 +317,7 @@ func (d *dockerBuilder) windowsResources() error {
 		"-arch", d.arch,
 		"-output", d.output,
 		"-dir", d.pkg,
+		"-icon", d.icon,
 	}
 	args = append(args, cmdArgs...)
 
