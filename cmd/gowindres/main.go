@@ -1,25 +1,23 @@
+/*
+gowindres is an utility used internally by fyne-cross to generate windows resource
+*/
 package main
 
 import (
 	"flag"
 	"fmt"
-	"image"
 	"log"
 	"os"
 	"os/exec"
 	"path"
 	"text/template"
-
-	ico "github.com/Kodeworks/golang-image-ico"
 )
 
 var (
 	// output represents the named output file
 	output string
-	// pkgRootDir represents the package root directory
-	pkgRootDir string
-	// icon represents the application icon used for distribution. Default to Icon.png
-	icon string
+	// workDir represents the package root directory
+	workDir string
 	// the architecture: 386 or amd64
 	arch string
 )
@@ -37,33 +35,21 @@ type tplData struct {
 
 func main() {
 
-	flag.StringVar(&icon, "icon", "Icon.png", "Application icon used for distribution. Default to Icon.png")
 	flag.StringVar(&arch, "arch", "", "Architecture: 368 or amd64")
 	flag.StringVar(&output, "output", "", "The named output file")
-	flag.StringVar(&pkgRootDir, "dir", "", "The package root directory")
+	flag.StringVar(&workDir, "workdir", "", "The working directory")
 	flag.Parse()
 
-	manifestPath := path.Join(pkgRootDir, output+".exe.manifest")
-	rcPath := path.Join(pkgRootDir, rc)
+	manifestPath := path.Join(workDir, output+".exe.manifest")
+	rcPath := path.Join(workDir, rc)
 	resource := output + ".syso"
-
-	// convert png to ico
-	pngPath := icon
-	if icon == "Icon.png" {
-		pngPath = path.Join(pkgRootDir, "Icon.png")
-	}
-	icoPath := path.Join(pkgRootDir, output+".ico")
-	err := convertPngToIco(pngPath, icoPath)
-	if err != nil {
-		log.Fatal(err)
-	}
 
 	data := tplData{
 		Name: output,
 	}
 
 	// write the main.rc
-	err = writeRc(data, rcPath)
+	err := writeRc(data, rcPath)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -80,37 +66,13 @@ func main() {
 	}
 
 	cmd := exec.Command(windresBin, "-F", target, "-o", resource, rc)
-	cmd.Dir = pkgRootDir
+	cmd.Dir = workDir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
 		fmt.Print("Could not create windows resource", err)
 		fmt.Printf("Debug output: %s\n", out)
 		os.Exit(1)
 	}
-}
-
-func convertPngToIco(pngPath string, icoPath string) error {
-	// convert icon
-	img, err := os.Open(pngPath)
-	if err != nil {
-		return fmt.Errorf("Failed to open source image: %s", err)
-	}
-	defer img.Close()
-	srcImg, _, err := image.Decode(img)
-	if err != nil {
-		return fmt.Errorf("Failed to decode source image: %s", err)
-	}
-
-	file, err := os.Create(icoPath)
-	if err != nil {
-		return fmt.Errorf("Failed to open image file: %s", err)
-	}
-	defer file.Close()
-	err = ico.Encode(file, srcImg)
-	if err != nil {
-		return fmt.Errorf("Failed to write image file: %s", err)
-	}
-	return nil
 }
 
 // writeManifest writes the manifest
