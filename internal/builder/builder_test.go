@@ -4,7 +4,9 @@ Package builder implements the build actions for the supperted OS and arch
 package builder
 
 import (
+	"fmt"
 	"os"
+	"os/user"
 	"reflect"
 	"testing"
 
@@ -24,6 +26,8 @@ func Test_dockerCmd(t *testing.T) {
 	}
 	defaultWorkDir := "/path/to/workdir"
 	vol, _ := volume.Mount(defaultWorkDir, "/path/to/cachedir")
+
+	uid, _ := user.Current()
 	tests := []struct {
 		name string
 		args args
@@ -36,7 +40,7 @@ func Test_dockerCmd(t *testing.T) {
 				vol:     vol,
 				command: []string{"echo test"},
 			},
-			want: "/usr/bin/docker run --rm -t -w /app -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=1000 lucor/fyne-cross echo test",
+			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /app -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross echo test", uid.Uid),
 		},
 		{
 			name: "command with custom env",
@@ -46,7 +50,7 @@ func Test_dockerCmd(t *testing.T) {
 				env:     []string{"TEST=1"},
 				command: []string{"echo test"},
 			},
-			want: "/usr/bin/docker run --rm -t -w /app -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e TEST=1 -e fyne_uid=1000 lucor/fyne-cross echo test",
+			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /app -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e TEST=1 -e fyne_uid=%s lucor/fyne-cross echo test", uid.Uid),
 		},
 		{
 			name: "command with custom workDir",
@@ -56,7 +60,7 @@ func Test_dockerCmd(t *testing.T) {
 				vol:     vol,
 				command: []string{"echo test"},
 			},
-			want: "/usr/bin/docker run --rm -t -w /path/to/workdir -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=1000 lucor/fyne-cross echo test",
+			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /path/to/workdir -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross echo test", uid.Uid),
 		},
 	}
 	for _, tt := range tests {
