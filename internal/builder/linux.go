@@ -46,7 +46,7 @@ func (b *Linux) Build(vol *volume.Volume, opts BuildOptions) error {
 	}
 
 	command := goBuildCmd(output, opts)
-	err := dockerRunCmd(linuxDockerImage, vol, b.BuildEnv(), vol.WorkDirContainer(), command, opts.Verbose)
+	err := dockerCmd(linuxDockerImage, vol, b.BuildEnv(), vol.WorkDirContainer(), command, opts.Verbose).Run()
 	if err != nil {
 		return fmt.Errorf("Could not build for %s/%s: %v", b.os, b.arch, err)
 	}
@@ -104,7 +104,7 @@ func (b *Linux) Package(vol *volume.Volume, opts PackageOptions) error {
 		"-name", b.Output(),
 	}
 
-	err = dockerRunCmd(baseDockerImage, vol, []string{}, vol.TmpDirContainer(), command, opts.Verbose)
+	err = dockerCmd(baseDockerImage, vol, []string{}, vol.TmpDirContainer(), command, opts.Verbose).Run()
 	if err != nil {
 		return fmt.Errorf("Could not package the Fyne app: %v", err)
 	}

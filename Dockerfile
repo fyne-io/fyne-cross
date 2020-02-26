@@ -1,6 +1,6 @@
 # docker cross 1.13.8
 ARG DOCKER_CROSS_VERSION=sha256:c7b8b09c766cf483682e53e42f16e3cde33c50cdb24585b6f0af10108bdf1b94 
-ARG FYNE_VERSION=release/v1.2.3
+ARG FYNE_VERSION=v1.2.2
 
 # Build the fyne command utility
 FROM dockercore/golang-cross@${DOCKER_CROSS_VERSION} AS fyne
@@ -11,7 +11,7 @@ RUN GO111MODULE=on go get -v "fyne.io/fyne/cmd/fyne@${FYNE_VERSION}"
 FROM dockercore/golang-cross@${DOCKER_CROSS_VERSION} AS gowindres
 WORKDIR /app
 COPY . .
-RUN GO111MODULE=on go build -o /go/bin/gowindres ./cmd/gowindres
+RUN GO111MODULE=on go build -o /go/bin/gowindres -ldflags '-w -s' ./cmd/gowindres
 
 # Build the fyne-cross base image
 FROM dockercore/golang-cross@${DOCKER_CROSS_VERSION}

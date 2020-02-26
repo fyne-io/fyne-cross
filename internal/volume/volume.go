@@ -60,20 +60,25 @@ func Mount(workDirHost string, cacheDirHost string) (*Volume, error) {
 		tmpDirHost:   filepath.Join(workDirHost, tmpRelativePath),
 		workDirHost:  workDirHost,
 	}
+
+	return l, nil
+}
+
+// CreateHostDirs creates the fyne-cross dirs on the host, if not exists
+func (l *Volume) CreateHostDirs() error {
 	dirs := []string{
 		l.binDirHost,
 		l.cacheDirHost,
 		l.distDirHost,
 		l.tmpDirHost,
 	}
-
 	for _, dir := range dirs {
-		err = os.MkdirAll(dir, 0755)
+		err := os.MkdirAll(dir, 0755)
 		if err != nil {
-			return nil, fmt.Errorf("Cannot create the fyne-cross directory %s: %s", dir, err)
+			return fmt.Errorf("Cannot create the fyne-cross directory %s: %s", dir, err)
 		}
 	}
-	return l, nil
+	return nil
 }
 
 // BinDirHost returns the fyne-cross bin dir on the host

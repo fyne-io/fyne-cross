@@ -56,8 +56,8 @@ type PackageOptions struct {
 	Verbose bool   // Verbose if true, enable verbose mode
 }
 
-// dockerRunCmd exec a command inside the container for the specified image
-func dockerRunCmd(image string, vol *volume.Volume, env []string, workDir string, command []string, verbose bool) error {
+// dockerCmd exec a command inside the container for the specified image
+func dockerCmd(image string, vol *volume.Volume, env []string, workDir string, command []string, verbose bool) *exec.Cmd {
 	// define workdir
 	w := vol.WorkDirContainer()
 	if workDir != "" {
@@ -102,7 +102,7 @@ func dockerRunCmd(image string, vol *volume.Volume, env []string, workDir string
 		fmt.Println(cmd.String())
 	}
 
-	return cmd.Run()
+	return cmd
 }
 
 // goModInit ensure a go.mod exists. If not try to generates a temporary one
@@ -123,7 +123,7 @@ func goModInit(vol *volume.Volume, verbose bool) error {
 
 	// Module does not exists, generate a temporary one
 	command := "go mod init fyne-cross-temp-module"
-	err = dockerRunCmd(baseDockerImage, vol, []string{}, vol.WorkDirContainer(), []string{command}, verbose)
+	err = dockerCmd(baseDockerImage, vol, []string{}, vol.WorkDirContainer(), []string{command}, verbose).Run()
 
 	if err != nil {
 		return fmt.Errorf("Could not generate the temporary go module: %v", err)
@@ -152,11 +152,6 @@ func goBuildCmd(output string, opts BuildOptions) []string {
 	if len(tags) > 0 {
 		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, " ")))
 	}
-
-	// // set c-shared build mode for android
-	// if d.os == "android" {
-	// 	args = append(args, "-buildmode", "c-shared")
-	// }
 
 	args = append(args, "-o", output)
 

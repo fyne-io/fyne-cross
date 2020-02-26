@@ -156,7 +156,13 @@ func run(args []string) {
 	// Prepare the fyne-cross layout
 	vol, err := volume.Mount(rootDir, cacheDir)
 	if err != nil {
-		fmt.Printf(err.Error())
+		fmt.Println(err.Error())
+		os.Exit(1)
+	}
+
+	err = vol.CreateHostDirs()
+	if err != nil {
+		fmt.Println(err.Error())
 		os.Exit(1)
 	}
 
@@ -172,7 +178,7 @@ func run(args []string) {
 		if wd == "." {
 			wd, err = os.Getwd()
 			if err != nil {
-				fmt.Printf("Cannot get the path for current directory %s", err)
+				fmt.Printf("Cannot get the path for current directory %s\n", err)
 				os.Exit(1)
 			}
 		}
