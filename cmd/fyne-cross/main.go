@@ -70,6 +70,8 @@ var (
 	dist bool
 	// icon represents the application icon used for distribution. Default to Icon.png
 	icon string
+	// appID represents the application ID used for distribution. Default to Icon.png
+	appID string
 )
 
 func main() {
@@ -86,6 +88,7 @@ func main() {
 	flag.BoolVar(&printVersion, "version", false, "Print fyne-cross version")
 	flag.BoolVar(&dist, "dist", false, "If set will also prepare an application for distribution")
 	flag.StringVar(&icon, "icon", "Icon.png", "Application icon used for distribution. Default to Icon.png")
+	flag.StringVar(&appID, "appID", "", "Application ID used for distribution. For ios or darwin targets an appID is required, for ios this must match a valid provisioning profile")
 
 	flag.Parse()
 
@@ -242,6 +245,7 @@ func run(args []string) {
 
 		packageOpts := builder.PackageOptions{
 			Icon:    icon,
+			AppID:   appID,
 			Verbose: verbose,
 		}
 		err = b.Package(vol, packageOpts)

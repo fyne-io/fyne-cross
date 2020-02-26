@@ -95,6 +95,10 @@ func (b *Darwin) Package(vol *volume.Volume, opts PackageOptions) error {
 		"-executable", filepath.Join(vol.BinDirContainer(), b.Output()),
 		"-name", b.Output(),
 	}
+	// set appID if specified
+	if opts.AppID != "" {
+		command = append(command, "-appID", opts.AppID)
+	}
 
 	err = dockerCmd(baseDockerImage, vol, []string{}, vol.TmpDirContainer(), command, opts.Verbose).Run()
 	if err != nil {

@@ -53,6 +53,7 @@ type BuildOptions struct {
 // PackageOptions holds the options to generate a package for distribution
 type PackageOptions struct {
 	Icon    string // Icon is the optional icon in png format to use for distribution
+	AppID   string // Icon is the appID to use for distribution
 	Verbose bool   // Verbose if true, enable verbose mode
 }
 
