@@ -2,9 +2,9 @@
 
 ## [1.4.0] - Unreleased
 - Add ability to package with an icon using fyne/cmd [#14](https://github.com/lucor/fyne-cross/issues/14)
-- Update to golang-cross:1.12.18 image (go v1.12.18)
-- GOCACHE folder is now mounted under $HOME/.cache/fyne-cross/go-build to cache build outputs for reuse in future builds.
+- Update to golang-cross:1.13.8 image (go v1.13.8) [#46](https://github.com/lucor/fyne-cross/issues/46)
 - Disable android build. See [#34](https://github.com/lucor/fyne-cross/issues/34)
+- GOCACHE folder is now mounted under $HOME/.cache/fyne-cross/go-build to cache build outputs for reuse in future builds.
 
 ## [1.3.2] - 2020-01-08
 - Update to golang-cross:1.12.14 image (go v1.12.14)
