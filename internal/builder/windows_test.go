@@ -19,7 +19,7 @@ func TestWindows_Output(t *testing.T) {
 				arch:   "amd64",
 				output: "test",
 			},
-			want: "test-windows-amd64.exe",
+			want: "test.exe",
 		},
 		{
 			name: "386",
@@ -27,7 +27,7 @@ func TestWindows_Output(t *testing.T) {
 				arch:   "386",
 				output: "test",
 			},
-			want: "test-windows-386.exe",
+			want: "test.exe",
 		},
 	}
 	for _, tt := range tests {

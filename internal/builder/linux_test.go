@@ -19,7 +19,7 @@ func TestLinux_Output(t *testing.T) {
 				arch:   "amd64",
 				output: "test",
 			},
-			want: "test-linux-amd64",
+			want: "test",
 		},
 		{
 			name: "386",
@@ -27,7 +27,7 @@ func TestLinux_Output(t *testing.T) {
 				arch:   "386",
 				output: "test",
 			},
-			want: "test-linux-386",
+			want: "test",
 		},
 	}
 	for _, tt := range tests {
