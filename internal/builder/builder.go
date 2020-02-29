@@ -38,7 +38,6 @@ type Builder interface {
 type PreBuildOptions struct {
 	Verbose bool   // Verbose if true, enable verbose mode
 	Icon    string // Icon is the optional icon in png format to use for distribution
-	Dist    bool   // Dist if true prepare the application for distribution
 }
 
 // BuildOptions holds the options to build the package

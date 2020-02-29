@@ -28,10 +28,13 @@ import (
 	"flag"
 	"fmt"
 	"go/build"
+	"io/ioutil"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 
+	"fyne.io/fyne/theme"
 	"github.com/lucor/fyne-cross/internal/builder"
 	"github.com/lucor/fyne-cross/internal/volume"
 )
@@ -66,11 +69,9 @@ var (
 	printVersion bool
 	// noStripDebug if true will not strip debug information from binaries
 	noStripDebug bool
-	// dist if true will also prepare an application for distribution
-	dist bool
-	// icon represents the application icon used for distribution. Default to Icon.png
+	// icon represents the application icon used for distribution
 	icon string
-	// appID represents the application ID used for distribution. Default to Icon.png
+	// appID represents the application ID used for distribution
 	appID string
 )
 
@@ -86,7 +87,6 @@ func main() {
 	flag.StringVar(&ldflags, "ldflags", "", "Flags to pass to the external linker")
 	flag.BoolVar(&noStripDebug, "no-strip", false, "If set will not strip debug information from binaries")
 	flag.BoolVar(&printVersion, "version", false, "Print fyne-cross version")
-	flag.BoolVar(&dist, "dist", false, "If set will also prepare an application for distribution")
 	flag.StringVar(&icon, "icon", "Icon.png", "Application icon used for distribution. Default to Icon.png")
 	flag.StringVar(&appID, "appID", "", "Application ID used for distribution. For ios or darwin targets an appID is required, for ios this must match a valid provisioning profile")
 
@@ -193,13 +193,21 @@ func run(args []string) {
 	fmt.Println("Project root dir:", vol.WorkDirHost())
 	fmt.Println("Package dir:", pkg)
 	fmt.Println("Bin output folder:", vol.BinDirHost())
+	fmt.Println("Dist output folder: ", vol.DistDirHost())
+	if icon == "Icon.png" {
+		icon = filepath.Join(vol.WorkDirHost(), "Icon.png")
+		if _, err := os.Stat(icon); os.IsNotExist(err) {
+			fmt.Printf("[WARN] Icon app was not specified with --icon and a default one was not found at %q. Using Fyne logo as icon app for testing purpose\n", icon)
+			icon = filepath.Join(vol.TmpDirHost(), "fyne.png")
+			err := ioutil.WriteFile(icon, theme.FyneLogo().Content(), 0644)
+			if err != nil {
+				fmt.Println("Could not create the temporary icon:", err)
+				os.Exit(1)
+			}
+		}
 
-	// dist
-	fmt.Println("Dist mode enabled", dist)
-	if dist {
-		fmt.Printf("Icon app: %s\n", icon)
-		fmt.Printf("Dist output folder: %s\n", vol.DistDirHost())
 	}
+	fmt.Println("Icon app: ", icon)
 
 	for _, target := range targets {
 		fmt.Printf("Building for target %s\n", target)
@@ -219,7 +227,6 @@ func run(args []string) {
 		preBuildOpts := builder.PreBuildOptions{
 			Verbose: verbose,
 			Icon:    icon,
-			Dist:    dist,
 		}
 		err := b.PreBuild(vol, preBuildOpts)
 		if err != nil {
@@ -237,10 +244,6 @@ func run(args []string) {
 		if err != nil {
 			fmt.Println(err)
 			os.Exit(1)
-		}
-
-		if !dist {
-			continue
 		}
 
 		packageOpts := builder.PackageOptions{
