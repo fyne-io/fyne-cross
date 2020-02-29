@@ -32,6 +32,7 @@ type Builder interface {
 	BuildTags() []string
 	Package(vol *volume.Volume, opts PackageOptions) error
 	Output() string
+	TargetID() string
 }
 
 // PreBuildOptions holds the options for the pre build step

@@ -64,7 +64,7 @@ func (b *Windows) PreBuild(vol *volume.Volume, opts PreBuildOptions) error {
 // Build builds the package
 func (b *Windows) Build(vol *volume.Volume, opts BuildOptions) error {
 
-	output := filepath.Join(vol.BinDirContainer(), b.Output())
+	output := filepath.Join(vol.BinDirContainer(), b.TargetID(), b.Output())
 
 	// add default ldflags, if any
 	if ldflags := b.BuildLdFlags(); ldflags != nil {
@@ -106,9 +106,14 @@ func (b *Windows) BuildTags() []string {
 	return nil
 }
 
-// Output returns the named output suffixed with the current OS and Arch
+// TargetID returns the target ID for the builder
+func (b *Windows) TargetID() string {
+	return fmt.Sprintf("%s-%s", b.os, b.arch)
+}
+
+// Output returns the named output
 func (b *Windows) Output() string {
-	return fmt.Sprintf("%s-%s-%s.exe", b.output, b.os, b.arch)
+	return b.output + ".exe"
 }
 
 // WindresOutput returns the named output for the windows resource
@@ -119,7 +124,14 @@ func (b *Windows) windresOutput() string {
 // Package generate a package for distribution
 func (b *Windows) Package(vol *volume.Volume, opts PackageOptions) error {
 	os.Remove(filepath.Join(vol.WorkDirHost(), b.windresOutput()))
-	return cp(filepath.Join(vol.BinDirHost(), b.Output()), filepath.Join(vol.DistDirHost(), b.Output()))
+	// move the dist package into the "dist" folder
+	srcFile := filepath.Join(vol.BinDirHost(), b.TargetID(), b.Output())
+	distFile := filepath.Join(vol.DistDirHost(), b.TargetID(), b.Output())
+	err := os.MkdirAll(filepath.Dir(distFile), 0755)
+	if err != nil {
+		return fmt.Errorf("Could not create the dist package dir: %v", err)
+	}
+	return cp(srcFile, distFile)
 }
 
 func convertPngToIco(pngPath string, icoPath string) error {

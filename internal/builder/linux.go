@@ -33,7 +33,7 @@ func (b *Linux) PreBuild(vol *volume.Volume, opts PreBuildOptions) error {
 // Build builds the package
 func (b *Linux) Build(vol *volume.Volume, opts BuildOptions) error {
 
-	output := filepath.Join(vol.BinDirContainer(), b.Output())
+	output := filepath.Join(vol.BinDirContainer(), b.TargetID(), b.Output())
 
 	// add default ldflags, if any
 	if ldflags := b.BuildLdFlags(); ldflags != nil {
@@ -83,9 +83,14 @@ func (b *Linux) BuildTags() []string {
 	return nil
 }
 
-// Output returns the named output suffixed with the current OS and Arch
+// TargetID returns the target ID for the builder
+func (b *Linux) TargetID() string {
+	return fmt.Sprintf("%s-%s", b.os, b.arch)
+}
+
+// Output returns the named output
 func (b *Linux) Output() string {
-	return fmt.Sprintf("%s-%s-%s", b.output, b.os, b.arch)
+	return b.output
 }
 
 // Package generate a package for distribution
@@ -97,10 +102,11 @@ func (b *Linux) Package(vol *volume.Volume, opts PackageOptions) error {
 	}
 
 	// use the fyne package command to create the dist package
+	packageName := fmt.Sprintf("%s.tar.gz", b.Output())
 	command := []string{
 		"fyne", "package",
 		"-os", b.os,
-		"-executable", filepath.Join(vol.BinDirContainer(), b.Output()),
+		"-executable", filepath.Join(vol.BinDirContainer(), b.TargetID(), b.Output()),
 		"-name", b.Output(),
 	}
 
@@ -110,6 +116,11 @@ func (b *Linux) Package(vol *volume.Volume, opts PackageOptions) error {
 	}
 
 	// move the dist package into the "dist" folder
-	distFile := fmt.Sprintf("%s.tar.gz", b.Output())
-	return os.Rename(filepath.Join(vol.TmpDirHost(), distFile), filepath.Join(vol.DistDirHost(), distFile))
+	srcFile := filepath.Join(vol.TmpDirHost(), packageName)
+	distFile := filepath.Join(vol.DistDirHost(), b.TargetID(), packageName)
+	err = os.MkdirAll(filepath.Dir(distFile), 0755)
+	if err != nil {
+		return fmt.Errorf("Could not create the dist package dir: %v", err)
+	}
+	return os.Rename(srcFile, distFile)
 }
