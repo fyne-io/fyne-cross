@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.4.0] - 2020-03-04
+- Add ability to package with an icon using fyne/cmd #14
+- Update to golang-cross:1.13.8 image (go v1.13.8) #46
+- Disable android build. See #34
+- Add support for passing appID to dist packaging #45
+- Introduce a root folder and layout for fyne-cross output #38 
+- Remove OS and Arch info from output #48
+- GOCACHE folder is now mounted under $HOME/.cache/fyne-cross/go-build to cache build outputs for reuse in future builds.
+
 ## [1.3.2] - 2020-01-08
 - Update to golang-cross:1.12.14 image (go v1.12.14)
 

@@ -16,10 +16,6 @@ Supported targets are:
   -  linux/arm64
   -  windows/amd64
   -  windows/386
-  -  android/amd64
-  -  android/386
-  -  android/arm
-  -  android/arm64
 
 ## Requirements
 
@@ -28,13 +24,13 @@ Supported targets are:
 
 ## Installation
 
-        go get github.com/lucor/fyne-cross
+        go get github.com/lucor/fyne-cross/cmd/fyne-cross
 
 ### Development release
 
 To install a preview of the next version or help in testing:
 
-        go get github.com/lucor/fyne-cross@develop
+        go get github.com/lucor/fyne-cross/cmd/fyne-cross@develop
 
 ## Usage
 
@@ -73,3 +69,9 @@ Builds for the specified targets will be available under the `build` folder
 ### Contributors
 
 See [contributors](https://github.com/lucor/fyne-cross/graphs/contributors) page
+
+## Legal note
+
+OSX/Darwin/Apple builds: 
+**[Please ensure you have read and understood the Xcode license
+   terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
