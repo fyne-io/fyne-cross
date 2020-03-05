@@ -96,7 +96,7 @@ func (b *Darwin) Package(vol *volume.Volume, opts PackageOptions) error {
 	// use the fyne package command to create the dist package
 	packageName := fmt.Sprintf("%s.app", b.Output())
 	command := []string{
-		"fyne", "package",
+		fyneCmd, "package",
 		"-os", b.os,
 		"-executable", filepath.Join(vol.BinDirContainer(), b.TargetID(), b.Output()),
 		"-name", b.Output(),

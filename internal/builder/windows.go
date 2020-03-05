@@ -40,7 +40,7 @@ func (b *Windows) PreBuild(vol *volume.Volume, opts PreBuildOptions) error {
 
 	// use the gowindres command to create the windows resource
 	command := []string{
-		"gowindres",
+		gowindresCmd,
 		"-arch", b.arch,
 		"-output", b.output,
 		"-workdir", vol.TmpDirContainer(),

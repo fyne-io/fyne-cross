@@ -22,6 +22,8 @@ const (
 	windowsDockerImage = baseDockerImage
 	darwinDockerImage  = baseDockerImage
 
+	fyneCmd      = "/usr/local/bin/fyne"
+	gowindresCmd = "/usr/local/bin/gowindres"
 	defaultIcon = "Icon.png"
 )
 
