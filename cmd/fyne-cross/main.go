@@ -39,7 +39,7 @@ import (
 	"github.com/lucor/fyne-cross/internal/volume"
 )
 
-const version = "develop"
+const version = "1.4.0"
 
 // supportedTargets represents the list of supported GOARCH for a GOOS
 var supportedTargets = map[string][]string{
