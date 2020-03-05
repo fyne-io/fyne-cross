@@ -21,9 +21,11 @@ const (
 	linuxDockerImage   = baseDockerImage
 	windowsDockerImage = baseDockerImage
 	darwinDockerImage  = baseDockerImage
+	androidDockerImage = "lucor/fyne-cross:android"
 
 	fyneCmd      = "/usr/local/bin/fyne"
 	gowindresCmd = "/usr/local/bin/gowindres"
+
 	defaultIcon = "Icon.png"
 )
 
@@ -43,6 +45,7 @@ type Builder interface {
 type PreBuildOptions struct {
 	Verbose bool   // Verbose if true, enable verbose mode
 	Icon    string // Icon is the optional icon in png format to use for distribution
+	AppID   string // Icon is the appID to use for distribution
 }
 
 // BuildOptions holds the options to build the package

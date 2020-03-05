@@ -16,6 +16,7 @@ Supported targets are:
   -  linux/arm64
   -  windows/amd64
   -  windows/386
+  -  android
 
 ## Requirements
 

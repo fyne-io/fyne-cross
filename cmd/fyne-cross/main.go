@@ -46,6 +46,7 @@ var supportedTargets = map[string][]string{
 	"darwin":  {"amd64", "386"},
 	"linux":   {"amd64", "386", "arm", "arm64"},
 	"windows": {"amd64", "386"},
+	"android": {},
 }
 
 var (
@@ -125,6 +126,10 @@ func printUsage() {
 
 	fmt.Println("Supported targets:")
 	for os, archs := range supportedTargets {
+		if len(archs) == 0 {
+			fmt.Printf(" - %s\n", os)
+			continue
+		}
 		for _, arch := range archs {
 			fmt.Printf(" - %s/%s\n", os, arch)
 		}
@@ -210,23 +215,27 @@ func run(args []string) {
 	fmt.Println("Icon app: ", icon)
 
 	for _, target := range targets {
-		fmt.Printf("Building for target %s\n", target)
-
-		osAndarch := strings.Split(target, "/")
+		fmt.Printf("Building for %s %s\n", target[0], target[1])
 
 		var b builder.Builder
-		switch osAndarch[0] {
+		switch target[0] {
 		case "darwin":
-			b = builder.NewDarwin(osAndarch[1], output)
+			b = builder.NewDarwin(target[1], output)
 		case "linux":
-			b = builder.NewLinux(osAndarch[1], output)
+			b = builder.NewLinux(target[1], output)
 		case "windows":
-			b = builder.NewWindows(osAndarch[1], output)
+			b = builder.NewWindows(target[1], output)
+		case "android":
+			b = builder.NewAndroid(target[1], output)
+		default:
+			fmt.Println("No builder defined for OS target", target[0])
+			os.Exit(1)
 		}
 
 		preBuildOpts := builder.PreBuildOptions{
 			Verbose: verbose,
 			Icon:    icon,
+			AppID:   appID,
 		}
 		err := b.PreBuild(vol, preBuildOpts)
 		if err != nil {
@@ -256,7 +265,7 @@ func run(args []string) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Printf("Target %s [OK]\n", target)
+		fmt.Printf("Target %s %s [OK]\n", target[0], target[1])
 	}
 }
 
@@ -278,12 +287,17 @@ func checkRequirements() error {
 }
 
 // parseTargets parse comma separated target list and validate against the supported targets
-func parseTargets(targetList string) ([]string, error) {
-	targets := []string{}
+func parseTargets(targetList string) ([][2]string, error) {
+	targets := [][2]string{}
 
 Parse:
 	for _, target := range strings.Split(targetList, ",") {
 		target = strings.TrimSpace(target)
+
+		if target == "android" {
+			targets = append(targets, [2]string{"android", ""})
+			continue
+		}
 
 		osAndArch := strings.Split(target, "/")
 		if len(osAndArch) != 2 {
@@ -298,14 +312,14 @@ Parse:
 
 		if targetArch == "*" {
 			for _, arch := range supportedArchs {
-				targets = append(targets, strings.Join([]string{targetOS, arch}, "/"))
+				targets = append(targets, [2]string{targetOS, arch})
 			}
 			continue
 		}
 
 		for _, arch := range supportedArchs {
 			if targetArch == arch {
-				targets = append(targets, target)
+				targets = append(targets, [2]string{targetOS, targetArch})
 				continue Parse
 			}
 		}
