@@ -18,10 +18,10 @@ import (
 
 const (
 	baseDockerImage    = "lucor/fyne-cross:develop"
+	androidDockerImage = baseDockerImage + "-android"
 	linuxDockerImage   = baseDockerImage
 	windowsDockerImage = baseDockerImage
 	darwinDockerImage  = baseDockerImage
-	androidDockerImage = "lucor/fyne-cross:android"
 
 	fyneCmd      = "/usr/local/bin/fyne"
 	gowindresCmd = "/usr/local/bin/gowindres"
