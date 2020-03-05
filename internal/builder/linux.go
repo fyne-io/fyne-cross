@@ -110,7 +110,7 @@ func (b *Linux) Package(vol *volume.Volume, opts PackageOptions) error {
 		"-name", b.Output(),
 	}
 
-	err = dockerCmd(baseDockerImage, vol, []string{}, vol.TmpDirContainer(), command, opts.Verbose).Run()
+	err = dockerCmd(linuxDockerImage, vol, []string{}, vol.TmpDirContainer(), command, opts.Verbose).Run()
 	if err != nil {
 		return fmt.Errorf("Could not package the Fyne app: %v", err)
 	}

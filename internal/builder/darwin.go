@@ -46,7 +46,7 @@ func (b *Darwin) Build(vol *volume.Volume, opts BuildOptions) error {
 	}
 
 	command := goBuildCmd(output, opts)
-	err := dockerCmd(linuxDockerImage, vol, b.BuildEnv(), vol.WorkDirContainer(), command, opts.Verbose).Run()
+	err := dockerCmd(darwinDockerImage, vol, b.BuildEnv(), vol.WorkDirContainer(), command, opts.Verbose).Run()
 	if err != nil {
 		return fmt.Errorf("Could not build for %s/%s: %v", b.os, b.arch, err)
 	}
@@ -106,7 +106,7 @@ func (b *Darwin) Package(vol *volume.Volume, opts PackageOptions) error {
 		command = append(command, "-appID", opts.AppID)
 	}
 
-	err = dockerCmd(baseDockerImage, vol, []string{}, vol.TmpDirContainer(), command, opts.Verbose).Run()
+	err = dockerCmd(darwinDockerImage, vol, []string{}, vol.TmpDirContainer(), command, opts.Verbose).Run()
 	if err != nil {
 		return fmt.Errorf("Could not package the Fyne app: %v", err)
 	}

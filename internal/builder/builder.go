@@ -17,8 +17,10 @@ import (
 )
 
 const (
-	baseDockerImage  = "lucor/fyne-cross:1.4.0"
-	linuxDockerImage = baseDockerImage
+	baseDockerImage    = "lucor/fyne-cross:develop"
+	linuxDockerImage   = baseDockerImage
+	windowsDockerImage = baseDockerImage
+	darwinDockerImage  = baseDockerImage
 
 	defaultIcon = "Icon.png"
 )
