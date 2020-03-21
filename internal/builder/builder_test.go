@@ -6,6 +6,7 @@ package builder
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"os/user"
 	"reflect"
 	"testing"
@@ -14,7 +15,10 @@ import (
 )
 
 func Test_dockerCmd(t *testing.T) {
-
+	dockerPath, err := exec.LookPath("docker")
+	if err != nil {
+		t.Fatalf("can't find docker executable: %v", err)
+	}
 	type args struct {
 		os      string
 		image   string
@@ -40,7 +44,7 @@ func Test_dockerCmd(t *testing.T) {
 				vol:     vol,
 				command: []string{"echo test"},
 			},
-			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /app -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross echo test", uid.Uid),
+			want: fmt.Sprintf("%s run --rm -t -w /app -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross echo test", dockerPath, uid.Uid),
 		},
 		{
 			name: "command with custom env",
@@ -50,7 +54,7 @@ func Test_dockerCmd(t *testing.T) {
 				env:     []string{"TEST=1"},
 				command: []string{"echo test"},
 			},
-			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /app -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e TEST=1 -e fyne_uid=%s lucor/fyne-cross echo test", uid.Uid),
+			want: fmt.Sprintf("%s run --rm -t -w /app -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e TEST=1 -e fyne_uid=%s lucor/fyne-cross echo test", dockerPath, uid.Uid),
 		},
 		{
 			name: "command with custom workDir",
@@ -60,7 +64,7 @@ func Test_dockerCmd(t *testing.T) {
 				vol:     vol,
 				command: []string{"echo test"},
 			},
-			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /path/to/workdir -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross echo test", uid.Uid),
+			want: fmt.Sprintf("%s run --rm -t -w /path/to/workdir -v /path/to/workdir:/app -v /path/to/cachedir:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross echo test", dockerPath, uid.Uid),
 		},
 	}
 	for _, tt := range tests {
