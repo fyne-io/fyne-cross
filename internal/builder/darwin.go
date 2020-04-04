@@ -33,7 +33,7 @@ func (b *Darwin) PreBuild(vol *volume.Volume, opts PreBuildOptions) error {
 // Build builds the package
 func (b *Darwin) Build(vol *volume.Volume, opts BuildOptions) error {
 
-	output := filepath.Join(vol.BinDirContainer(), b.TargetID(), b.Output())
+	output := volume.JoinPathContainer(vol.BinDirContainer(), b.TargetID(), b.Output())
 
 	// add default ldflags, if any
 	if ldflags := b.BuildLdFlags(); ldflags != nil {
@@ -88,7 +88,7 @@ func (b *Darwin) Output() string {
 // Package generate a package for distribution
 func (b *Darwin) Package(vol *volume.Volume, opts PackageOptions) error {
 	// copy the icon to tmp dir
-	err := cp(opts.Icon, filepath.Join(vol.TmpDirHost(), defaultIcon))
+	err := cp(opts.Icon, volume.JoinPathHost(vol.TmpDirHost(), defaultIcon))
 	if err != nil {
 		return fmt.Errorf("Could not package the Fyne app due to error copying the icon: %v", err)
 	}
@@ -98,7 +98,7 @@ func (b *Darwin) Package(vol *volume.Volume, opts PackageOptions) error {
 	command := []string{
 		fyneCmd, "package",
 		"-os", b.os,
-		"-executable", filepath.Join(vol.BinDirContainer(), b.TargetID(), b.Output()),
+		"-executable", volume.JoinPathContainer(vol.BinDirContainer(), b.TargetID(), b.Output()),
 		"-name", b.Output(),
 	}
 	// set appID if specified
@@ -112,8 +112,8 @@ func (b *Darwin) Package(vol *volume.Volume, opts PackageOptions) error {
 	}
 
 	// move the dist package into the "dist" folder
-	srcFile := filepath.Join(vol.TmpDirHost(), packageName)
-	distFile := filepath.Join(vol.DistDirHost(), b.TargetID(), packageName)
+	srcFile := volume.JoinPathHost(vol.TmpDirHost(), packageName)
+	distFile := volume.JoinPathHost(vol.DistDirHost(), b.TargetID(), packageName)
 	err = os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
 		return fmt.Errorf("Could not create the dist package dir: %v", err)

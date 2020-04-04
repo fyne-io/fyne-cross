@@ -66,7 +66,7 @@ func (b *Android) Output() string {
 // Package generate a package for distribution
 func (b *Android) Package(vol *volume.Volume, opts PackageOptions) error {
 	// copy the icon to tmp dir
-	err := cp(opts.Icon, filepath.Join(vol.TmpDirHost(), defaultIcon))
+	err := cp(opts.Icon, volume.JoinPathHost(vol.TmpDirHost(), defaultIcon))
 	if err != nil {
 		return fmt.Errorf("Could not package the Fyne app due to error copying the icon: %v", err)
 	}
@@ -77,7 +77,7 @@ func (b *Android) Package(vol *volume.Volume, opts PackageOptions) error {
 		fyneCmd, "package",
 		"-os", b.os,
 		"-name", b.Output(),
-		"-icon", filepath.Join(vol.TmpDirContainer(), defaultIcon),
+		"-icon", volume.JoinPathContainer(vol.TmpDirContainer(), defaultIcon),
 		"-appID", opts.AppID, // opts.AppID is mandatory for android app
 	}
 
@@ -87,8 +87,8 @@ func (b *Android) Package(vol *volume.Volume, opts PackageOptions) error {
 	}
 
 	// move the dist package into the "dist" folder
-	srcFile := filepath.Join(vol.WorkDirHost(), packageName)
-	distFile := filepath.Join(vol.DistDirHost(), b.TargetID(), packageName)
+	srcFile := volume.JoinPathHost(vol.WorkDirHost(), packageName)
+	distFile := volume.JoinPathHost(vol.DistDirHost(), b.TargetID(), packageName)
 	err = os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
 		return fmt.Errorf("Could not create the dist package dir: %v", err)

@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -116,7 +115,7 @@ func dockerCmd(image string, vol *volume.Volume, env []string, workDir string, c
 // goModInit ensure a go.mod exists. If not try to generates a temporary one
 func goModInit(vol *volume.Volume, verbose bool) error {
 	// check if the go.mod exists
-	goModPath := filepath.Join(vol.WorkDirHost(), "go.mod")
+	goModPath := volume.JoinPathHost(vol.WorkDirHost(), "go.mod")
 	_, err := os.Stat(goModPath)
 	if err == nil {
 		if verbose {

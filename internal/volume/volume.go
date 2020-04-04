@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 const (
@@ -49,15 +50,15 @@ func Mount(workDirHost string, cacheDirHost string) (*Volume, error) {
 		if err != nil {
 			return nil, fmt.Errorf("Cannot get the path for the system cache directory on the host %s", err)
 		}
-		cacheDirHost = filepath.Join(userCacheDir, fyneCrossPrefix)
+		cacheDirHost = JoinPathHost(userCacheDir, fyneCrossPrefix)
 
 	}
 
 	l := &Volume{
-		binDirHost:   filepath.Join(workDirHost, binRelativePath),
+		binDirHost:   JoinPathHost(workDirHost, binRelativePath),
 		cacheDirHost: cacheDirHost,
-		distDirHost:  filepath.Join(workDirHost, distRelativePath),
-		tmpDirHost:   filepath.Join(workDirHost, tmpRelativePath),
+		distDirHost:  JoinPathHost(workDirHost, distRelativePath),
+		tmpDirHost:   JoinPathHost(workDirHost, tmpRelativePath),
 		workDirHost:  workDirHost,
 	}
 
@@ -134,4 +135,16 @@ func (l *Volume) TmpDirContainer() string {
 // WorkDirContainer returns the working dir on the host
 func (l *Volume) WorkDirContainer() string {
 	return workDirContainer
+}
+
+// JoinPathContainer joins any number of path elements into a single path,
+// separating them with the Container OS specific Separator.
+func JoinPathContainer(elem ...string) string {
+	return strings.Join(elem, "/")
+}
+
+// JoinPathHost joins any number of path elements into a single path,
+// separating them with the Host OS specific Separator.
+func JoinPathHost(elem ...string) string {
+	return filepath.Join(elem...)
 }

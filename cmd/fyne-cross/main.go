@@ -190,8 +190,7 @@ func run(args []string) {
 				os.Exit(1)
 			}
 		}
-		parts := strings.Split(wd, "/")
-		output = parts[len(parts)-1]
+		_, output = filepath.Split(wd)
 	}
 
 	// Print build summary
@@ -200,10 +199,10 @@ func run(args []string) {
 	fmt.Println("Bin output folder:", vol.BinDirHost())
 	fmt.Println("Dist output folder: ", vol.DistDirHost())
 	if icon == "Icon.png" {
-		icon = filepath.Join(vol.WorkDirHost(), "Icon.png")
+		icon = volume.JoinPathHost(vol.WorkDirHost(), "Icon.png")
 		if _, err := os.Stat(icon); os.IsNotExist(err) {
 			fmt.Printf("[WARN] Icon app was not specified with --icon and a default one was not found at %q. Using Fyne logo as icon app for testing purpose\n", icon)
-			icon = filepath.Join(vol.TmpDirHost(), "fyne.png")
+			icon = volume.JoinPathHost(vol.TmpDirHost(), "fyne.png")
 			err := ioutil.WriteFile(icon, theme.FyneLogo().Content(), 0644)
 			if err != nil {
 				fmt.Println("Could not create the temporary icon:", err)

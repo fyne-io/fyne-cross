@@ -54,7 +54,7 @@ func (b *Windows) PreBuild(vol *volume.Volume, opts PreBuildOptions) error {
 
 	// copy the windows resource under the project root
 	// it will be automatically linked by compliler during build
-	err = cp(filepath.Join(vol.TmpDirHost(), windres), filepath.Join(vol.WorkDirHost(), windres))
+	err = cp(volume.JoinPathHost(vol.TmpDirHost(), windres), volume.JoinPathHost(vol.WorkDirHost(), windres))
 	if err != nil {
 		return fmt.Errorf("Could not copy windows resource under the project root: %v", err)
 	}
@@ -64,7 +64,7 @@ func (b *Windows) PreBuild(vol *volume.Volume, opts PreBuildOptions) error {
 // Build builds the package
 func (b *Windows) Build(vol *volume.Volume, opts BuildOptions) error {
 
-	output := filepath.Join(vol.BinDirContainer(), b.TargetID(), b.Output())
+	output := volume.JoinPathContainer(vol.BinDirContainer(), b.TargetID(), b.Output())
 
 	// add default ldflags, if any
 	if ldflags := b.BuildLdFlags(); ldflags != nil {
@@ -123,10 +123,10 @@ func (b *Windows) windresOutput() string {
 
 // Package generate a package for distribution
 func (b *Windows) Package(vol *volume.Volume, opts PackageOptions) error {
-	os.Remove(filepath.Join(vol.WorkDirHost(), b.windresOutput()))
+	os.Remove(volume.JoinPathHost(vol.WorkDirHost(), b.windresOutput()))
 	// move the dist package into the "dist" folder
-	srcFile := filepath.Join(vol.BinDirHost(), b.TargetID(), b.Output())
-	distFile := filepath.Join(vol.DistDirHost(), b.TargetID(), b.Output())
+	srcFile := volume.JoinPathHost(vol.BinDirHost(), b.TargetID(), b.Output())
+	distFile := volume.JoinPathHost(vol.DistDirHost(), b.TargetID(), b.Output())
 	err := os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
 		return fmt.Errorf("Could not create the dist package dir: %v", err)
