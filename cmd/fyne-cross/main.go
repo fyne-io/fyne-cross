@@ -32,6 +32,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 
 	"fyne.io/fyne/theme"
@@ -139,11 +140,22 @@ func printUsage() {
 	fmt.Println("Example: fyne-cross --targets=linux/amd64,windows/amd64 --output=test ./cmd/test")
 }
 
+func getVersion() string {
+	if version != "develop" {
+		return version
+	}
+	// dev version, try to get additional info
+	if info, ok := debug.ReadBuildInfo(); ok {
+		return info.Main.Version
+	}
+	return version
+}
+
 func run(args []string) {
 
 	// Prints the version and exit
 	if printVersion == true {
-		fmt.Printf("fyne-cross version %s\n", version)
+		fmt.Printf("fyne-cross version %s\n", getVersion())
 		os.Exit(2)
 	}
 
