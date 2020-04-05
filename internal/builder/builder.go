@@ -75,10 +75,18 @@ func dockerCmd(image string, vol *volume.Volume, env []string, workDir string, c
 		"run", "--rm", "-t",
 		"-w", w, // set workdir
 		"-v", fmt.Sprintf("%s:%s", vol.WorkDirHost(), vol.WorkDirContainer()), // mount the working dir
-		"-v", fmt.Sprintf("%s:%s", vol.CacheDirHost(), vol.CacheDirContainer()), // mount the cache dir
+	}
+
+	// mount the cache dir if cache is enabled
+	if vol.CacheEnabled() {
+		args = append(args, "-v", fmt.Sprintf("%s:%s", vol.CacheDirHost(), vol.CacheDirContainer()))
+	}
+
+	// add default env variables
+	args = append(args,
 		"-e", "CGO_ENABLED=1", // enable CGO
 		"-e", fmt.Sprintf("GOCACHE=%s", vol.GoCacheDirContainer()), // mount GOCACHE to reuse cache between builds
-	}
+	)
 
 	// add custom env variables
 	for _, e := range env {

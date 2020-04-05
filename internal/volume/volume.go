@@ -23,6 +23,12 @@ const (
 	distDirContainer    = "/app/" + distRelativePath
 	tmpDirContainer     = "/app/" + tmpRelativePath
 	workDirContainer    = "/app"
+
+	// cacheDisabledValue is the value user can specify to disable cache
+	// The possibility to disable cache has been introduced to mitigate some
+	// issues on docker for Windows (v2.2.0.5) handing files on shared volumes.
+	// See https://github.com/lucor/fyne-cross/issues/54
+	cacheDisabledValue = "no"
 )
 
 // Volume represents the fyne-cross projec layout
@@ -51,7 +57,6 @@ func Mount(workDirHost string, cacheDirHost string) (*Volume, error) {
 			return nil, fmt.Errorf("Cannot get the path for the system cache directory on the host %s", err)
 		}
 		cacheDirHost = JoinPathHost(userCacheDir, fyneCrossPrefix)
-
 	}
 
 	l := &Volume{
@@ -135,6 +140,11 @@ func (l *Volume) TmpDirContainer() string {
 // WorkDirContainer returns the working dir on the host
 func (l *Volume) WorkDirContainer() string {
 	return workDirContainer
+}
+
+// CacheEnabled returns true if the cache is enabled
+func (l *Volume) CacheEnabled() bool {
+	return l.CacheDirHost() != cacheDisabledValue
 }
 
 // JoinPathContainer joins any number of path elements into a single path,

@@ -84,7 +84,7 @@ func main() {
 	flag.StringVar(&targetList, "targets", defaultTarget, fmt.Sprintf("The list of targets to build separated by comma. Default to current GOOS/GOARCH %s", defaultTarget))
 	flag.StringVar(&output, "output", "", "The named output file. Default to package name")
 	flag.StringVar(&rootDir, "dir", "", "The root directory. Default current dir")
-	flag.StringVar(&cacheDir, "cache", "", "Directory used to share/cache sources and dependencies. Default to system cache directory (i.e. $HOME/.cache/fyne-cross)")
+	flag.StringVar(&cacheDir, "cache", "", "Directory used to share/cache sources and dependencies. Default to system cache directory (i.e. $HOME/.cache/fyne-cross). To disable set to 'no'")
 	flag.BoolVar(&verbose, "v", false, "Enable verbosity flag for go commands. Default to false")
 	flag.StringVar(&ldflags, "ldflags", "", "Flags to pass to the external linker")
 	flag.BoolVar(&noStripDebug, "no-strip", false, "If set will not strip debug information from binaries")
