@@ -3,6 +3,7 @@
 ## Unreleased
 - Add android support #37
 - Issue cross compiling from Windows 10 #54
+- Update to golang-cross:1.13.10 image (go v1.13.10)
 
 ## [1.4.0] - 2020-03-04
 - Add ability to package with an icon using fyne/cmd #14
