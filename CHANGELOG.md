@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Add android support #37
+- Add iOS support on Darwin hosts
 - Issue cross compiling from Windows 10 #54
 - Update to golang-cross:1.13.10 image (go v1.13.10)
 - Update to fyne cli v1.2.4

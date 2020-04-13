@@ -21,6 +21,7 @@ const (
 	linuxDockerImage   = baseDockerImage
 	windowsDockerImage = baseDockerImage
 	darwinDockerImage  = baseDockerImage
+	iosDockerImage     = baseDockerImage
 
 	fyneCmd      = "/usr/local/bin/fyne"
 	gowindresCmd = "/usr/local/bin/gowindres"

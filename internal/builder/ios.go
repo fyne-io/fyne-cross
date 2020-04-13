@@ -4,67 +4,71 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"runtime"
 
 	"github.com/lucor/fyne-cross/internal/volume"
 )
 
-// NewAndroid returns a builder for the android OS
-func NewAndroid(arch string, output string) *Android {
-	return &Android{
-		os:     "android",
+// NewIOS returns a builder for the iOS OS
+func NewIOS(arch string, output string) *IOS {
+	return &IOS{
+		os:     "ios",
 		arch:   arch,
 		output: output,
 	}
 }
 
-// Android is the build for the android OS
-type Android struct {
+// IOS is the build for the iOS OS
+type IOS struct {
 	os     string
 	arch   string
 	output string
 }
 
 // PreBuild performs all tasks needed to perform a build
-func (b *Android) PreBuild(vol *volume.Volume, opts PreBuildOptions) error {
+func (b *IOS) PreBuild(vol *volume.Volume, opts PreBuildOptions) error {
+	if runtime.GOOS != "darwin" {
+		return fmt.Errorf("iOS compilation is supported only on darwin hosts")
+	}
 	//ensures go.mod exists, if not try to create a temporary one
 	if opts.AppID == "" {
-		return fmt.Errorf("appID is required for android build")
+		return fmt.Errorf("appID is required for iOS build")
 	}
 	return goModInit(vol, opts.Verbose)
 }
 
 // Build builds the package
-func (b *Android) Build(vol *volume.Volume, opts BuildOptions) error {
+func (b *IOS) Build(vol *volume.Volume, opts BuildOptions) error {
 	return nil
 }
 
 //BuildEnv returns the env variables required to build the package
-func (b *Android) BuildEnv() []string {
+func (b *IOS) BuildEnv() []string {
 	return []string{}
 }
 
 //BuildLdFlags returns the default ldflags used to build the package
-func (b *Android) BuildLdFlags() []string {
+func (b *IOS) BuildLdFlags() []string {
 	return nil
 }
 
 //BuildTags returns the default tags used to build the package
-func (b *Android) BuildTags() []string {
+func (b *IOS) BuildTags() []string {
 	return nil
 }
 
 // TargetID returns the target ID for the builder
-func (b *Android) TargetID() string {
+func (b *IOS) TargetID() string {
 	return fmt.Sprintf("%s", b.os)
 }
 
 // Output returns the named output
-func (b *Android) Output() string {
+func (b *IOS) Output() string {
 	return b.output
 }
 
 // Package generate a package for distribution
-func (b *Android) Package(vol *volume.Volume, opts PackageOptions) error {
+func (b *IOS) Package(vol *volume.Volume, opts PackageOptions) error {
 	// copy the icon to tmp dir
 	err := cp(opts.Icon, volume.JoinPathHost(vol.TmpDirHost(), defaultIcon))
 	if err != nil {
@@ -72,16 +76,16 @@ func (b *Android) Package(vol *volume.Volume, opts PackageOptions) error {
 	}
 
 	// use the fyne package command to create the dist package
-	packageName := b.Output() + ".apk"
+	packageName := b.Output() + ".app"
 	command := []string{
 		fyneCmd, "package",
 		"-os", b.os,
 		"-name", b.Output(),
 		"-icon", volume.JoinPathContainer(vol.TmpDirContainer(), defaultIcon),
-		"-appID", opts.AppID, // opts.AppID is mandatory for android app
+		"-appID", opts.AppID, // opts.AppID is mandatory for iOS app
 	}
 
-	err = dockerCmd(androidDockerImage, vol, []string{}, vol.WorkDirContainer(), command, opts.Verbose).Run()
+	err = dockerCmd(iosDockerImage, vol, []string{}, vol.WorkDirContainer(), command, opts.Verbose).Run()
 	if err != nil {
 		return fmt.Errorf("Could not package the Fyne app: %v", err)
 	}

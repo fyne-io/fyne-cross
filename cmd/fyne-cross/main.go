@@ -48,6 +48,7 @@ var supportedTargets = map[string][]string{
 	"linux":   {"amd64", "386", "arm", "arm64"},
 	"windows": {"amd64", "386"},
 	"android": {},
+	"ios":     {},
 }
 
 var (
@@ -238,6 +239,8 @@ func run(args []string) {
 			b = builder.NewWindows(target[1], output)
 		case "android":
 			b = builder.NewAndroid(target[1], output)
+		case "ios":
+			b = builder.NewIOS(target[1], output)
 		default:
 			fmt.Println("No builder defined for OS target", target[0])
 			os.Exit(1)
@@ -307,6 +310,11 @@ Parse:
 
 		if target == "android" {
 			targets = append(targets, [2]string{"android", ""})
+			continue
+		}
+
+		if target == "ios" {
+			targets = append(targets, [2]string{"ios", ""})
 			continue
 		}
 
