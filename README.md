@@ -19,7 +19,7 @@ Supported targets are:
   -  android
   -  ios
 
-> Note: iOS compilation is supported only on darwin hosts
+> Note: iOS compilation is supported only on darwin hosts. See [fyne README mobile](https://github.com/fyne-io/fyne/blob/v1.2.4/README-mobile.md#ios) for pre-requisites.
 
 ## Requirements
 
