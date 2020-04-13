@@ -9,7 +9,6 @@ import (
 	"os"
 	"os/exec"
 	"os/user"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -17,8 +16,15 @@ import (
 )
 
 const (
-	baseDockerImage  = "lucor/fyne-cross:1.4.0"
-	linuxDockerImage = baseDockerImage
+	baseDockerImage    = "lucor/fyne-cross:1.5.0"
+	androidDockerImage = baseDockerImage + "-android"
+	linuxDockerImage   = baseDockerImage
+	windowsDockerImage = baseDockerImage
+	darwinDockerImage  = baseDockerImage
+	iosDockerImage     = baseDockerImage
+
+	fyneCmd      = "/usr/local/bin/fyne"
+	gowindresCmd = "/usr/local/bin/gowindres"
 
 	defaultIcon = "Icon.png"
 )
@@ -39,6 +45,7 @@ type Builder interface {
 type PreBuildOptions struct {
 	Verbose bool   // Verbose if true, enable verbose mode
 	Icon    string // Icon is the optional icon in png format to use for distribution
+	AppID   string // Icon is the appID to use for distribution
 }
 
 // BuildOptions holds the options to build the package
@@ -69,10 +76,18 @@ func dockerCmd(image string, vol *volume.Volume, env []string, workDir string, c
 		"run", "--rm", "-t",
 		"-w", w, // set workdir
 		"-v", fmt.Sprintf("%s:%s", vol.WorkDirHost(), vol.WorkDirContainer()), // mount the working dir
-		"-v", fmt.Sprintf("%s:%s", vol.CacheDirHost(), vol.CacheDirContainer()), // mount the cache dir
+	}
+
+	// mount the cache dir if cache is enabled
+	if vol.CacheEnabled() {
+		args = append(args, "-v", fmt.Sprintf("%s:%s", vol.CacheDirHost(), vol.CacheDirContainer()))
+	}
+
+	// add default env variables
+	args = append(args,
 		"-e", "CGO_ENABLED=1", // enable CGO
 		"-e", fmt.Sprintf("GOCACHE=%s", vol.GoCacheDirContainer()), // mount GOCACHE to reuse cache between builds
-	}
+	)
 
 	// add custom env variables
 	for _, e := range env {
@@ -109,7 +124,7 @@ func dockerCmd(image string, vol *volume.Volume, env []string, workDir string, c
 // goModInit ensure a go.mod exists. If not try to generates a temporary one
 func goModInit(vol *volume.Volume, verbose bool) error {
 	// check if the go.mod exists
-	goModPath := filepath.Join(vol.WorkDirHost(), "go.mod")
+	goModPath := volume.JoinPathHost(vol.WorkDirHost(), "go.mod")
 	_, err := os.Stat(goModPath)
 	if err == nil {
 		if verbose {

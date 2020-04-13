@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"os"
-	"path"
 	"path/filepath"
 
 	ico "github.com/Kodeworks/golang-image-ico"
@@ -36,25 +35,28 @@ func (b *Windows) PreBuild(vol *volume.Volume, opts PreBuildOptions) error {
 	}
 
 	// Convert the png icon to ico format and store under the temp directory
-	convertPngToIco(opts.Icon, path.Join(vol.TmpDirHost(), b.output+".ico"))
+	err = convertPngToIco(opts.Icon, volume.JoinPathHost(vol.TmpDirHost(), b.output+".ico"))
+	if err != nil {
+		return fmt.Errorf("Could not create the windows ico: %v", err)
+	}
 
 	// use the gowindres command to create the windows resource
 	command := []string{
-		"gowindres",
+		gowindresCmd,
 		"-arch", b.arch,
 		"-output", b.output,
 		"-workdir", vol.TmpDirContainer(),
 	}
 
 	windres := b.output + ".syso"
-	err = dockerCmd(baseDockerImage, vol, []string{}, vol.TmpDirContainer(), command, opts.Verbose).Run()
+	err = dockerCmd(windowsDockerImage, vol, []string{}, vol.TmpDirContainer(), command, opts.Verbose).Run()
 	if err != nil {
 		return fmt.Errorf("Could not create the windows resource %q: %v", windres, err)
 	}
 
 	// copy the windows resource under the project root
 	// it will be automatically linked by compliler during build
-	err = cp(filepath.Join(vol.TmpDirHost(), windres), filepath.Join(vol.WorkDirHost(), windres))
+	err = cp(volume.JoinPathHost(vol.TmpDirHost(), windres), volume.JoinPathHost(vol.WorkDirHost(), windres))
 	if err != nil {
 		return fmt.Errorf("Could not copy windows resource under the project root: %v", err)
 	}
@@ -64,7 +66,7 @@ func (b *Windows) PreBuild(vol *volume.Volume, opts PreBuildOptions) error {
 // Build builds the package
 func (b *Windows) Build(vol *volume.Volume, opts BuildOptions) error {
 
-	output := filepath.Join(vol.BinDirContainer(), b.TargetID(), b.Output())
+	output := volume.JoinPathContainer(vol.BinDirContainer(), b.TargetID(), b.Output())
 
 	// add default ldflags, if any
 	if ldflags := b.BuildLdFlags(); ldflags != nil {
@@ -77,7 +79,7 @@ func (b *Windows) Build(vol *volume.Volume, opts BuildOptions) error {
 	}
 
 	command := goBuildCmd(output, opts)
-	err := dockerCmd(linuxDockerImage, vol, b.BuildEnv(), vol.WorkDirContainer(), command, opts.Verbose).Run()
+	err := dockerCmd(windowsDockerImage, vol, b.BuildEnv(), vol.WorkDirContainer(), command, opts.Verbose).Run()
 	if err != nil {
 		return fmt.Errorf("Could not build for %s/%s: %v", b.os, b.arch, err)
 	}
@@ -123,10 +125,10 @@ func (b *Windows) windresOutput() string {
 
 // Package generate a package for distribution
 func (b *Windows) Package(vol *volume.Volume, opts PackageOptions) error {
-	os.Remove(filepath.Join(vol.WorkDirHost(), b.windresOutput()))
+	os.Remove(volume.JoinPathHost(vol.WorkDirHost(), b.windresOutput()))
 	// move the dist package into the "dist" folder
-	srcFile := filepath.Join(vol.BinDirHost(), b.TargetID(), b.Output())
-	distFile := filepath.Join(vol.DistDirHost(), b.TargetID(), b.Output())
+	srcFile := volume.JoinPathHost(vol.BinDirHost(), b.TargetID(), b.Output())
+	distFile := volume.JoinPathHost(vol.DistDirHost(), b.TargetID(), b.Output())
 	err := os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
 		return fmt.Errorf("Could not create the dist package dir: %v", err)

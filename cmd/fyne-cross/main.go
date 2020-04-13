@@ -32,6 +32,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime/debug"
 	"strings"
 
 	"fyne.io/fyne/theme"
@@ -39,13 +40,15 @@ import (
 	"github.com/lucor/fyne-cross/internal/volume"
 )
 
-const version = "1.4.0"
+const version = "1.5.0"
 
 // supportedTargets represents the list of supported GOARCH for a GOOS
 var supportedTargets = map[string][]string{
 	"darwin":  {"amd64", "386"},
 	"linux":   {"amd64", "386", "arm", "arm64"},
 	"windows": {"amd64", "386"},
+	"android": {},
+	"ios":     {},
 }
 
 var (
@@ -82,7 +85,7 @@ func main() {
 	flag.StringVar(&targetList, "targets", defaultTarget, fmt.Sprintf("The list of targets to build separated by comma. Default to current GOOS/GOARCH %s", defaultTarget))
 	flag.StringVar(&output, "output", "", "The named output file. Default to package name")
 	flag.StringVar(&rootDir, "dir", "", "The root directory. Default current dir")
-	flag.StringVar(&cacheDir, "cache", "", "Directory used to share/cache sources and dependencies. Default to system cache directory (i.e. $HOME/.cache/fyne-cross)")
+	flag.StringVar(&cacheDir, "cache", "", "Directory used to share/cache sources and dependencies. Default to system cache directory (i.e. $HOME/.cache/fyne-cross). To disable set to 'no'")
 	flag.BoolVar(&verbose, "v", false, "Enable verbosity flag for go commands. Default to false")
 	flag.StringVar(&ldflags, "ldflags", "", "Flags to pass to the external linker")
 	flag.BoolVar(&noStripDebug, "no-strip", false, "If set will not strip debug information from binaries")
@@ -125,6 +128,10 @@ func printUsage() {
 
 	fmt.Println("Supported targets:")
 	for os, archs := range supportedTargets {
+		if len(archs) == 0 {
+			fmt.Printf(" - %s\n", os)
+			continue
+		}
 		for _, arch := range archs {
 			fmt.Printf(" - %s/%s\n", os, arch)
 		}
@@ -134,11 +141,22 @@ func printUsage() {
 	fmt.Println("Example: fyne-cross --targets=linux/amd64,windows/amd64 --output=test ./cmd/test")
 }
 
+func getVersion() string {
+	if version != "develop" {
+		return version
+	}
+	// dev version, try to get additional info
+	if info, ok := debug.ReadBuildInfo(); ok {
+		return info.Main.Version
+	}
+	return version
+}
+
 func run(args []string) {
 
 	// Prints the version and exit
 	if printVersion == true {
-		fmt.Printf("fyne-cross version %s\n", version)
+		fmt.Printf("fyne-cross version %s\n", getVersion())
 		os.Exit(2)
 	}
 
@@ -185,8 +203,7 @@ func run(args []string) {
 				os.Exit(1)
 			}
 		}
-		parts := strings.Split(wd, "/")
-		output = parts[len(parts)-1]
+		_, output = filepath.Split(wd)
 	}
 
 	// Print build summary
@@ -195,10 +212,10 @@ func run(args []string) {
 	fmt.Println("Bin output folder:", vol.BinDirHost())
 	fmt.Println("Dist output folder: ", vol.DistDirHost())
 	if icon == "Icon.png" {
-		icon = filepath.Join(vol.WorkDirHost(), "Icon.png")
+		icon = volume.JoinPathHost(vol.WorkDirHost(), "Icon.png")
 		if _, err := os.Stat(icon); os.IsNotExist(err) {
 			fmt.Printf("[WARN] Icon app was not specified with --icon and a default one was not found at %q. Using Fyne logo as icon app for testing purpose\n", icon)
-			icon = filepath.Join(vol.TmpDirHost(), "fyne.png")
+			icon = volume.JoinPathHost(vol.TmpDirHost(), "fyne.png")
 			err := ioutil.WriteFile(icon, theme.FyneLogo().Content(), 0644)
 			if err != nil {
 				fmt.Println("Could not create the temporary icon:", err)
@@ -210,23 +227,29 @@ func run(args []string) {
 	fmt.Println("Icon app: ", icon)
 
 	for _, target := range targets {
-		fmt.Printf("Building for target %s\n", target)
-
-		osAndarch := strings.Split(target, "/")
+		fmt.Printf("Building for %s %s\n", target[0], target[1])
 
 		var b builder.Builder
-		switch osAndarch[0] {
+		switch target[0] {
 		case "darwin":
-			b = builder.NewDarwin(osAndarch[1], output)
+			b = builder.NewDarwin(target[1], output)
 		case "linux":
-			b = builder.NewLinux(osAndarch[1], output)
+			b = builder.NewLinux(target[1], output)
 		case "windows":
-			b = builder.NewWindows(osAndarch[1], output)
+			b = builder.NewWindows(target[1], output)
+		case "android":
+			b = builder.NewAndroid(target[1], output)
+		case "ios":
+			b = builder.NewIOS(target[1], output)
+		default:
+			fmt.Println("No builder defined for OS target", target[0])
+			os.Exit(1)
 		}
 
 		preBuildOpts := builder.PreBuildOptions{
 			Verbose: verbose,
 			Icon:    icon,
+			AppID:   appID,
 		}
 		err := b.PreBuild(vol, preBuildOpts)
 		if err != nil {
@@ -256,7 +279,7 @@ func run(args []string) {
 			fmt.Println(err)
 			os.Exit(1)
 		}
-		fmt.Printf("Target %s [OK]\n", target)
+		fmt.Printf("Target %s %s [OK]\n", target[0], target[1])
 	}
 }
 
@@ -278,12 +301,22 @@ func checkRequirements() error {
 }
 
 // parseTargets parse comma separated target list and validate against the supported targets
-func parseTargets(targetList string) ([]string, error) {
-	targets := []string{}
+func parseTargets(targetList string) ([][2]string, error) {
+	targets := [][2]string{}
 
 Parse:
 	for _, target := range strings.Split(targetList, ",") {
 		target = strings.TrimSpace(target)
+
+		if target == "android" {
+			targets = append(targets, [2]string{"android", ""})
+			continue
+		}
+
+		if target == "ios" {
+			targets = append(targets, [2]string{"ios", ""})
+			continue
+		}
 
 		osAndArch := strings.Split(target, "/")
 		if len(osAndArch) != 2 {
@@ -298,14 +331,14 @@ Parse:
 
 		if targetArch == "*" {
 			for _, arch := range supportedArchs {
-				targets = append(targets, strings.Join([]string{targetOS, arch}, "/"))
+				targets = append(targets, [2]string{targetOS, arch})
 			}
 			continue
 		}
 
 		for _, arch := range supportedArchs {
 			if targetArch == arch {
-				targets = append(targets, target)
+				targets = append(targets, [2]string{targetOS, targetArch})
 				continue Parse
 			}
 		}
