@@ -16,7 +16,7 @@ import (
 )
 
 const (
-	baseDockerImage    = "lucor/fyne-cross:1.5.0"
+	baseDockerImage    = "lucor/fyne-cross:develop"
 	androidDockerImage = baseDockerImage + "-android"
 	linuxDockerImage   = baseDockerImage
 	windowsDockerImage = baseDockerImage
