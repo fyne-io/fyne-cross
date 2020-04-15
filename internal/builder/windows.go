@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"image"
 	"os"
-	"path"
 	"path/filepath"
 
 	ico "github.com/Kodeworks/golang-image-ico"
@@ -36,7 +35,10 @@ func (b *Windows) PreBuild(vol *volume.Volume, opts PreBuildOptions) error {
 	}
 
 	// Convert the png icon to ico format and store under the temp directory
-	convertPngToIco(opts.Icon, path.Join(vol.TmpDirHost(), b.output+".ico"))
+	err = convertPngToIco(opts.Icon, volume.JoinPathHost(vol.TmpDirHost(), b.output+".ico"))
+	if err != nil {
+		return fmt.Errorf("Could not create the windows ico: %v", err)
+	}
 
 	// use the gowindres command to create the windows resource
 	command := []string{

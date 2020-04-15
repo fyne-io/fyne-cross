@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [1.5.0] - 2020-04-13
 - Add android support #37
 - Add iOS support on Darwin hosts
 - Issue cross compiling from Windows 10 #54
