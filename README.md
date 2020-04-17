@@ -23,7 +23,7 @@ Supported targets are:
 
 ## Requirements
 
-- go
+- go >= 1.13
 - docker
 
 ## Installation
