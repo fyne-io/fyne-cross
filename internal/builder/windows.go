@@ -11,19 +11,21 @@ import (
 )
 
 // NewWindows returns a builder for the Windows OS
-func NewWindows(arch string, output string) *Windows {
+func NewWindows(arch string, output string, console bool) *Windows {
 	return &Windows{
-		os:     "windows",
-		arch:   arch,
-		output: output,
+		os:      "windows",
+		arch:    arch,
+		output:  output,
+		console: console,
 	}
 }
 
 // Windows is the build for the Windows OS
 type Windows struct {
-	os     string
-	arch   string
-	output string
+	os      string
+	arch    string
+	output  string
+	console bool
 }
 
 // PreBuild performs all tasks needed to perform a build
@@ -100,6 +102,9 @@ func (b *Windows) BuildEnv() []string {
 
 //BuildLdFlags returns the default ldflags used to build the package
 func (b *Windows) BuildLdFlags() []string {
+	if b.console {
+		return []string{}
+	}
 	return []string{"-H windowsgui"}
 }
 

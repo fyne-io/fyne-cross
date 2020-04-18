@@ -1,7 +1,7 @@
 # Changelog
 
 ## Unreleased
-- 
+- Add a flag to build as "console binary" for Windows #57
 
 ## [1.5.0] - 2020-04-13
 - Add android support #37

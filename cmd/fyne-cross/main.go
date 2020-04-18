@@ -76,6 +76,8 @@ var (
 	icon string
 	// appID represents the application ID used for distribution
 	appID string
+	// console if true will build for windows as "console binary" instead of "GUI binary"
+	console bool
 )
 
 func main() {
@@ -92,6 +94,7 @@ func main() {
 	flag.BoolVar(&printVersion, "version", false, "Print fyne-cross version")
 	flag.StringVar(&icon, "icon", "Icon.png", "Application icon used for distribution. Default to Icon.png")
 	flag.StringVar(&appID, "appID", "", "Application ID used for distribution. For ios or darwin targets an appID is required, for ios this must match a valid provisioning profile")
+	flag.BoolVar(&console, "console", false, "If set will build as 'console binary' on Windows")
 
 	flag.Parse()
 
@@ -236,7 +239,7 @@ func run(args []string) {
 		case "linux":
 			b = builder.NewLinux(target[1], output)
 		case "windows":
-			b = builder.NewWindows(target[1], output)
+			b = builder.NewWindows(target[1], output, console)
 		case "android":
 			b = builder.NewAndroid(target[1], output)
 		case "ios":

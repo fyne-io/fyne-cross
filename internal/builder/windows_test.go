@@ -4,9 +4,10 @@ import "testing"
 
 func TestWindows_Output(t *testing.T) {
 	type fields struct {
-		os     string
-		arch   string
-		output string
+		os      string
+		arch    string
+		output  string
+		console bool
 	}
 	tests := []struct {
 		name   string
@@ -32,7 +33,7 @@ func TestWindows_Output(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			b := NewWindows(tt.fields.arch, tt.fields.output)
+			b := NewWindows(tt.fields.arch, tt.fields.output, tt.fields.console)
 			if got := b.Output(); got != tt.want {
 				t.Errorf("Windows.Output() = %v, want %v", got, tt.want)
 			}
