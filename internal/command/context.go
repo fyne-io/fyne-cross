@@ -38,7 +38,7 @@ type Context struct {
 	volume.Volume
 
 	Architecture          // Arch defines the target architecture
-	Env          []string // Env defines the env variable to use
+	Env          []string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
 	ID           string   // ID is the context ID
 	LdFlags      []string // LdFlags defines the ldflags to use
 	OS           string   // OS defines the target OS
@@ -105,6 +105,7 @@ func makeDefaultContext(flags *CommonFlags) (Context, error) {
 	ctx := Context{
 		AppID:        flags.AppID,
 		CacheEnabled: !flags.NoCache,
+		Env:          *flags.Env,
 		Icon:         flags.Icon,
 		Output:       flags.Output,
 		Package:      flags.Package,

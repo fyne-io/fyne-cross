@@ -184,9 +184,9 @@ func darwinContext(flags *darwinFlags) ([]Context, error) {
 
 		switch arch {
 		case ArchAmd64:
-			ctx.Env = []string{"GOOS=darwin", "GOARCH=amd64", "CC=o32-clang"}
+			ctx.Env = append(ctx.Env, "GOOS=darwin", "GOARCH=amd64", "CC=o32-clang")
 		case Arch386:
-			ctx.Env = []string{"GOOS=darwin", "GOARCH=386", "CC=o32-clang"}
+			ctx.Env = append(ctx.Env, "GOOS=darwin", "GOARCH=386", "CC=o32-clang")
 		}
 
 		ctxs = append(ctxs, ctx)

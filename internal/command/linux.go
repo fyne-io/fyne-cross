@@ -181,14 +181,14 @@ func linuxContext(flags *linuxFlags) ([]Context, error) {
 
 		switch arch {
 		case ArchAmd64:
-			ctx.Env = []string{"GOOS=linux", "GOARCH=amd64", "CC=gcc"}
+			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=amd64", "CC=gcc")
 		case Arch386:
-			ctx.Env = []string{"GOOS=linux", "GOARCH=386", "CC=i686-linux-gnu-gcc"}
+			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=386", "CC=i686-linux-gnu-gcc")
 		case ArchArm:
-			ctx.Env = []string{"GOOS=linux", "GOARCH=arm", "CC=arm-linux-gnueabihf-gcc", "GOARM=7"}
+			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=arm", "CC=arm-linux-gnueabihf-gcc", "GOARM=7")
 			ctx.Tags = []string{"gles"}
 		case ArchArm64:
-			ctx.Env = []string{"GOOS=linux", "GOARCH=arm64", "CC=aarch64-linux-gnu-gcc"}
+			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=arm64", "CC=aarch64-linux-gnu-gcc")
 			ctx.Tags = []string{"gles"}
 		}
 

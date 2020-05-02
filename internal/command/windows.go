@@ -194,9 +194,9 @@ func makeWindowsContext(flags *windowsFlags) ([]Context, error) {
 
 		switch arch {
 		case ArchAmd64:
-			ctx.Env = []string{"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"}
+			ctx.Env = append(ctx.Env, "GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc")
 		case Arch386:
-			ctx.Env = []string{"GOOS=windows", "GOARCH=386", "CC=i686-w64-mingw32-gcc"}
+			ctx.Env = append(ctx.Env, "GOOS=windows", "GOARCH=386", "CC=i686-w64-mingw32-gcc")
 		}
 
 		ctx.LdFlags = []string{"-H windowsgui"}
