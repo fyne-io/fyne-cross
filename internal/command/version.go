@@ -41,10 +41,6 @@ func (cmd *Version) Usage() {
 }
 
 func getVersion() string {
-	if version != "develop" {
-		return version
-	}
-	// dev version, try to get additional info
 	if info, ok := debug.ReadBuildInfo(); ok {
 		return info.Main.Version
 	}
