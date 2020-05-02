@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/lucor/fyne-cross/v2/internal/icon"
 	"github.com/lucor/fyne-cross/v2/internal/volume"
 )
 
@@ -58,7 +57,10 @@ func newCommonFlags() (*CommonFlags, error) {
 		return nil, err
 	}
 
-	defaultIcon := volume.JoinPathHost(rootDir, icon.Default)
+	defaultIcon, err := volume.DefaultIconHost()
+	if err != nil {
+		return nil, err
+	}
 
 	flags := &CommonFlags{
 		Env: &envFlag{},

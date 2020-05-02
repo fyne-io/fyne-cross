@@ -5,7 +5,6 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/lucor/fyne-cross/v2/internal/icon"
 	"github.com/lucor/fyne-cross/v2/internal/log"
 	"github.com/lucor/fyne-cross/v2/internal/volume"
 )
@@ -46,32 +45,32 @@ func (cmd *Android) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	cmdCtx, err := makeAndroidContext(flags)
+	ctx, err := makeAndroidContext(flags)
 	if err != nil {
 		return err
 	}
 
-	cmd.Context = cmdCtx
+	cmd.Context = ctx
 	return nil
 }
 
 // Run runs the command
 func (cmd *Android) Run() error {
 
-	cmdCtx := cmd.Context
+	ctx := cmd.Context
 
-	log.Infof("[i] Target: %s", cmdCtx.OS)
-	log.Debugf("%#v", cmdCtx)
+	log.Infof("[i] Target: %s", ctx.OS)
+	log.Debugf("%#v", ctx)
 
 	//
 	// prepare build
 	//
-	err := cmdCtx.CleanTempTargetDir()
+	err := cleanTargetDirs(ctx)
 	if err != nil {
 		return err
 	}
 
-	err = GoModInit(cmdCtx)
+	err = goModInit(ctx)
 	if err != nil {
 		return err
 	}
@@ -83,20 +82,19 @@ func (cmd *Android) Run() error {
 
 	packageName := fmt.Sprintf("%s.apk", cmd.Context.Output)
 
-	// copy the icon to tmp dir
-	err = volume.Copy(cmd.Context.Icon, volume.JoinPathHost(cmdCtx.TmpDirHost(), cmdCtx.ID, icon.Default))
+	err = prepareIcon(ctx)
 	if err != nil {
-		return fmt.Errorf("Could not package the Fyne app due to error copying the icon: %v", err)
+		return err
 	}
 
-	err = FynePackage(cmdCtx)
+	err = fynePackage(ctx)
 	if err != nil {
 		return fmt.Errorf("Could not package the Fyne app: %v", err)
 	}
 
 	// move the dist package into the "dist" folder
-	srcFile := volume.JoinPathHost(cmdCtx.WorkDirHost(), packageName)
-	distFile := volume.JoinPathHost(cmdCtx.DistDirHost(), cmdCtx.ID, packageName)
+	srcFile := volume.JoinPathHost(ctx.WorkDirHost(), packageName)
+	distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
 	err = os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
 		return fmt.Errorf("Could not create the dist package dir: %v", err)

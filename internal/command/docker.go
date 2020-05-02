@@ -100,8 +100,8 @@ func Run(image string, vol volume.Volume, opts Options, cmdArgs []string) error 
 	return cmd.Run()
 }
 
-// GoModInit ensure a go.mod exists. If not try to generates a temporary one
-func GoModInit(ctx Context) error {
+// goModInit ensure a go.mod exists. If not try to generates a temporary one
+func goModInit(ctx Context) error {
 
 	goModPath := volume.JoinPathHost(ctx.WorkDirHost(), "go.mod")
 	log.Infof("[i] Checking for go.mod: %s", goModPath)
@@ -122,8 +122,8 @@ func GoModInit(ctx Context) error {
 	return nil
 }
 
-// GoBuild run the go build command in the container
-func GoBuild(ctx Context) error {
+// goBuild run the go build command in the container
+func goBuild(ctx Context) error {
 	log.Infof("[i] Building binary...")
 	// add go build command
 	args := []string{"go", "build"}
@@ -173,8 +173,8 @@ func GoBuild(ctx Context) error {
 	return nil
 }
 
-// FynePackage package the application using the fyne cli tool
-func FynePackage(ctx Context) error {
+// fynePackage package the application using the fyne cli tool
+func fynePackage(ctx Context) error {
 
 	args := []string{
 		fyneBin, "package",
@@ -210,13 +210,12 @@ func FynePackage(ctx Context) error {
 // that will be automatically linked by compliler during the build
 func WindowsResource(ctx Context) (string, error) {
 
-	outputBase := strings.TrimSuffix(ctx.Output, ".exe")
-	windres := outputBase + ".syso"
+	windres := ctx.Output + ".syso"
 
 	args := []string{
 		gowindresBin,
 		"-arch", ctx.Architecture.String(),
-		"-output", outputBase,
+		"-output", ctx.Output,
 		"-workdir", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID),
 	}
 

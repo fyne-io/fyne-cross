@@ -11,6 +11,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/lucor/fyne-cross/v2/internal/icon"
 )
 
 const (
@@ -44,6 +46,15 @@ func DefaultCacheDirHost() (string, error) {
 		return "", fmt.Errorf("Cannot get the path for the system cache directory on the host %s", err)
 	}
 	return JoinPathHost(userCacheDir, fyneCrossPrefix), nil
+}
+
+// DefaultIconHost returns the default icon path on the host
+func DefaultIconHost() (string, error) {
+	wd, err := DefaultWorkDirHost()
+	if err != nil {
+		return "", err
+	}
+	return JoinPathHost(wd, icon.Default), nil
 }
 
 // DefaultWorkDirHost returns the default work dir on the host
@@ -179,11 +190,6 @@ func (l Volume) CacheDirHost() string {
 	return l.cacheDirHost
 }
 
-// GoCacheDirContainer returns the fyne-cross Go cache dir on the container
-func (l Volume) GoCacheDirContainer() string {
-	return goCacheDirContainer
-}
-
 // DistDirContainer returns the fyne-cross distribution dir on the container
 func (l Volume) DistDirContainer() string {
 	return distDirContainer
@@ -192,6 +198,11 @@ func (l Volume) DistDirContainer() string {
 // DistDirHost returns the fyne-cross distribution dir on the host
 func (l Volume) DistDirHost() string {
 	return l.distDirHost
+}
+
+// GoCacheDirContainer returns the fyne-cross Go cache dir on the container
+func (l Volume) GoCacheDirContainer() string {
+	return goCacheDirContainer
 }
 
 // TmpDirContainer returns the fyne-cross temporary dir on the container

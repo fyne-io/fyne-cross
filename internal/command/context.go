@@ -3,7 +3,6 @@ package command
 import (
 	"bytes"
 	"fmt"
-	"os"
 
 	"github.com/lucor/fyne-cross/v2/internal/log"
 	"github.com/lucor/fyne-cross/v2/internal/volume"
@@ -52,33 +51,6 @@ type Context struct {
 	Package      string // Package is the package to build named by the import path as per 'go build'
 	StripDebug   bool   // StripDebug if true, strips binary output
 	Debug        bool   // Debug if true enable debug log
-}
-
-// CleanTempTargetDir cleans the temp dir for the target context
-func (ctx Context) CleanTempTargetDir() error {
-
-	dirs := map[string]string{
-		"bin":  volume.JoinPathHost(ctx.BinDirHost(), ctx.ID),
-		"dist": volume.JoinPathHost(ctx.DistDirHost(), ctx.ID),
-		"temp": volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID),
-	}
-
-	log.Infof("[i] Cleaning target directories...")
-	for k, v := range dirs {
-		err := os.RemoveAll(v)
-		if err != nil {
-			return fmt.Errorf("Could not clean the %q dir %s: %v", k, v, err)
-		}
-
-		err = os.MkdirAll(v, 0755)
-		if err != nil {
-			return fmt.Errorf("Could not create the %q dir %s: %v", k, v, err)
-		}
-
-		log.Infof("[✓] %q dir cleaned: %s", k, v)
-	}
-
-	return nil
 }
 
 // String implements the Stringer interface

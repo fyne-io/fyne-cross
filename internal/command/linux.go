@@ -6,7 +6,6 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/lucor/fyne-cross/v2/internal/icon"
 	"github.com/lucor/fyne-cross/v2/internal/log"
 	"github.com/lucor/fyne-cross/v2/internal/volume"
 )
@@ -54,31 +53,31 @@ func (cmd *Linux) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	cmdCtx, err := linuxContext(flags)
+	ctx, err := linuxContext(flags)
 	if err != nil {
 		return err
 	}
-	cmd.Context = cmdCtx
+	cmd.Context = ctx
 	return nil
 }
 
 // Run runs the command
 func (cmd *Linux) Run() error {
 
-	for _, cmdCtx := range cmd.Context {
+	for _, ctx := range cmd.Context {
 
-		log.Infof("[i] Target: %s/%s", cmdCtx.OS, cmdCtx.Architecture)
-		log.Debugf("%#v", cmdCtx)
+		log.Infof("[i] Target: %s/%s", ctx.OS, ctx.Architecture)
+		log.Debugf("%#v", ctx)
 
 		//
 		// prepare build
 		//
-		err := cmdCtx.CleanTempTargetDir()
+		err := cleanTargetDirs(ctx)
 		if err != nil {
 			return err
 		}
 
-		err = GoModInit(cmdCtx)
+		err = goModInit(ctx)
 		if err != nil {
 			return err
 		}
@@ -86,7 +85,7 @@ func (cmd *Linux) Run() error {
 		//
 		// build
 		//
-		err = GoBuild(cmdCtx)
+		err = goBuild(ctx)
 		if err != nil {
 			return err
 		}
@@ -96,22 +95,21 @@ func (cmd *Linux) Run() error {
 		//
 		log.Info("[i] Packaging app...")
 
-		packageName := fmt.Sprintf("%s.tar.gz", cmdCtx.Output)
+		packageName := fmt.Sprintf("%s.tar.gz", ctx.Output)
 
-		// copy the icon to tmp dir
-		err = volume.Copy(cmdCtx.Icon, volume.JoinPathHost(cmdCtx.TmpDirHost(), cmdCtx.ID, icon.Default))
+		err = prepareIcon(ctx)
 		if err != nil {
-			return fmt.Errorf("Could not package the Fyne app due to error copying the icon: %v", err)
+			return err
 		}
 
-		err = FynePackage(cmdCtx)
+		err = fynePackage(ctx)
 		if err != nil {
 			return fmt.Errorf("Could not package the Fyne app: %v", err)
 		}
 
 		// move the dist package into the "dist" folder
-		srcFile := volume.JoinPathHost(cmdCtx.TmpDirHost(), cmdCtx.ID, packageName)
-		distFile := volume.JoinPathHost(cmdCtx.DistDirHost(), cmdCtx.ID, packageName)
+		srcFile := volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, packageName)
+		distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
 		err = os.MkdirAll(filepath.Dir(distFile), 0755)
 		if err != nil {
 			return fmt.Errorf("Could not create the dist package dir: %v", err)

@@ -5,9 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
-	"strings"
 
-	"github.com/lucor/fyne-cross/v2/internal/icon"
 	"github.com/lucor/fyne-cross/v2/internal/log"
 	"github.com/lucor/fyne-cross/v2/internal/volume"
 )
@@ -62,51 +60,46 @@ func (cmd *Windows) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	cmdCtx, err := makeWindowsContext(flags)
+	ctx, err := makeWindowsContext(flags)
 	if err != nil {
 		return err
 	}
-	cmd.CmdContext = cmdCtx
+	cmd.CmdContext = ctx
 	return nil
 }
 
 // Run runs the command
 func (cmd *Windows) Run() error {
 
-	for _, cmdCtx := range cmd.CmdContext {
+	for _, ctx := range cmd.CmdContext {
 
-		log.Infof("[i] Target: %s/%s", cmdCtx.OS, cmdCtx.Architecture)
-		log.Debugf("%#v", cmdCtx)
+		log.Infof("[i] Target: %s/%s", ctx.OS, ctx.Architecture)
+		log.Debugf("%#v", ctx)
 
 		//
 		// prepare build
 		//
-		err := cmdCtx.CleanTempTargetDir()
+		err := cleanTargetDirs(ctx)
 		if err != nil {
 			return err
 		}
 
-		err = GoModInit(cmdCtx)
+		err = goModInit(ctx)
 		if err != nil {
 			return err
 		}
 
-		outputBase := strings.TrimSuffix(cmdCtx.Output, ".exe")
-
-		// convert the png icon to ico format and store under the temp directory
-		pngIcon := cmdCtx.Icon
-		icoIcon := volume.JoinPathHost(cmdCtx.TmpDirHost(), cmdCtx.ID, outputBase+".ico")
-		err = icon.ConvertPngToIco(pngIcon, icoIcon)
+		err = prepareIcon(ctx)
 		if err != nil {
-			return fmt.Errorf("Could not create the windows ico: %v", err)
+			return err
 		}
 
-		windres, err := WindowsResource(cmdCtx)
+		windres, err := WindowsResource(ctx)
 
 		//
 		// build
 		//
-		err = GoBuild(cmdCtx)
+		err = goBuild(ctx)
 		if err != nil {
 			return err
 		}
@@ -118,12 +111,12 @@ func (cmd *Windows) Run() error {
 		log.Info("[i] Packaging app...")
 
 		// remove the windres file under the project root
-		os.Remove(volume.JoinPathHost(cmdCtx.WorkDirHost(), windres))
+		os.Remove(volume.JoinPathHost(ctx.WorkDirHost(), windres))
 
 		// create a zip archive from the compiled binary under the "bin" folder
 		// and place it under the "dist" folder
-		srcFile := volume.JoinPathHost(cmdCtx.BinDirHost(), cmdCtx.ID, cmdCtx.Output)
-		distFile := volume.JoinPathHost(cmdCtx.DistDirHost(), cmdCtx.ID, outputBase+".zip")
+		srcFile := volume.JoinPathHost(ctx.BinDirHost(), ctx.ID, ctx.Output)
+		distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, ctx.Output+".zip")
 		err = os.MkdirAll(filepath.Dir(distFile), 0755)
 		if err != nil {
 			return fmt.Errorf("Could not create the dist package dir: %v", err)

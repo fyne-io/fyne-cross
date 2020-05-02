@@ -40,7 +40,7 @@ func main() {
 	flag.StringVar(&workDir, "workdir", "", "The working directory")
 	flag.Parse()
 
-	manifestPath := path.Join(workDir, output+".exe.manifest")
+	manifestPath := path.Join(workDir, output+".manifest")
 	rcPath := path.Join(workDir, rc)
 	resource := output + ".syso"
 
@@ -69,7 +69,7 @@ func main() {
 	cmd.Dir = workDir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
-		fmt.Print("Could not create windows resource", err)
+		fmt.Println("Could not create windows resource", err)
 		fmt.Printf("Debug output: %s\n", out)
 		os.Exit(1)
 	}
@@ -103,7 +103,7 @@ func writeManifest(data tplData, outFile string) error {
 func writeRc(data tplData, outFile string) error {
 
 	rc := `100 ICON    "{{.Name}}.ico"
-100 24      "{{.Name}}.exe.manifest"
+100 24      "{{.Name}}.manifest"
 `
 	mFile, err := os.Create(outFile)
 	if err != nil {
