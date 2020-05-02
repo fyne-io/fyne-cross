@@ -1,6 +1,8 @@
 package command
 
 import (
+	"fmt"
+	"os/user"
 	"runtime"
 	"testing"
 
@@ -11,6 +13,8 @@ func TestCmd(t *testing.T) {
 	if runtime.GOOS == "windows" {
 		t.Skip("TODO update for windows")
 	}
+
+	uid, _ := user.Current()
 
 	vol, err := volume.Mount("/tmp/fyne-cross-test/app", "/tmp/fyne-cross-test/cache")
 	if err != nil {
@@ -36,7 +40,7 @@ func TestCmd(t *testing.T) {
 				opts:    Options{},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: "/usr/bin/docker run --rm -t -w /app -v /tmp/fyne-cross-test/app:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=1000 lucor/fyne-cross command arg",
+			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /app -v /tmp/fyne-cross-test/app:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross command arg", uid.Uid),
 		},
 		{
 			name: "custom work dir",
@@ -48,7 +52,7 @@ func TestCmd(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: "/usr/bin/docker run --rm -t -w /tmp/fyne-cross-test/custom-wd -v /tmp/fyne-cross-test/app:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=1000 lucor/fyne-cross command arg",
+			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /tmp/fyne-cross-test/custom-wd -v /tmp/fyne-cross-test/app:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross command arg", uid.Uid),
 		},
 		{
 			name: "cache enabled",
@@ -60,7 +64,7 @@ func TestCmd(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: "/usr/bin/docker run --rm -t -w /app -v /tmp/fyne-cross-test/app:/app -v /tmp/fyne-cross-test/cache:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=1000 lucor/fyne-cross command arg",
+			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /app -v /tmp/fyne-cross-test/app:/app -v /tmp/fyne-cross-test/cache:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross command arg", uid.Uid),
 		},
 		{
 			name: "custom env variables",
@@ -72,7 +76,7 @@ func TestCmd(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: "/usr/bin/docker run --rm -t -w /app -v /tmp/fyne-cross-test/app:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com -e fyne_uid=1000 lucor/fyne-cross command arg",
+			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /app -v /tmp/fyne-cross-test/app:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com -e fyne_uid=%s lucor/fyne-cross command arg", uid.Uid),
 		},
 	}
 	for _, tt := range tests {
