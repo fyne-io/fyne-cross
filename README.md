@@ -25,15 +25,11 @@ Supported targets are:
 - go >= 1.13
 - docker
 
-## Installation
-
-        go get github.com/lucor/fyne-cross/cmd/fyne-cross
-
 ### Development release
 
-To install a preview of the next version or help in testing:
+To install a preview of the v2 version or help in testing:
 
-        go get github.com/lucor/fyne-cross/cmd/fyne-cross@develop
+        go get github.com/lucor/fyne-cross/v2/cmd/fyne-cross@develop
 
 ## Usage
 
