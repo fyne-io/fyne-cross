@@ -1,4 +1,4 @@
-FROM lucor/fyne-cross:develop
+FROM lucor/fyne-cross:base-latest
 
 ENV JAVA_HOME /usr/local/android_jdk8
 ENV ANDROID_HOME /usr/local/android_sdk
@@ -10,11 +10,6 @@ ENV ANDROID_SDK_PLATFORM 29
 ENV ANDROID_NDK_BIN ${ANDROID_HOME}/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin
 
 ENV PATH=${PATH}:${JAVA_HOME}/bin:${ANDROID_NDK_BIN}:${ANDROID_SDK_BUILD_TOOLS_BIN}
-
-RUN apt-get update -qq \
-    && apt-get install -y -q --no-install-recommends \
-        zip \
-        unzip 
 
 # Install Java
 RUN wget -O jdk8.tgz "https://android.googlesource.com/platform/prebuilts/jdk/jdk8/+archive/refs/heads/master/linux-x86.tar.gz"; \
