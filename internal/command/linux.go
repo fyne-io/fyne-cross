@@ -14,7 +14,10 @@ const (
 	// linuxOS it the linux OS name
 	linuxOS = "linux"
 	// linuxImage is the fyne-cross image for the Linux OS
-	linuxImage = baseImage
+	linuxImageAmd64 = "lucor/fyne-cross:base-latest"
+	linuxImage386   = "lucor/fyne-cross:linux-386-latest"
+	linuxImageArm64 = "lucor/fyne-cross:linux-arm64-latest"
+	linuxImageArm   = "lucor/fyne-cross:linux-arm-latest"
 )
 
 var (
@@ -174,20 +177,28 @@ func linuxContext(flags *linuxFlags) ([]Context, error) {
 
 		ctx.Architecture = arch
 		ctx.OS = linuxOS
-		ctx.DockerImage = linuxImage
 		ctx.ID = fmt.Sprintf("%s-%s", ctx.OS, ctx.Architecture)
 
+		var defaultDockerImage string
 		switch arch {
 		case ArchAmd64:
+			defaultDockerImage = linuxImageAmd64
 			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=amd64", "CC=gcc")
 		case Arch386:
+			defaultDockerImage = linuxImage386
 			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=386", "CC=i686-linux-gnu-gcc")
 		case ArchArm:
+			defaultDockerImage = linuxImageArm
 			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=arm", "CC=arm-linux-gnueabihf-gcc", "GOARM=7")
 			ctx.Tags = []string{"gles"}
 		case ArchArm64:
+			defaultDockerImage = linuxImageArm64
 			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=arm64", "CC=aarch64-linux-gnu-gcc")
 			ctx.Tags = []string{"gles"}
+		}
+
+		if flags.DockerImage == "" {
+			ctx.DockerImage = defaultDockerImage
 		}
 
 		ctxs = append(ctxs, ctx)

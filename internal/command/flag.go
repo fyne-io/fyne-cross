@@ -20,6 +20,8 @@ type CommonFlags struct {
 	// CacheDir is the directory used to share/cache sources and dependencies.
 	// Default to system cache directory (i.e. $HOME/.cache/fyne-cross)
 	CacheDir string
+	// DockerImage represents a custom docker image to use for build
+	DockerImage string
 	// Env is the list of custom env variable to set. Specified as "KEY=VALUE"
 	Env *envFlag
 	// Icon represents the application icon used for distribution
@@ -70,6 +72,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")
 	flagSet.Var(flags.Env, "env", "List of additional env variables specified as KEY=VALUE and separated by comma")
 	flagSet.StringVar(&flags.Icon, "icon", defaultIcon, "Application icon used for distribution")
+	flagSet.StringVar(&flags.DockerImage, "image", "", "Custom docker image to use for build")
 	flagSet.StringVar(&flags.Ldflags, "ldflags", "", "Additional flags to pass to the external linker")
 	flagSet.BoolVar(&flags.NoStripDebug, "no-strip-debug", false, "Do not strip debug information from binaries")
 	flagSet.StringVar(&flags.Output, "output", output, "Named output file")

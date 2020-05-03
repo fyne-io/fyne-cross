@@ -14,7 +14,7 @@ const (
 	// windowsOS it the windows OS name
 	windowsOS = "windows"
 	// windowsImage is the fyne-cross image for the Windows OS
-	windowsImage = baseImage
+	windowsImage = "lucor/fyne-cross:base-latest"
 )
 
 var (
@@ -182,7 +182,6 @@ func makeWindowsContext(flags *windowsFlags) ([]Context, error) {
 
 		ctx.Architecture = arch
 		ctx.OS = windowsOS
-		ctx.DockerImage = windowsImage
 		ctx.ID = fmt.Sprintf("%s-%s", ctx.OS, ctx.Architecture)
 
 		switch arch {
@@ -197,6 +196,10 @@ func makeWindowsContext(flags *windowsFlags) ([]Context, error) {
 		// set context based on command-line flags
 		if flags.Console {
 			ctx.LdFlags = []string{}
+		}
+
+		if flags.DockerImage == "" {
+			ctx.DockerImage = windowsImage
 		}
 
 		ctxs = append(ctxs, ctx)

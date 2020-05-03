@@ -19,7 +19,7 @@ var (
 	// darwinArchSupported defines the supported target architectures on darwin
 	darwinArchSupported = []Architecture{ArchAmd64, Arch386}
 	// darwinImage is the fyne-cross image for the Darwin OS
-	darwinImage = baseImage
+	darwinImage = "lucor/fyne-cross:base-latest"
 )
 
 // Darwin build and package the fyne app for the darwin OS
@@ -177,7 +177,6 @@ func darwinContext(flags *darwinFlags) ([]Context, error) {
 
 		ctx.Architecture = arch
 		ctx.OS = darwinOS
-		ctx.DockerImage = darwinImage
 		ctx.ID = fmt.Sprintf("%s-%s", ctx.OS, ctx.Architecture)
 
 		switch arch {
@@ -185,6 +184,10 @@ func darwinContext(flags *darwinFlags) ([]Context, error) {
 			ctx.Env = append(ctx.Env, "GOOS=darwin", "GOARCH=amd64", "CC=o32-clang")
 		case Arch386:
 			ctx.Env = append(ctx.Env, "GOOS=darwin", "GOARCH=386", "CC=o32-clang")
+		}
+
+		if flags.DockerImage == "" {
+			ctx.DockerImage = darwinImage
 		}
 
 		ctxs = append(ctxs, ctx)

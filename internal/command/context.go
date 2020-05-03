@@ -9,11 +9,6 @@ import (
 )
 
 const (
-	// baseImage is the fyne-cross base image
-	baseImage = "lucor/fyne-cross:develop"
-)
-
-const (
 	// ArchAmd64 represents the amd64 architecture
 	ArchAmd64 Architecture = "amd64"
 	// Arch386 represents the amd64 architecture
@@ -77,6 +72,7 @@ func makeDefaultContext(flags *CommonFlags) (Context, error) {
 	ctx := Context{
 		AppID:        flags.AppID,
 		CacheEnabled: !flags.NoCache,
+		DockerImage:  flags.DockerImage,
 		Env:          *flags.Env,
 		Icon:         flags.Icon,
 		Output:       flags.Output,

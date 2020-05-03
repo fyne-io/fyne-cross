@@ -14,7 +14,7 @@ const (
 	// iosOS it the ios OS name
 	iosOS = "ios"
 	// iosImage is the fyne-cross image for the iOS OS
-	iosImage = baseImage
+	iosImage = "lucor/fyne-cross:base-latest"
 )
 
 // IOS build and package the fyne app for the ios OS
@@ -158,9 +158,12 @@ func makeIOSContext(flags *iosFlags) (Context, error) {
 		return Context{}, fmt.Errorf("appID is mandatory for %s", iosImage)
 	}
 
-	ctx.DockerImage = iosOS
-	ctx.ID = iosImage
-	ctx.OS = iosImage
+	ctx.OS = iosOS
+	ctx.ID = iosOS
+
+	if flags.DockerImage == "" {
+		ctx.DockerImage = iosImage
+	}
 
 	return ctx, nil
 }

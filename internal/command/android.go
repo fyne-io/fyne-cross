@@ -13,7 +13,7 @@ const (
 	// androidOS is the android OS name
 	androidOS = "android"
 	// androidImage is the fyne-cross image for the Android OS
-	androidImage = baseImage + "-android"
+	androidImage = "lucor/fyne-cross:android-latest"
 )
 
 // Android build and package the fyne app for the android OS
@@ -148,8 +148,12 @@ func makeAndroidContext(flags *androidFlags) (Context, error) {
 		return Context{}, fmt.Errorf("appID is mandatory for %s", androidOS)
 	}
 
-	ctx.DockerImage = androidImage
-	ctx.ID = androidOS
 	ctx.OS = androidOS
+	ctx.ID = androidOS
+
+	if flags.DockerImage == "" {
+		ctx.DockerImage = androidImage
+	}
+
 	return ctx, nil
 }
