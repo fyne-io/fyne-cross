@@ -169,7 +169,7 @@ func goBuild(ctx Context) error {
 		return err
 	}
 
-	log.Infof("[✓] Binary: %s", volume.JoinPathHost(ctx.BinDirHost(), ctx.Output))
+	log.Infof("[✓] Binary: %s", volume.JoinPathHost(ctx.BinDirHost(), ctx.ID, ctx.Output))
 	return nil
 }
 
