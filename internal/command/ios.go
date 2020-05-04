@@ -3,9 +3,11 @@ package command
 import (
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"runtime"
 
+	"github.com/lucor/fyne-cross/v2/internal/icon"
 	"github.com/lucor/fyne-cross/v2/internal/log"
 	"github.com/lucor/fyne-cross/v2/internal/volume"
 )
@@ -65,9 +67,27 @@ func (cmd *IOS) Run() error {
 	log.Debugf("%#v", ctx)
 
 	//
+	// check requirements
+	// until a docker image for iOS will be available the packaging of iOS app
+	// is supported only on darwin hosts via the fyne command.
+	// Requirements:
+	// - fyne binary
+	// - XCode
+	//
+	fyne, err := exec.LookPath("fyne")
+	if err != nil {
+		return fmt.Errorf("Missed requirement: fyne. To install: `go get fyne.io/fyne/cmd/fyne` and add $GOPATH/bin to $PATH")
+	}
+
+	err = exec.Command("xcrun", "xcodebuild", "-version").Run()
+	if err != nil {
+		return fmt.Errorf("Missed requirement: XCode")
+	}
+
+	//
 	// prepare build
 	//
-	err := cleanTargetDirs(ctx)
+	err = cleanTargetDirs(ctx)
 	if err != nil {
 		return err
 	}
@@ -90,7 +110,25 @@ func (cmd *IOS) Run() error {
 		return err
 	}
 
-	err = fynePackage(ctx)
+	args := []string{
+		"package",
+		"-os", ctx.OS,
+		"-name", ctx.Output,
+		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
+		"-appID", ctx.AppID,
+	}
+
+	// run the command inside the container
+	fynePackageCmd := exec.Command(fyne, args...)
+	fynePackageCmd.Dir = ctx.WorkDirHost()
+	fynePackageCmd.Stdout = os.Stdout
+	fynePackageCmd.Stderr = os.Stderr
+
+	if ctx.Debug {
+		log.Debug(fynePackageCmd)
+	}
+
+	err = fynePackageCmd.Run()
 	if err != nil {
 		return fmt.Errorf("Could not package the Fyne app: %v", err)
 	}
@@ -144,7 +182,7 @@ type iosFlags struct {
 // makeIOSContext returns the command context for an iOS target
 func makeIOSContext(flags *iosFlags) (Context, error) {
 
-	if runtime.GOOS != darwinOS {
+	if runtime.GOOS == darwinOS {
 		return Context{}, fmt.Errorf("iOS build is supported only on darwin hosts")
 	}
 
@@ -166,4 +204,10 @@ func makeIOSContext(flags *iosFlags) (Context, error) {
 	}
 
 	return ctx, nil
+}
+
+// fynePackageIOS package the application using the fyne cli tool
+func fynePackageIOS(ctx Context) error {
+
+	return nil
 }
