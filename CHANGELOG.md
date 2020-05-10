@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.0] - Unreleased
+## [2.0.0-beta1] - 2020-05-10
 - Add subcommand support
 - Add a flag to build as "console binary" for Windows #57
 - Add support for custom env variables #59
