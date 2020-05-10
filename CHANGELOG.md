@@ -5,6 +5,7 @@
 - Add a flag to build as "console binary" for Windows #57
 - Add support for custom env variables #59
 - Add support for custom docker image #52
+- Add support for FreeBSD #23
 
 ## [1.5.0] - 2020-04-13
 - Add android support #37

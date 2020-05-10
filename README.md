@@ -9,6 +9,7 @@ It has been inspired by [xgo](https://github.com/karalabe/xgo) and uses a [docke
 Supported targets are:
   -  darwin/amd64
   -  darwin/386
+  -  freebsd/amd64
   -  linux/amd64
   -  linux/386
   -  linux/arm
@@ -43,6 +44,7 @@ The commands are:
 	windows       Build and package a fyne application for the windows OS
 	android       Build and package a fyne application for the android OS
 	ios           Build and package a fyne application for the iOS OS
+	freebsd       Build and package a fyne application for the freebsd OS
 	version       Print the fyne-cross version information
 
 Use "fyne-cross <command> --help" for more information about a command.
