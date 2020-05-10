@@ -11,6 +11,8 @@ build-images:
 	@docker tag lucor/fyne-cross:linux-arm64-latest lucor/fyne-cross:linux-arm64-$(tag)
 	@docker build -f ${CURDIR}/docker/android/Dockerfile -t lucor/fyne-cross:android-latest .
 	@docker tag lucor/fyne-cross:android-latest lucor/fyne-cross:android-$(tag)
+	@docker build -f ${CURDIR}/docker/freebsd/Dockerfile -t lucor/fyne-cross:freebsd-latest .
+	@docker tag lucor/fyne-cross:freebsd-latest lucor/fyne-cross:freebsd-$(tag)
 
 push-images:
 	$(eval TAG := $(date +"%y.%m.%d"))
@@ -24,3 +26,5 @@ push-images:
 	@docker push lucor/fyne-cross:linux-arm64-$(tag)
 	@docker push lucor/fyne-cross:android-latest
 	@docker push lucor/fyne-cross:android-$(tag)
+	@docker push lucor/fyne-cross:freebsd-latest
+	@docker push lucor/fyne-cross:freebsd-$(tag)
