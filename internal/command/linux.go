@@ -197,6 +197,11 @@ func linuxContext(flags *linuxFlags) ([]Context, error) {
 			ctx.Tags = []string{"gles"}
 		}
 
+		// set context based on command-line flags
+		if len(flags.Ldflags) > 0 {
+			ctx.LdFlags = append(ctx.LdFlags, flags.Ldflags)
+		}
+
 		if flags.DockerImage == "" {
 			ctx.DockerImage = defaultDockerImage
 		}

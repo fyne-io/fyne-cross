@@ -199,6 +199,11 @@ func makeIOSContext(flags *iosFlags) (Context, error) {
 	ctx.OS = iosOS
 	ctx.ID = iosOS
 
+	// set context based on command-line flags
+	if len(flags.Ldflags) > 0 {
+		ctx.LdFlags = append(ctx.LdFlags, flags.Ldflags)
+	}
+
 	if flags.DockerImage == "" {
 		ctx.DockerImage = iosImage
 	}

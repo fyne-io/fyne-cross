@@ -186,6 +186,11 @@ func darwinContext(flags *darwinFlags) ([]Context, error) {
 			ctx.Env = append(ctx.Env, "GOOS=darwin", "GOARCH=386", "CC=o32-clang")
 		}
 
+		// set context based on command-line flags
+		if len(flags.Ldflags) > 0 {
+			ctx.LdFlags = append(ctx.LdFlags, flags.Ldflags)
+		}
+
 		if flags.DockerImage == "" {
 			ctx.DockerImage = darwinImage
 		}

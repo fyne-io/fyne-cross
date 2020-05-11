@@ -151,6 +151,11 @@ func makeAndroidContext(flags *androidFlags) (Context, error) {
 	ctx.OS = androidOS
 	ctx.ID = androidOS
 
+	// set context based on command-line flags
+	if len(flags.Ldflags) > 0 {
+		ctx.LdFlags = append(ctx.LdFlags, flags.Ldflags)
+	}
+
 	if flags.DockerImage == "" {
 		ctx.DockerImage = androidImage
 	}
