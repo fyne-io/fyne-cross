@@ -69,6 +69,7 @@ func makeDefaultContext(flags *CommonFlags) (Context, error) {
 		return Context{}, err
 	}
 
+	// set context based on command-line flags
 	ctx := Context{
 		AppID:        flags.AppID,
 		CacheEnabled: !flags.NoCache,
@@ -80,6 +81,10 @@ func makeDefaultContext(flags *CommonFlags) (Context, error) {
 		StripDebug:   !flags.NoStripDebug,
 		Debug:        flags.Debug,
 		Volume:       vol,
+	}
+
+	if len(flags.Ldflags) > 0 {
+		ctx.LdFlags = append(ctx.LdFlags, flags.Ldflags)
 	}
 
 	if flags.Silent {
