@@ -154,10 +154,6 @@ func freebsdContext(flags *freebsdFlags) ([]Context, error) {
 		}
 
 		// set context based on command-line flags
-		if len(flags.Ldflags) > 0 {
-			ctx.LdFlags = append(ctx.LdFlags, flags.Ldflags)
-		}
-
 		if flags.DockerImage == "" {
 			ctx.DockerImage = defaultDockerImage
 		}
