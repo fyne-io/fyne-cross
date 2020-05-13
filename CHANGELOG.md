@@ -1,6 +1,6 @@
 # Changelog
 
-## [2.0.0-beta2] - Unreleased
+## [2.0.0-beta2] - 2020-05-13
 - Fix build for packages not in root dir
 - Fix ldflags flag not honored #62
 
