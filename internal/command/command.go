@@ -23,12 +23,12 @@ type Command interface {
 func Usage(commands []Command) {
 	template := `fyne-cross is a simple tool to cross compile Fyne applications
 
-Usage: fyne-cross <command> [options]
+Usage: fyne-cross <command> [arguments]
 
 The commands are:
 
 {{ range $k, $cmd := . }}	{{ printf "%-13s %s\n" $cmd.Name $cmd.Description }}{{ end }}
-Use "fyne-cross <command> --help" for more information about a command.
+Use "fyne-cross <command> -help" for more information about a command.
 `
 
 	printUsage(template, commands)

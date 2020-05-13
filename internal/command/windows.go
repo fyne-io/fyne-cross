@@ -60,7 +60,7 @@ func (cmd *Windows) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	ctx, err := makeWindowsContext(flags)
+	ctx, err := makeWindowsContext(flags, flagSet.Args())
 	if err != nil {
 		return err
 	}
@@ -143,7 +143,7 @@ func (cmd *Windows) Usage() {
 	}
 
 	template := `
-Usage: fyne-cross {{ .Name }} [options] 
+Usage: fyne-cross {{ .Name }} [options] [package]
 
 {{ .Description }}
 
@@ -166,7 +166,7 @@ type windowsFlags struct {
 }
 
 // makeWindowsContext returns the command context for a windows target
-func makeWindowsContext(flags *windowsFlags) ([]Context, error) {
+func makeWindowsContext(flags *windowsFlags, args []string) ([]Context, error) {
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, windowsArchSupported)
 	if err != nil {
 		return []Context{}, fmt.Errorf("could not make build context for %s OS: %s", windowsOS, err)
@@ -175,7 +175,7 @@ func makeWindowsContext(flags *windowsFlags) ([]Context, error) {
 	ctxs := []Context{}
 	for _, arch := range targetArch {
 
-		ctx, err := makeDefaultContext(flags.CommonFlags)
+		ctx, err := makeDefaultContext(flags.CommonFlags, args)
 		if err != nil {
 			return ctxs, err
 		}

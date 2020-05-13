@@ -64,7 +64,7 @@ Output: {{ .Output }}
 	return buf.String()
 }
 
-func makeDefaultContext(flags *CommonFlags) (Context, error) {
+func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 	// mount the fyne-cross volume
 	vol, err := volume.Mount(flags.RootDir, flags.CacheDir)
 	if err != nil {
@@ -84,7 +84,7 @@ func makeDefaultContext(flags *CommonFlags) (Context, error) {
 		Volume:       vol,
 	}
 
-	ctx.Package, err = packageFromFlag(flags.Package, vol)
+	ctx.Package, err = packageFromArgs(args, vol)
 	if err != nil {
 		return ctx, err
 	}
@@ -104,9 +104,13 @@ func makeDefaultContext(flags *CommonFlags) (Context, error) {
 	return ctx, nil
 }
 
-// packageFromFlag validates and returns the package to compile.
-func packageFromFlag(pkg string, vol volume.Volume) (string, error) {
-	if pkg == "." || pkg == "" {
+// packageFromArgs validates and returns the package to compile.
+func packageFromArgs(args []string, vol volume.Volume) (string, error) {
+	pkg := "."
+	if len(args) > 0 {
+		pkg = args[0]
+	}
+	if pkg == "." {
 		return ".", nil
 	}
 
@@ -114,12 +118,13 @@ func packageFromFlag(pkg string, vol volume.Volume) (string, error) {
 		return pkg, nil
 	}
 
-	rel, err := filepath.Rel(vol.WorkDirContainer(), pkg)
-	if err != nil || strings.HasPrefix(rel, "..") {
-		fmt.Println(rel)
+	pkg = filepath.Clean(pkg)
+
+	if !strings.HasPrefix(pkg, vol.WorkDirHost()) {
 		return pkg, fmt.Errorf("package options when specified as absolute path must be relative to the project root dir")
 	}
 
+	pkg = strings.Replace(pkg, vol.WorkDirHost(), ".", 1)
 	return pkg, nil
 }
 

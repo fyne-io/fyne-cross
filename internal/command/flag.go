@@ -34,8 +34,6 @@ type CommonFlags struct {
 	NoStripDebug bool
 	// Output represents the named output file
 	Output string
-	// Package represents the package to build
-	Package string
 	// RootDir represents the project root directory
 	RootDir string
 	// Silent enables the silent mode
@@ -74,7 +72,6 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.StringVar(&flags.Ldflags, "ldflags", "", "Additional flags to pass to the external linker")
 	flagSet.BoolVar(&flags.NoStripDebug, "no-strip-debug", false, "Do not strip debug information from binaries")
 	flagSet.StringVar(&flags.Output, "output", output, "Named output file")
-	flagSet.StringVar(&flags.Package, "package", ".", "Package to compile")
 	flagSet.StringVar(&flags.RootDir, "dir", rootDir, "Fyne app root directory")
 	flagSet.BoolVar(&flags.Silent, "silent", false, "Silent mode")
 	flagSet.BoolVar(&flags.Debug, "debug", false, "Debug mode")

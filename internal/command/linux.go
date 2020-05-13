@@ -56,7 +56,7 @@ func (cmd *Linux) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	ctx, err := linuxContext(flags)
+	ctx, err := linuxContext(flags, flagSet.Args())
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (cmd *Linux) Usage() {
 	}
 
 	template := `
-Usage: fyne-cross {{ .Name }} [options] 
+Usage: fyne-cross {{ .Name }} [options] [package]
 
 {{ .Description }}
 
@@ -160,7 +160,7 @@ type linuxFlags struct {
 }
 
 // linuxContext returns the command context for a linux target
-func linuxContext(flags *linuxFlags) ([]Context, error) {
+func linuxContext(flags *linuxFlags, args []string) ([]Context, error) {
 
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, linuxArchSupported)
 	if err != nil {
@@ -170,7 +170,7 @@ func linuxContext(flags *linuxFlags) ([]Context, error) {
 	ctxs := []Context{}
 	for _, arch := range targetArch {
 
-		ctx, err := makeDefaultContext(flags.CommonFlags)
+		ctx, err := makeDefaultContext(flags.CommonFlags, args)
 		if err != nil {
 			return ctxs, err
 		}

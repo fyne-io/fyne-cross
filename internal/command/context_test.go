@@ -15,6 +15,7 @@ func Test_makeDefaultContext(t *testing.T) {
 
 	type args struct {
 		flags *CommonFlags
+		args  []string
 	}
 	tests := []struct {
 		name    string
@@ -83,9 +84,8 @@ func Test_makeDefaultContext(t *testing.T) {
 		{
 			name: "package dot",
 			args: args{
-				flags: &CommonFlags{
-					Package: ".",
-				},
+				flags: &CommonFlags{},
+				args:  []string{"."},
 			},
 			want: Context{
 				Volume:       vol,
@@ -98,9 +98,8 @@ func Test_makeDefaultContext(t *testing.T) {
 		{
 			name: "package relative",
 			args: args{
-				flags: &CommonFlags{
-					Package: "./cmd/command",
-				},
+				flags: &CommonFlags{},
+				args:  []string{"./cmd/command"},
 			},
 			want: Context{
 				Volume:       vol,
@@ -113,31 +112,29 @@ func Test_makeDefaultContext(t *testing.T) {
 		{
 			name: "package absolute",
 			args: args{
-				flags: &CommonFlags{
-					Package: volume.JoinPathHost(vol.WorkDirContainer(), "cmd/command"),
-				},
+				flags: &CommonFlags{},
+				args:  []string{volume.JoinPathHost(vol.WorkDirHost(), "cmd/command")},
 			},
 			want: Context{
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
-				Package:      volume.JoinPathHost(vol.WorkDirContainer(), "cmd/command"),
+				Package:      "./cmd/command",
 			},
 			wantErr: false,
 		},
 		{
 			name: "package absolute outside work dir",
 			args: args{
-				flags: &CommonFlags{
-					Package: "/path/outside/workdir",
-				},
+				flags: &CommonFlags{},
+				args:  []string{"/path/outside/workdir"},
 			},
 			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			ctx, err := makeDefaultContext(tt.args.flags)
+			ctx, err := makeDefaultContext(tt.args.flags, tt.args.args)
 
 			if tt.wantErr {
 				require.NotNil(t, err)
