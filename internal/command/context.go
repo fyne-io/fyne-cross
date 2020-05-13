@@ -3,6 +3,8 @@ package command
 import (
 	"bytes"
 	"fmt"
+	"path/filepath"
+	"strings"
 
 	"github.com/lucor/fyne-cross/v2/internal/log"
 	"github.com/lucor/fyne-cross/v2/internal/volume"
@@ -74,13 +76,17 @@ func makeDefaultContext(flags *CommonFlags) (Context, error) {
 		AppID:        flags.AppID,
 		CacheEnabled: !flags.NoCache,
 		DockerImage:  flags.DockerImage,
-		Env:          *flags.Env,
+		Env:          flags.Env,
 		Icon:         flags.Icon,
 		Output:       flags.Output,
-		Package:      flags.Package,
 		StripDebug:   !flags.NoStripDebug,
 		Debug:        flags.Debug,
 		Volume:       vol,
+	}
+
+	ctx.Package, err = packageFromFlag(flags.Package, vol)
+	if err != nil {
+		return ctx, err
 	}
 
 	if len(flags.Ldflags) > 0 {
@@ -96,6 +102,25 @@ func makeDefaultContext(flags *CommonFlags) (Context, error) {
 	}
 
 	return ctx, nil
+}
+
+// packageFromFlag validates and returns the package to compile.
+func packageFromFlag(pkg string, vol volume.Volume) (string, error) {
+	if pkg == "." || pkg == "" {
+		return ".", nil
+	}
+
+	if !filepath.IsAbs(pkg) {
+		return pkg, nil
+	}
+
+	rel, err := filepath.Rel(vol.WorkDirContainer(), pkg)
+	if err != nil || strings.HasPrefix(rel, "..") {
+		fmt.Println(rel)
+		return pkg, fmt.Errorf("package options when specified as absolute path must be relative to the project root dir")
+	}
+
+	return pkg, nil
 }
 
 // targetArchFromFlag validates and returns the architecture specified using flag againts the supported ones.

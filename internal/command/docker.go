@@ -187,6 +187,10 @@ func fynePackage(ctx Context) error {
 	// workDir default value
 	workDir := ctx.WorkDirContainer()
 
+	if ctx.OS == androidOS || ctx.OS == iosOS {
+		workDir = volume.JoinPathContainer(workDir, ctx.Package)
+	}
+
 	// set executable flag for linux and darwin targets
 	if ctx.OS == linuxOS || ctx.OS == darwinOS {
 		args = append(args, "-executable", volume.JoinPathContainer(ctx.BinDirContainer(), ctx.ID, ctx.Output))

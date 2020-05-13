@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.0-beta2] - Unreleased
+- Fix build for packages not in root dir
+- Fix ldflags flag not honored #62
+
 ## [2.0.0-beta1] - 2020-05-10
 - Add subcommand support
 - Add a flag to build as "console binary" for Windows #57
