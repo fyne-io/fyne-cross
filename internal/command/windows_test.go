@@ -13,6 +13,7 @@ func Test_makeWindowsContext(t *testing.T) {
 
 	type args struct {
 		flags *windowsFlags
+		args  []string
 	}
 	tests := []struct {
 		name    string
@@ -120,7 +121,7 @@ func Test_makeWindowsContext(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
-				ctx, err := makeWindowsContext(tt.args.flags)
+				ctx, err := makeWindowsContext(tt.args.flags, tt.args.args)
 				if tt.wantErr {
 					require.NotNil(t, err)
 					return

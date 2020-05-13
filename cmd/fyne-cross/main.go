@@ -48,7 +48,7 @@ func main() {
 	}
 
 	// Parse the arguments for the command
-	// It will display the command usage if --help is specified
+	// It will display the command usage if -help is specified
 	// and will exit in case of error
 	err = cmd.Parse(os.Args[2:])
 	if err != nil {

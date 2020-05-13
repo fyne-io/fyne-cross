@@ -50,7 +50,7 @@ func (cmd *FreeBSD) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	ctx, err := freebsdContext(flags)
+	ctx, err := freebsdContext(flags, flagSet.Args())
 	if err != nil {
 		return err
 	}
@@ -107,7 +107,7 @@ func (cmd *FreeBSD) Usage() {
 	}
 
 	template := `
-Usage: fyne-cross {{ .Name }} [options] 
+Usage: fyne-cross {{ .Name }} [options] [package]
 
 {{ .Description }}
 
@@ -127,7 +127,7 @@ type freebsdFlags struct {
 }
 
 // freebsdContext returns the command context for a freebsd target
-func freebsdContext(flags *freebsdFlags) ([]Context, error) {
+func freebsdContext(flags *freebsdFlags, args []string) ([]Context, error) {
 
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, freebsdArchSupported)
 	if err != nil {
@@ -137,7 +137,7 @@ func freebsdContext(flags *freebsdFlags) ([]Context, error) {
 	ctxs := []Context{}
 	for _, arch := range targetArch {
 
-		ctx, err := makeDefaultContext(flags.CommonFlags)
+		ctx, err := makeDefaultContext(flags.CommonFlags, args)
 		if err != nil {
 			return ctxs, err
 		}

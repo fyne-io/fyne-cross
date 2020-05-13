@@ -55,7 +55,7 @@ The commands are:
 	freebsd       Build and package a fyne application for the freebsd OS
 	version       Print the fyne-cross version information
 
-Use "fyne-cross <command> --help" for more information about a command.
+Use "fyne-cross <command> -help" for more information about a command.
 ```
 
 ### Wildcards
@@ -65,13 +65,13 @@ The `arch` flag support wildcards in case want to compile against all supported 
 Example:
 
 ```
-fyne-cross windows --arch=*
+fyne-cross windows -arch=*
 ```
 
 is equivalent to
 
 ```
-fyne-cross windows --arch=amd64,386
+fyne-cross windows -arch=amd64,386
 ```
 
 ## Example
@@ -89,10 +89,14 @@ cd examples
 fyne-cross linux
 ```
 
+> Note: by default fyne-cross will compile the package into the current dir.
+>
+> The command above is equivalent to: `fyne-cross linux .`
+
 ### Compile and package a particular example app
 
 ```
-fyne-cross linux --package ./cmd/bugs --output bugs
+fyne-cross linux -output bugs ./cmd/bugs
 ```
 
 ## Contribute

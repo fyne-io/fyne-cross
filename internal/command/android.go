@@ -45,7 +45,7 @@ func (cmd *Android) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	ctx, err := makeAndroidContext(flags)
+	ctx, err := makeAndroidContext(flags, flagSet.Args())
 	if err != nil {
 		return err
 	}
@@ -93,7 +93,7 @@ func (cmd *Android) Run() error {
 	}
 
 	// move the dist package into the "dist" folder
-	srcFile := volume.JoinPathHost(ctx.WorkDirHost(), packageName)
+	srcFile := volume.JoinPathHost(ctx.WorkDirHost(), ctx.Package, packageName)
 	distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
 	err = os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
@@ -120,7 +120,7 @@ func (cmd *Android) Usage() {
 	}
 
 	template := `
-Usage: fyne-cross {{ .Name }} [options] 
+Usage: fyne-cross {{ .Name }} [options] [package]
 
 {{ .Description }}
 
@@ -137,8 +137,8 @@ type androidFlags struct {
 }
 
 // makeAndroidContext returns the command context for an android target
-func makeAndroidContext(flags *androidFlags) (Context, error) {
-	ctx, err := makeDefaultContext(flags.CommonFlags)
+func makeAndroidContext(flags *androidFlags, args []string) (Context, error) {
+	ctx, err := makeDefaultContext(flags.CommonFlags, args)
 	if err != nil {
 		return Context{}, err
 	}

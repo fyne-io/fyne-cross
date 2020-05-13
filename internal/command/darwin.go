@@ -56,7 +56,7 @@ func (cmd *Darwin) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	ctx, err := darwinContext(flags)
+	ctx, err := darwinContext(flags, flagSet.Args())
 	if err != nil {
 		return err
 	}
@@ -140,7 +140,7 @@ func (cmd *Darwin) Usage() {
 	}
 
 	template := `
-Usage: fyne-cross {{ .Name }} [options] 
+Usage: fyne-cross {{ .Name }} [options] [package]
 
 {{ .Description }}
 
@@ -160,7 +160,7 @@ type darwinFlags struct {
 }
 
 // darwinContext returns the command context for a darwin target
-func darwinContext(flags *darwinFlags) ([]Context, error) {
+func darwinContext(flags *darwinFlags, args []string) ([]Context, error) {
 
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, darwinArchSupported)
 	if err != nil {
@@ -170,7 +170,7 @@ func darwinContext(flags *darwinFlags) ([]Context, error) {
 	ctxs := []Context{}
 	for _, arch := range targetArch {
 
-		ctx, err := makeDefaultContext(flags.CommonFlags)
+		ctx, err := makeDefaultContext(flags.CommonFlags, args)
 		if err != nil {
 			return ctxs, err
 		}
