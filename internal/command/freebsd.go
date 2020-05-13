@@ -153,6 +153,7 @@ func freebsdContext(flags *freebsdFlags) ([]Context, error) {
 			ctx.Env = append(ctx.Env, "GOOS=freebsd", "GOARCH=amd64", "CC=x86_64-unknown-freebsd11-clang")
 		}
 
+		// set context based on command-line flags
 		if flags.DockerImage == "" {
 			ctx.DockerImage = defaultDockerImage
 		}

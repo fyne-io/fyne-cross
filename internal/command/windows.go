@@ -191,11 +191,8 @@ func makeWindowsContext(flags *windowsFlags) ([]Context, error) {
 			ctx.Env = append(ctx.Env, "GOOS=windows", "GOARCH=386", "CC=i686-w64-mingw32-gcc")
 		}
 
-		ctx.LdFlags = []string{"-H windowsgui"}
-
-		// set context based on command-line flags
-		if flags.Console {
-			ctx.LdFlags = []string{}
+		if !flags.Console {
+			ctx.LdFlags = append(ctx.LdFlags, "-H windowsgui")
 		}
 
 		if flags.DockerImage == "" {

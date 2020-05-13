@@ -28,14 +28,17 @@ Supported targets are:
 
 ### Installation
 
-    go get github.com/lucor/fyne-cross/v2/cmd/fyne-cross
-
+```
+go get github.com/lucor/fyne-cross/v2/cmd/fyne-cross
+```
 
 ### Development release
 
 To install a preview of the v2 version or help in testing:
 
-        go get github.com/lucor/fyne-cross/v2/cmd/fyne-cross@develop
+```
+go get github.com/lucor/fyne-cross/v2/cmd/fyne-cross@develop
+```
 
 ## Usage
 
@@ -61,19 +64,36 @@ The `arch` flag support wildcards in case want to compile against all supported 
 
 Example:
 
-        fyne-cross windows --arch=*
+```
+fyne-cross windows --arch=*
+```
 
 is equivalent to
 
-       fyne-cross windows --arch=amd64,386
+```
+fyne-cross windows --arch=amd64,386
+```
 
 ## Example
 
-The example below cross build the [fyne examples application](https://github.com/fyne-io/examples)
+The example below cross compile and package the [fyne examples application](https://github.com/fyne-io/examples)
 
-        git clone https://github.com/fyne-io/examples.git
-        cd examples
-        fyne-cross linux
+```
+git clone https://github.com/fyne-io/examples.git
+cd examples
+```
+
+### Compile and package the main example app
+
+```
+fyne-cross linux
+```
+
+### Compile and package a particular example app
+
+```
+fyne-cross linux --package ./cmd/bugs --output bugs
+```
 
 ## Contribute
 
