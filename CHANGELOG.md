@@ -1,7 +1,10 @@
 # Changelog
 
-## [2.0.0-beta2] - 2020-05-13
+## [2.0.0-beta3] - 2020-05-13
 - Remove package option. Package can be now specified as argument
+- Fix android build when the package is not into the root dir
+
+## [2.0.0-beta2] - 2020-05-13
 - Fix build for packages not in root dir
 - Fix ldflags flag not honored #62
 
