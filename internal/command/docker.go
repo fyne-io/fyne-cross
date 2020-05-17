@@ -176,6 +176,13 @@ func goBuild(ctx Context) error {
 // fynePackage package the application using the fyne cli tool
 func fynePackage(ctx Context) error {
 
+	if ctx.Debug {
+		err := Run(ctx.DockerImage, ctx.Volume, Options{Debug: ctx.Debug}, []string{fyneBin, "version"})
+		if err != nil {
+			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
+		}
+	}
+
 	args := []string{
 		fyneBin, "package",
 		"-os", ctx.OS,
