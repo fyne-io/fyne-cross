@@ -5,6 +5,10 @@ All notable changes to the fyne-cross docker images will be documented in this f
 Release cycle won't follow the fyne-cross one, so the images will be tagged using the label
 year.month.day along with the latest one.
 
+# Release 20.05.17
+- Android image: upgrade fyne cli tool to develop to allow build for app fyne
+  develop branch
+
 # Release 20.05.10
 - Add support for FreeBSD: lucor/fyne-cross:freebsd-latest
 
