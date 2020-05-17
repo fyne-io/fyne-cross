@@ -3,7 +3,6 @@ package log
 
 import (
 	"io"
-	"log"
 	golog "log"
 	"os"
 	"sync"
@@ -96,11 +95,11 @@ func Fatalf(format string, v ...interface{}) {
 func PrintTemplate(w io.Writer, textTemplate string, data interface{}) {
 	tpl, err := template.New("tpl").Parse(textTemplate)
 	if err != nil {
-		log.Fatalf("Could not parse the template: %s", err)
+		golog.Fatalf("Could not parse the template: %s", err)
 	}
 	err = tpl.Execute(w, data)
 	if err != nil {
-		log.Fatalf("Could not execute the template: %s", err)
+		golog.Fatalf("Could not execute the template: %s", err)
 	}
 }
 

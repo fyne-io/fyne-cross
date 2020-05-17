@@ -89,7 +89,7 @@ func (cmd *Android) Run() error {
 
 	err = fynePackage(ctx)
 	if err != nil {
-		return fmt.Errorf("Could not package the Fyne app: %v", err)
+		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 
 	// move the dist package into the "dist" folder
@@ -97,7 +97,7 @@ func (cmd *Android) Run() error {
 	distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
 	err = os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
-		return fmt.Errorf("Could not create the dist package dir: %v", err)
+		return fmt.Errorf("could not create the dist package dir: %v", err)
 	}
 
 	err = os.Rename(srcFile, distFile)

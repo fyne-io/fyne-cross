@@ -1,6 +1,6 @@
 # Fyne Cross
 
-[![CircleCI](https://circleci.com/gh/lucor/fyne-cross.svg?style=svg)](https://circleci.com/gh/lucor/fyne-cross) [![Go Report Card](https://goreportcard.com/badge/github.com/lucor/fyne-cross)](https://goreportcard.com/report/github.com/lucor/fyne-cross) [![GoDoc](https://godoc.org/github.com/lucor/fyne-cross?status.svg)](http://godoc.org/github.com/lucor/fyne-cross) [![GitHub tag](https://img.shields.io/github/tag/lucor/fyne-cross.svg)]()
+[![CI](https://github.com/lucor/fyne-cross/workflows/CI/badge.svg)](https://github.com/lucor/fyne-cross/actions?query=workflow%3ACI) [![Go Report Card](https://goreportcard.com/badge/github.com/lucor/fyne-cross)](https://goreportcard.com/report/github.com/lucor/fyne-cross) [![GoDoc](https://godoc.org/github.com/lucor/fyne-cross?status.svg)](http://godoc.org/github.com/lucor/fyne-cross) [![GitHub tag](https://img.shields.io/github/tag/lucor/fyne-cross.svg)]()
 
 fyne-cross is a simple tool to cross compile and create distribution packages for [Fyne](https://fyne.io) applications.
 

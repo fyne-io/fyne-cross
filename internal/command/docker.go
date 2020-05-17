@@ -24,7 +24,7 @@ const (
 func CheckRequirements() error {
 	_, err := exec.LookPath("docker")
 	if err != nil {
-		return fmt.Errorf("Missed requirement: docker binary not found in PATH")
+		return fmt.Errorf("missed requirement: docker binary not found in PATH")
 	}
 	return nil
 }
@@ -115,7 +115,7 @@ func goModInit(ctx Context) error {
 	runOpts := Options{Debug: ctx.Debug}
 	err = Run(ctx.DockerImage, ctx.Volume, runOpts, []string{"go", "mod", "init", ctx.Output})
 	if err != nil {
-		return fmt.Errorf("Could not generate the temporary go module: %v", err)
+		return fmt.Errorf("could not generate the temporary go module: %v", err)
 	}
 
 	log.Info("[✓] go.mod created")
@@ -205,7 +205,7 @@ func fynePackage(ctx Context) error {
 
 	err := Run(ctx.DockerImage, ctx.Volume, runOpts, args)
 	if err != nil {
-		return fmt.Errorf("Could not package the Fyne app: %v", err)
+		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 	return nil
 }
@@ -230,14 +230,14 @@ func WindowsResource(ctx Context) (string, error) {
 
 	err := Run(ctx.DockerImage, ctx.Volume, runOpts, args)
 	if err != nil {
-		return windres, fmt.Errorf("Could not package the Fyne app: %v", err)
+		return windres, fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 
 	// copy the windows resource under the project root
 	// it will be automatically linked by compiler during build
 	err = volume.Copy(volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, windres), volume.JoinPathHost(ctx.WorkDirHost(), windres))
 	if err != nil {
-		return windres, fmt.Errorf("Could not copy windows resource under the project root: %v", err)
+		return windres, fmt.Errorf("could not copy windows resource under the project root: %v", err)
 	}
 
 	return windres, nil

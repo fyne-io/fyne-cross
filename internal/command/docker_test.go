@@ -2,7 +2,10 @@ package command
 
 import (
 	"fmt"
+	"os"
+	"os/exec"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"testing"
 
@@ -10,13 +13,19 @@ import (
 )
 
 func TestCmd(t *testing.T) {
-	if runtime.GOOS == "windows" {
-		t.Skip("TODO update for windows")
+
+	expectedCmd := "docker"
+	if lp, err := exec.LookPath(expectedCmd); err == nil {
+		expectedCmd = lp
 	}
 
 	uid, _ := user.Current()
 
-	vol, err := volume.Mount("/tmp/fyne-cross-test/app", "/tmp/fyne-cross-test/cache")
+	workDir := filepath.Join(os.TempDir(), "fyne-cross-test", "app")
+	cacheDir := filepath.Join(os.TempDir(), "fyne-cross-test", "cache")
+	customWorkDir := filepath.Join(os.TempDir(), "fyne-cross-test", "custom")
+
+	vol, err := volume.Mount(workDir, cacheDir)
 	if err != nil {
 		t.Fatalf("Error mounting volume test got unexpected error: %v", err)
 	}
@@ -28,9 +37,10 @@ func TestCmd(t *testing.T) {
 		cmdArgs []string
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name        string
+		args        args
+		want        string
+		wantWindows string
 	}{
 		{
 			name: "default",
@@ -40,7 +50,8 @@ func TestCmd(t *testing.T) {
 				opts:    Options{},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /app -v /tmp/fyne-cross-test/app:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross command arg", uid.Uid),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross command arg", expectedCmd, workDir, uid.Uid),
+			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build lucor/fyne-cross command arg", expectedCmd, workDir),
 		},
 		{
 			name: "custom work dir",
@@ -48,11 +59,12 @@ func TestCmd(t *testing.T) {
 				image: "lucor/fyne-cross",
 				vol:   vol,
 				opts: Options{
-					WorkDir: "/tmp/fyne-cross-test/custom-wd",
+					WorkDir: customWorkDir,
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /tmp/fyne-cross-test/custom-wd -v /tmp/fyne-cross-test/app:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross command arg", uid.Uid),
+			want:        fmt.Sprintf("%s run --rm -t -w %s -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross command arg", expectedCmd, customWorkDir, workDir, uid.Uid),
+			wantWindows: fmt.Sprintf("%s run --rm -t -w %s -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build lucor/fyne-cross command arg", expectedCmd, customWorkDir, workDir),
 		},
 		{
 			name: "cache enabled",
@@ -64,7 +76,8 @@ func TestCmd(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /app -v /tmp/fyne-cross-test/app:/app -v /tmp/fyne-cross-test/cache:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross command arg", uid.Uid),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -v %s:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s lucor/fyne-cross command arg", expectedCmd, workDir, cacheDir, uid.Uid),
+			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -v %s:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build lucor/fyne-cross command arg", expectedCmd, workDir, cacheDir),
 		},
 		{
 			name: "custom env variables",
@@ -76,14 +89,19 @@ func TestCmd(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: fmt.Sprintf("/usr/bin/docker run --rm -t -w /app -v /tmp/fyne-cross-test/app:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com -e fyne_uid=%s lucor/fyne-cross command arg", uid.Uid),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com -e fyne_uid=%s lucor/fyne-cross command arg", expectedCmd, workDir, uid.Uid),
+			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com lucor/fyne-cross command arg", expectedCmd, workDir),
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			cmd := Cmd(tt.args.image, tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()
-			if cmd != tt.want {
-				t.Errorf("Cmd() command = %v, want %v", cmd, tt.want)
+			want := tt.want
+			if runtime.GOOS == "windows" {
+				want = tt.wantWindows
+			}
+			if cmd != want {
+				t.Errorf("Cmd() command = %v, want %v", cmd, want)
 			}
 		})
 	}

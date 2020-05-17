@@ -81,7 +81,7 @@ func newCommonFlags() (*CommonFlags, error) {
 func defaultOutput() (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
-		return "", fmt.Errorf("Cannot get the path for current directory %s", err)
+		return "", fmt.Errorf("cannot get the path for current directory %s", err)
 	}
 	_, output := filepath.Split(wd)
 	return output, nil

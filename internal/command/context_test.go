@@ -1,6 +1,7 @@
 package command
 
 import (
+	"os"
 	"testing"
 
 	"github.com/stretchr/testify/assert"
@@ -127,7 +128,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			name: "package absolute outside work dir",
 			args: args{
 				flags: &CommonFlags{},
-				args:  []string{"/path/outside/workdir"},
+				args:  []string{os.TempDir()},
 			},
 			wantErr: true,
 		},
