@@ -95,6 +95,9 @@ func (cmd *Windows) Run() error {
 		}
 
 		windres, err := WindowsResource(ctx)
+		if err != nil {
+			return err
+		}
 
 		//
 		// build
@@ -119,7 +122,7 @@ func (cmd *Windows) Run() error {
 		distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, ctx.Output+".zip")
 		err = os.MkdirAll(filepath.Dir(distFile), 0755)
 		if err != nil {
-			return fmt.Errorf("Could not create the dist package dir: %v", err)
+			return fmt.Errorf("could not create the dist package dir: %v", err)
 		}
 		err = volume.Zip(srcFile, distFile)
 		if err != nil {

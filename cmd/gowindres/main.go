@@ -85,16 +85,16 @@ func writeManifest(data tplData, outFile string) error {
 
 	mFile, err := os.Create(outFile)
 	if err != nil {
-		return fmt.Errorf("Could not create the manifest file: %s", err)
+		return fmt.Errorf("could not create the manifest file: %s", err)
 	}
 	defer mFile.Close()
 	tpl, err := template.New("tpl").Parse(manifest)
 	if err != nil {
-		return fmt.Errorf("Could not parse the manifest template: %s", err)
+		return fmt.Errorf("could not parse the manifest template: %s", err)
 	}
 	err = tpl.Execute(mFile, data)
 	if err != nil {
-		return fmt.Errorf("Could not execute the manifest template: %s", err)
+		return fmt.Errorf("could not execute the manifest template: %s", err)
 	}
 	return nil
 }
@@ -107,16 +107,16 @@ func writeRc(data tplData, outFile string) error {
 `
 	mFile, err := os.Create(outFile)
 	if err != nil {
-		return fmt.Errorf("Could not create the rc file: %s", err)
+		return fmt.Errorf("could not create the rc file: %s", err)
 	}
 	defer mFile.Close()
 	tpl, err := template.New("tpl").Parse(rc)
 	if err != nil {
-		return fmt.Errorf("Could not parse the rc template: %s", err)
+		return fmt.Errorf("could not parse the rc template: %s", err)
 	}
 	err = tpl.Execute(mFile, data)
 	if err != nil {
-		return fmt.Errorf("Could not execute the rc template: %s", err)
+		return fmt.Errorf("could not execute the rc template: %s", err)
 	}
 	return nil
 }

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"path/filepath"
+	"runtime"
 	"strings"
 
 	"github.com/lucor/fyne-cross/v2/internal/log"
@@ -125,6 +126,9 @@ func packageFromArgs(args []string, vol volume.Volume) (string, error) {
 	}
 
 	pkg = strings.Replace(pkg, vol.WorkDirHost(), ".", 1)
+	if runtime.GOOS == "windows" {
+		pkg = filepath.ToSlash(pkg)
+	}
 	return pkg, nil
 }
 

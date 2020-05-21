@@ -1,0 +1,46 @@
+name: "CI"
+on: push
+
+jobs:
+  lint:
+    runs-on: "ubuntu-latest"
+    steps:
+    - name: Setup Go environment
+      uses: actions/setup-go@v2
+      with:
+        go-version: "1.14.x"
+
+    - name: Install staticcheck
+      run: go get -v honnef.co/go/tools/cmd/staticcheck
+    - name: Install goimports
+      run: go get -v golang.org/x/tools/cmd/goimports
+
+    # Checks-out the repository under $GITHUB_WORKSPACE
+    - uses: actions/checkout@v2
+
+    # Run linters
+    - name: Run go vet
+      run: go vet ./...
+    - name: Run goimports
+      run: test -z $(find . -name '*.go' -type f | xargs goimports -e -d | tee /dev/stderr)
+    - name: Run staticcheck
+      run: staticcheck github.com/lucor/fyne-cross/v2/...
+
+  test:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        go-version: ["1.14.x", "1.13.x"]
+
+    steps:
+    - name: Setup Go environment
+      uses: actions/setup-go@v2
+      with:
+        go-version: ${{ matrix.go-version }}
+
+    # Checks-out the repository under $GITHUB_WORKSPACE
+    - uses: actions/checkout@v2
+
+    # Run tests
+    - run: go test -race ./...

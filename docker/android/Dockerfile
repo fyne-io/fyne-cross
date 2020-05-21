@@ -29,3 +29,9 @@ RUN yes | ${ANDROID_HOME}/tools/bin/sdkmanager \
 	"ndk-bundle" \
 	"platforms;android-${ANDROID_SDK_PLATFORM}" \
 	"platform-tools"
+
+# Build the fyne command utility
+RUN GO111MODULE=on go get -v -ldflags="-w -s" "fyne.io/fyne/cmd/fyne@develop" \
+ 	&& mv /go/bin/fyne /usr/local/bin \
+ 	&& rm -rf /go/go-build \
+ 	&& fyne version

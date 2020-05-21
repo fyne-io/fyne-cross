@@ -76,12 +76,12 @@ func (cmd *IOS) Run() error {
 	//
 	fyne, err := exec.LookPath("fyne")
 	if err != nil {
-		return fmt.Errorf("Missed requirement: fyne. To install: `go get fyne.io/fyne/cmd/fyne` and add $GOPATH/bin to $PATH")
+		return fmt.Errorf("missed requirement: fyne. To install: `go get fyne.io/fyne/cmd/fyne` and add $GOPATH/bin to $PATH")
 	}
 
 	err = exec.Command("xcrun", "xcodebuild", "-version").Run()
 	if err != nil {
-		return fmt.Errorf("Missed requirement: XCode")
+		return fmt.Errorf("missed requirement: XCode")
 	}
 
 	//
@@ -130,7 +130,7 @@ func (cmd *IOS) Run() error {
 
 	err = fynePackageCmd.Run()
 	if err != nil {
-		return fmt.Errorf("Could not package the Fyne app: %v", err)
+		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 
 	// move the dist package into the "dist" folder
@@ -138,7 +138,7 @@ func (cmd *IOS) Run() error {
 	distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
 	err = os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
-		return fmt.Errorf("Could not create the dist package dir: %v", err)
+		return fmt.Errorf("could not create the dist package dir: %v", err)
 	}
 
 	err = os.Rename(srcFile, distFile)
@@ -205,10 +205,4 @@ func makeIOSContext(flags *iosFlags, args []string) (Context, error) {
 	}
 
 	return ctx, nil
-}
-
-// fynePackageIOS package the application using the fyne cli tool
-func fynePackageIOS(ctx Context) error {
-
-	return nil
 }

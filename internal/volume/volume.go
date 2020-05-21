@@ -43,7 +43,7 @@ func Copy(src string, dst string) error {
 func DefaultCacheDirHost() (string, error) {
 	userCacheDir, err := os.UserCacheDir()
 	if err != nil {
-		return "", fmt.Errorf("Cannot get the path for the system cache directory on the host %s", err)
+		return "", fmt.Errorf("cannot get the path for the system cache directory on the host %s", err)
 	}
 	return JoinPathHost(userCacheDir, fyneCrossPrefix), nil
 }
@@ -61,7 +61,7 @@ func DefaultIconHost() (string, error) {
 func DefaultWorkDirHost() (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
-		return "", fmt.Errorf("Cannot get the path for the work directory on the host %s", err)
+		return "", fmt.Errorf("cannot get the path for the work directory on the host %s", err)
 	}
 	return wd, nil
 }
@@ -237,7 +237,7 @@ func createHostDirs(l Volume) error {
 	for _, dir := range dirs {
 		err := os.MkdirAll(dir, 0755)
 		if err != nil {
-			return fmt.Errorf("Cannot create the fyne-cross directory %s: %s", dir, err)
+			return fmt.Errorf("cannot create the fyne-cross directory %s: %s", dir, err)
 		}
 	}
 	return nil

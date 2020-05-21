@@ -47,12 +47,12 @@ func cleanTargetDirs(ctx Context) error {
 	for k, v := range dirs {
 		err := os.RemoveAll(v)
 		if err != nil {
-			return fmt.Errorf("Could not clean the %q dir %s: %v", k, v, err)
+			return fmt.Errorf("could not clean the %q dir %s: %v", k, v, err)
 		}
 
 		err = os.MkdirAll(v, 0755)
 		if err != nil {
-			return fmt.Errorf("Could not create the %q dir %s: %v", k, v, err)
+			return fmt.Errorf("could not create the %q dir %s: %v", k, v, err)
 		}
 
 		log.Infof("[✓] %q dir cleaned: %s", k, v)
@@ -71,13 +71,13 @@ func prepareIcon(ctx Context) error {
 		}
 
 		if ctx.Icon != defaultIcon {
-			return fmt.Errorf("Icon not found at %q", ctx.Icon)
+			return fmt.Errorf("icon not found at %q", ctx.Icon)
 		}
 
 		log.Infof("[!] Default icon not found at %q", ctx.Icon)
 		err = ioutil.WriteFile(ctx.Icon, icon.FyneLogo, 0644)
 		if err != nil {
-			return fmt.Errorf("Could not create the temporary icon: %s", err)
+			return fmt.Errorf("could not create the temporary icon: %s", err)
 		}
 		log.Infof("[✓] Created a placeholder icon using Fyne logo for testing purpose")
 	}
@@ -87,14 +87,14 @@ func prepareIcon(ctx Context) error {
 		icoIcon := volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, ctx.Output+".ico")
 		err := icon.ConvertPngToIco(ctx.Icon, icoIcon)
 		if err != nil {
-			return fmt.Errorf("Could not create the windows ico: %v", err)
+			return fmt.Errorf("could not create the windows ico: %v", err)
 		}
 		return nil
 	}
 
 	err := volume.Copy(ctx.Icon, volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, icon.Default))
 	if err != nil {
-		return fmt.Errorf("Could not copy the icon to temp folder: %v", err)
+		return fmt.Errorf("could not copy the icon to temp folder: %v", err)
 	}
 	return nil
 }
