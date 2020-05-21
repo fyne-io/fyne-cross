@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [2.0.0-beta4] - 2020-05-21
 - Print fyne cli version in debug mode
 - Update unit tests to work on windows
 - Fix some minor linter suggestions
