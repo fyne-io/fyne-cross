@@ -4,6 +4,7 @@
 - Print fyne cli version in debug mode
 - Update unit tests to work on windows
 - Fix some minor linter suggestions
+- Update docker base image to go v1.13.11
 
 ## [2.0.0-beta3] - 2020-05-13
 - Remove package option. Package can be now specified as argument
