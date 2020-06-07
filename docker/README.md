@@ -9,3 +9,4 @@ It provides the following images:
 - lucor/fyne-cross:linux-arm64
 - lucor/fyne-cross:linux-arm
 - lucor/fyne-cross:android
+- lucor/fyne-cross:freebsd

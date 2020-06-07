@@ -1,7 +1,7 @@
-# docker cross 1.13.11
-ARG DOCKER_CROSS_VERSION=sha256:301126419b2b339eaf44928e092fdd0ed97015c540c9a2ffbd55415fb3190531
+# docker cross 1.13.12
+ARG DOCKER_CROSS_VERSION=sha256:ad1b962c4db7a04d7bad5e676589c58c9532feecdb24eccaa8090de878e4c891
 # fyne stable branch
-ARG FYNE_VERSION=v1.2.4
+ARG FYNE_VERSION=v1.3.0
 
 # Build the fyne command utility
 FROM dockercore/golang-cross@${DOCKER_CROSS_VERSION} AS fyne
