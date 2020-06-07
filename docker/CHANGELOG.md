@@ -7,6 +7,7 @@ year.month.day along with the latest one.
 
 # Release 20.06.07
 - Base image is based on dockercore/golang-cross@1.13.12 (Go v1.13.12)
+- fyne cli updated to v1.3.0
 
 # Release 20.05.21
 - Base image is based on dockercore/golang-cross@1.13.11 (Go v1.13.11)
