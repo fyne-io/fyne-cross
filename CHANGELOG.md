@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.0.0] - 2020-06-07
+- Base image is based on dockercore/golang-cross@1.13.12 (Go v1.13.12)
+- fyne cli updated to v1.3.0
+
 ## [2.0.0-beta4] - 2020-05-21
 - Print fyne cli version in debug mode
 - Update unit tests to work on windows
