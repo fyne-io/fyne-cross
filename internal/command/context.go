@@ -78,6 +78,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		CacheEnabled: !flags.NoCache,
 		DockerImage:  flags.DockerImage,
 		Env:          flags.Env,
+		Tags:         flags.Tags,
 		Icon:         flags.Icon,
 		Output:       flags.Output,
 		StripDebug:   !flags.NoStripDebug,

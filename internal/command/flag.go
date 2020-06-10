@@ -28,6 +28,8 @@ type CommonFlags struct {
 	Icon string
 	// Ldflags represents the flags to pass to the external linker
 	Ldflags string
+	// Additional build tags
+	Tags tagsFlag
 	// NoCache if true will not use the go build cache
 	NoCache bool
 	// NoStripDebug if true will not strip debug information from binaries
@@ -70,6 +72,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.StringVar(&flags.Icon, "icon", defaultIcon, "Application icon used for distribution")
 	flagSet.StringVar(&flags.DockerImage, "image", "", "Custom docker image to use for build")
 	flagSet.StringVar(&flags.Ldflags, "ldflags", "", "Additional flags to pass to the external linker")
+	flagSet.Var(&flags.Tags, "tags", "List of additional build tags separated by comma")
 	flagSet.BoolVar(&flags.NoStripDebug, "no-strip-debug", false, "Do not strip debug information from binaries")
 	flagSet.StringVar(&flags.Output, "output", output, "Named output file")
 	flagSet.StringVar(&flags.RootDir, "dir", rootDir, "Fyne app root directory")
@@ -140,7 +143,31 @@ func (af *targetArchFlag) Set(value string) error {
 	}
 
 	for _, v := range strings.Split(value, ",") {
-		*af = append(*af, v)
+		*af = append(*af, strings.TrimSpace(v))
+	}
+	return nil
+}
+
+// tagsFlag is a custom flag used to define build tags
+type tagsFlag []string
+
+// String is the method to format the flag's value, part of the flag.Value interface.
+// The String method's output will be used in diagnostics.
+func (tf *tagsFlag) String() string {
+	return fmt.Sprint(*tf)
+}
+
+// Set is the method to set the flag value, part of the flag.Value interface.
+// Set's argument is a string to be parsed to set the flag.
+// It's a comma-separated list, so we split it.
+func (tf *tagsFlag) Set(value string) error {
+	*tf = []string{}
+	if len(*tf) > 1 {
+		return errors.New("flag already set")
+	}
+
+	for _, v := range strings.Split(value, ",") {
+		*tf = append(*tf, strings.TrimSpace(v))
 	}
 	return nil
 }

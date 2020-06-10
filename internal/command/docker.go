@@ -142,7 +142,7 @@ func goBuild(ctx Context) error {
 	// add tags to command, if any
 	tags := ctx.Tags
 	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, " ")))
+		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
 	}
 
 	// set output folder to fyne-cross/bin/<target>
