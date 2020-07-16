@@ -1,5 +1,5 @@
-# docker cross 1.13.12
-ARG DOCKER_CROSS_VERSION=sha256:ad1b962c4db7a04d7bad5e676589c58c9532feecdb24eccaa8090de878e4c891
+# docker cross 1.13.13
+ARG DOCKER_CROSS_VERSION=sha256:4a1f78f11f5d9e15ea1400c4c9901c5c396e3ec3fb202fb12ec32d5d461125ad
 # fyne stable branch
 ARG FYNE_VERSION=v1.3.2
 
