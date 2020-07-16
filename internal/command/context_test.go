@@ -132,6 +132,22 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			wantErr: true,
 		},
+		{
+			name: "custom tags",
+			args: args{
+				flags: &CommonFlags{
+					Tags: tagsFlag{"hints", "gles"},
+				},
+			},
+			want: Context{
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Tags:         []string{"hints", "gles"},
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -1,5 +1,10 @@
 # Changelog
 
+## [2.1.0] - 2020-07-16
+- Add support for build flags #69
+- Base image is based on dockercore/golang-cross@1.13.13 (Go v1.13.13)
+- fyne cli updated to v1.3.2
+
 ## [2.0.0] - 2020-06-07
 - Base image is based on dockercore/golang-cross@1.13.12 (Go v1.13.12)
 - fyne cli updated to v1.3.0

@@ -190,11 +190,11 @@ func linuxContext(flags *linuxFlags, args []string) ([]Context, error) {
 		case ArchArm:
 			defaultDockerImage = linuxImageArm
 			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=arm", "CC=arm-linux-gnueabihf-gcc", "GOARM=7")
-			ctx.Tags = []string{"gles"}
+			ctx.Tags = append(ctx.Tags, "gles")
 		case ArchArm64:
 			defaultDockerImage = linuxImageArm64
 			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=arm64", "CC=aarch64-linux-gnu-gcc")
-			ctx.Tags = []string{"gles"}
+			ctx.Tags = append(ctx.Tags, "gles")
 		}
 
 		// set context based on command-line flags
