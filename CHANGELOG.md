@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [2.1.1] - 2020-07-17
 - Update base image to dockercore/golang-cross@1.13.14 (Go v1.13.14)
 
 ## [2.1.0] - 2020-07-16
