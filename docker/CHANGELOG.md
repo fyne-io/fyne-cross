@@ -5,6 +5,9 @@ All notable changes to the fyne-cross docker images will be documented in this f
 Release cycle won't follow the fyne-cross one, so the images will be tagged using the label
 year.month.day along with the latest one.
 
+# Release 20.07.17
+- Base image is based on dockercore/golang-cross@1.13.14 (Go v1.13.14)
+
 # Release 20.07.16
 - Base image is based on dockercore/golang-cross@1.13.13 (Go v1.13.13)
 - fyne cli updated to v1.3.2
