@@ -1,5 +1,9 @@
 # Changelog
 
+## [2.1.2] - 2020-08-13
+- Update base image to dockercore/golang-cross@1.13.15 (Go v1.13.15)
+- fyne cli updated to v1.3.3
+
 ## [2.1.1] - 2020-07-17
 - Update base image to dockercore/golang-cross@1.13.14 (Go v1.13.14)
 
