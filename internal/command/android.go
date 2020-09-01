@@ -63,9 +63,17 @@ func (cmd *Android) Run() error {
 	log.Debugf("%#v", ctx)
 
 	//
+	// pull image, if requested
+	//
+	err := pullImage(ctx)
+	if err != nil {
+		return err
+	}
+
+	//
 	// prepare build
 	//
-	err := cleanTargetDirs(ctx)
+	err = cleanTargetDirs(ctx)
 	if err != nil {
 		return err
 	}

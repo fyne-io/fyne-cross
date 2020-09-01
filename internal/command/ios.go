@@ -85,6 +85,14 @@ func (cmd *IOS) Run() error {
 	}
 
 	//
+	// pull image, if requested
+	//
+	err = pullImage(ctx)
+	if err != nil {
+		return err
+	}
+
+	//
 	// prepare build
 	//
 	err = cleanTargetDirs(ctx)
