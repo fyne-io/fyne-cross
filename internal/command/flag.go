@@ -42,6 +42,8 @@ type CommonFlags struct {
 	Silent bool
 	// Debug enables the debug mode
 	Debug bool
+	// Pull attempts to pull a newer version of the docker image
+	Pull bool
 }
 
 // newCommonFlags defines all the flags for the shared options
@@ -78,6 +80,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.StringVar(&flags.RootDir, "dir", rootDir, "Fyne app root directory")
 	flagSet.BoolVar(&flags.Silent, "silent", false, "Silent mode")
 	flagSet.BoolVar(&flags.Debug, "debug", false, "Debug mode")
+	flagSet.BoolVar(&flags.Pull, "pull", false, "Attempt to pull a newer version of the docker image")
 	return flags, nil
 }
 

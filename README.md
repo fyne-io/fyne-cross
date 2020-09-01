@@ -32,6 +32,19 @@ Supported targets are:
 go get github.com/lucor/fyne-cross/v2/cmd/fyne-cross
 ```
 
+### Updating docker images
+
+To update to a newer docker image the `--pull` flag can be specified.
+If set, fyne-cross will attempt to pull the image required to cross compile the application for the specified target.
+
+For example:
+
+```
+fyne-cross linux --pull
+```
+
+will pull only the `fyne-cross:base-latest` image required to cross compile for linux target.   
+
 ### Development release
 
 To install a preview of the v2 version or help in testing:

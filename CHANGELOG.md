@@ -1,5 +1,8 @@
 # Changelog
 
+## [2.2.0] - 2020-09-01
+- Add `--pull` option to attempt to pull a newer version of the docker image #75
+
 ## [2.1.2] - 2020-08-13
 - Update base image to dockercore/golang-cross@1.13.15 (Go v1.13.15)
 - fyne cli updated to v1.3.3

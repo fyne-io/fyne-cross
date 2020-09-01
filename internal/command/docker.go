@@ -1,6 +1,7 @@
 package command
 
 import (
+	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
@@ -248,4 +249,37 @@ func WindowsResource(ctx Context) (string, error) {
 	}
 
 	return windres, nil
+}
+
+// pullImage attempts to pull a newer version of the docker image
+func pullImage(ctx Context) error {
+	if !ctx.Pull {
+		return nil
+	}
+
+	log.Infof("[i] Checking for a newer version of the docker image: %s", ctx.DockerImage)
+
+	buf := bytes.Buffer{}
+
+	// run the command inside the container
+	cmd := exec.Command("docker", "pull", ctx.DockerImage)
+	cmd.Stdout = &buf
+	cmd.Stderr = &buf
+
+	if ctx.Debug {
+		log.Debug(cmd)
+	}
+
+	err := cmd.Run()
+
+	if ctx.Debug {
+		log.Debug(buf.String())
+	}
+
+	if err != nil {
+		return fmt.Errorf("could not pull the docker image: %v", err)
+	}
+
+	log.Infof("[✓] Image is up to date")
+	return nil
 }

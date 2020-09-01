@@ -49,6 +49,7 @@ type Context struct {
 	Package      string // Package is the package to build named by the import path as per 'go build'
 	StripDebug   bool   // StripDebug if true, strips binary output
 	Debug        bool   // Debug if true enable debug log
+	Pull         bool   // Pull if true attempts to pull a newer version of the docker image
 }
 
 // String implements the Stringer interface
@@ -84,6 +85,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		StripDebug:   !flags.NoStripDebug,
 		Debug:        flags.Debug,
 		Volume:       vol,
+		Pull:         flags.Pull,
 	}
 
 	ctx.Package, err = packageFromArgs(args, vol)
