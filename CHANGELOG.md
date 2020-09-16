@@ -2,6 +2,7 @@
 
 ## Unreleased
 - Fix iOS fails with "only on darwin" when on mac #78
+- Update README installation when module-aware mode is not enabled
 
 ## [2.2.0] - 2020-09-01
 - Add `--pull` option to attempt to pull a newer version of the docker image #75
