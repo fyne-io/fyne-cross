@@ -25,12 +25,15 @@ Supported targets are:
 
 - go >= 1.13
 - docker
+- [module-aware mode](https://golang.org/ref/mod#mod-commands) enabled
 
 ### Installation
 
 ```
-go get github.com/lucor/fyne-cross/v2/cmd/fyne-cross
+GO111MODULE=on go get github.com/lucor/fyne-cross/v2/cmd/fyne-cross
 ```
+
+> `fyne-cross` will be installed in GOPATH/bin, unless GOBIN is set.
 
 ### Updating docker images
 
