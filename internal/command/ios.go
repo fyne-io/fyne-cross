@@ -190,7 +190,7 @@ type iosFlags struct {
 // makeIOSContext returns the command context for an iOS target
 func makeIOSContext(flags *iosFlags, args []string) (Context, error) {
 
-	if runtime.GOOS == darwinOS {
+	if runtime.GOOS != darwinOS {
 		return Context{}, fmt.Errorf("iOS build is supported only on darwin hosts")
 	}
 
