@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## [2.2.1] - 2020-09-16
 - Fix iOS fails with "only on darwin" when on mac #78
 - Update README installation when module-aware mode is not enabled
 
