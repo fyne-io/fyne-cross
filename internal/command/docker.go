@@ -9,9 +9,9 @@ import (
 	"runtime"
 	"strings"
 
-	"github.com/lucor/fyne-cross/v2/internal/icon"
-	"github.com/lucor/fyne-cross/v2/internal/log"
-	"github.com/lucor/fyne-cross/v2/internal/volume"
+	"github.com/fyne-io/fyne-cross/internal/icon"
+	"github.com/fyne-io/fyne-cross/internal/log"
+	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
 const (

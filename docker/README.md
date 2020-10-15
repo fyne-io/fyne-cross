@@ -4,9 +4,9 @@ This folder contains the docker images used by fyne-cross to build the Fyne appl
 
 It provides the following images:
 
-- lucor/fyne-cross:base
-- lucor/fyne-cross:linux-386
-- lucor/fyne-cross:linux-arm64
-- lucor/fyne-cross:linux-arm
-- lucor/fyne-cross:android
-- lucor/fyne-cross:freebsd
+- fyneio/fyne-cross:base
+- fyneio/fyne-cross:linux-386
+- fyneio/fyne-cross:linux-arm64
+- fyneio/fyne-cross:linux-arm
+- fyneio/fyne-cross:android
+- fyneio/fyne-cross:freebsd

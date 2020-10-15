@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/lucor/fyne-cross/v2/internal/volume"
+	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
 var flagSet = flag.NewFlagSet("fyne-cross", flag.ExitOnError)

@@ -7,16 +7,16 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/lucor/fyne-cross/v2/internal/icon"
-	"github.com/lucor/fyne-cross/v2/internal/log"
-	"github.com/lucor/fyne-cross/v2/internal/volume"
+	"github.com/fyne-io/fyne-cross/internal/icon"
+	"github.com/fyne-io/fyne-cross/internal/log"
+	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
 const (
 	// iosOS it the ios OS name
 	iosOS = "ios"
 	// iosImage is the fyne-cross image for the iOS OS
-	iosImage = "lucor/fyne-cross:base-latest"
+	iosImage = "fyneio/fyne-cross:base-latest"
 )
 
 // IOS build and package the fyne app for the ios OS

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/lucor/fyne-cross/v2/internal/log"
-	"github.com/lucor/fyne-cross/v2/internal/volume"
+	"github.com/fyne-io/fyne-cross/internal/log"
+	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
 const (
@@ -19,7 +19,7 @@ var (
 	// darwinArchSupported defines the supported target architectures on darwin
 	darwinArchSupported = []Architecture{ArchAmd64, Arch386}
 	// darwinImage is the fyne-cross image for the Darwin OS
-	darwinImage = "lucor/fyne-cross:base-latest"
+	darwinImage = "fyneio/fyne-cross:base-latest"
 )
 
 // Darwin build and package the fyne app for the darwin OS

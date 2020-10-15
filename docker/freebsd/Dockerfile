@@ -1,4 +1,4 @@
-FROM lucor/fyne-cross:base-latest
+FROM fyneio/fyne-cross:base-latest
 
 # Install pkg
 # Based on https://github.com/freebsd/pkg/blob/release-1.12/.cirrus.yml#L19-L29

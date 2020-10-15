@@ -1,5 +1,5 @@
 # fyne-cross linux 386 image
-FROM lucor/fyne-cross:base-latest
+FROM fyneio/fyne-cross:base-latest
 RUN dpkg --add-architecture i386 \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \     

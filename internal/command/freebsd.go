@@ -4,14 +4,14 @@ import (
 	"fmt"
 	"runtime"
 
-	"github.com/lucor/fyne-cross/v2/internal/log"
+	"github.com/fyne-io/fyne-cross/internal/log"
 )
 
 const (
 	// freebsdOS it the freebsd OS name
 	freebsdOS = "freebsd"
 	// freebsdImageAmd64 is the fyne-cross image for the FreeBSD OS amd64 arch
-	freebsdImageAmd64 = "lucor/fyne-cross:freebsd-latest"
+	freebsdImageAmd64 = "fyneio/fyne-cross:freebsd-latest"
 )
 
 var (

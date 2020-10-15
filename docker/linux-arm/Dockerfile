@@ -1,5 +1,5 @@
 # fyne-cross linux arm image
-FROM lucor/fyne-cross:base-latest
+FROM fyneio/fyne-cross:base-latest
 RUN dpkg --add-architecture armhf \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \     

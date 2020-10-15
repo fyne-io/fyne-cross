@@ -1,4 +1,4 @@
-FROM lucor/fyne-cross:base-latest
+FROM fyneio/fyne-cross:base-latest
 
 ENV JAVA_HOME /usr/local/android_jdk8
 ENV ANDROID_HOME /usr/local/android_sdk

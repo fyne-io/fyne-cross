@@ -1,4 +1,10 @@
-# Changelog
+# Changelog - Fyne.io fyne-cross
+
+## [1.0.0]
+- Releaseing under project namespace with previous 2.2.1 becoming 1.0.0 in fyne-io namespace
+
+
+# Archive - lucor/fyne-cross
 
 ## [2.2.1] - 2020-09-16
 - Fix iOS fails with "only on darwin" when on mac #78

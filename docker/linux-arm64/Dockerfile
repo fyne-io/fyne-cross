@@ -1,5 +1,5 @@
 # fyne-cross linux arm64 image
-FROM lucor/fyne-cross:base-latest
+FROM fyneio/fyne-cross:base-latest
 RUN dpkg --add-architecture arm64 \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \

@@ -24,7 +24,7 @@ jobs:
     - name: Run goimports
       run: test -z $(find . -name '*.go' -type f | xargs goimports -e -d | tee /dev/stderr)
     - name: Run staticcheck
-      run: staticcheck github.com/lucor/fyne-cross/v2/...
+      run: staticcheck github.com/fyne-io/fyne-cross/...
 
   test:
     runs-on: ${{ matrix.os }}

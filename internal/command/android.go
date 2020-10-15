@@ -5,15 +5,15 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/lucor/fyne-cross/v2/internal/log"
-	"github.com/lucor/fyne-cross/v2/internal/volume"
+	"github.com/fyne-io/fyne-cross/internal/log"
+	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
 const (
 	// androidOS is the android OS name
 	androidOS = "android"
 	// androidImage is the fyne-cross image for the Android OS
-	androidImage = "lucor/fyne-cross:android-latest"
+	androidImage = "fyneio/fyne-cross:android-latest"
 )
 
 // Android build and package the fyne app for the android OS

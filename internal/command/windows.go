@@ -6,15 +6,15 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/lucor/fyne-cross/v2/internal/log"
-	"github.com/lucor/fyne-cross/v2/internal/volume"
+	"github.com/fyne-io/fyne-cross/internal/log"
+	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
 const (
 	// windowsOS it the windows OS name
 	windowsOS = "windows"
 	// windowsImage is the fyne-cross image for the Windows OS
-	windowsImage = "lucor/fyne-cross:base-latest"
+	windowsImage = "fyneio/fyne-cross:base-latest"
 )
 
 var (

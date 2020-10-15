@@ -12,7 +12,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/lucor/fyne-cross/v2/internal/icon"
+	"github.com/fyne-io/fyne-cross/internal/icon"
 )
 
 const (

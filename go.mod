@@ -1,4 +1,4 @@
-module github.com/lucor/fyne-cross/v2
+module github.com/fyne-io/fyne-cross
 
 go 1.13
 

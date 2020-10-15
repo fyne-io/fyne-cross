@@ -3,8 +3,8 @@ package main
 import (
 	"os"
 
-	"github.com/lucor/fyne-cross/v2/internal/command"
-	"github.com/lucor/fyne-cross/v2/internal/log"
+	"github.com/fyne-io/fyne-cross/internal/command"
+	"github.com/fyne-io/fyne-cross/internal/log"
 )
 
 func main() {

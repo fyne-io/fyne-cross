@@ -6,18 +6,18 @@ import (
 	"path/filepath"
 	"runtime"
 
-	"github.com/lucor/fyne-cross/v2/internal/log"
-	"github.com/lucor/fyne-cross/v2/internal/volume"
+	"github.com/fyne-io/fyne-cross/internal/log"
+	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
 const (
 	// linuxOS it the linux OS name
 	linuxOS = "linux"
 	// linuxImage is the fyne-cross image for the Linux OS
-	linuxImageAmd64 = "lucor/fyne-cross:base-latest"
-	linuxImage386   = "lucor/fyne-cross:linux-386-latest"
-	linuxImageArm64 = "lucor/fyne-cross:linux-arm64-latest"
-	linuxImageArm   = "lucor/fyne-cross:linux-arm-latest"
+	linuxImageAmd64 = "fyneio/fyne-cross:base-latest"
+	linuxImage386   = "fyneio/fyne-cross:linux-386-latest"
+	linuxImageArm64 = "fyneio/fyne-cross:linux-arm64-latest"
+	linuxImageArm   = "fyneio/fyne-cross:linux-arm-latest"
 )
 
 var (
