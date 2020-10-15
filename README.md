@@ -25,12 +25,11 @@ Supported targets are:
 
 - go >= 1.13
 - docker
-- [module-aware mode](https://golang.org/ref/mod#mod-commands) enabled
 
 ### Installation
 
 ```
-GO111MODULE=on go get github.com/fyne-io/fyne-cross/cmd/fyne-cross
+go get github.com/fyne-io/fyne-cross
 ```
 
 > `fyne-cross` will be installed in GOPATH/bin, unless GOBIN is set.
@@ -47,14 +46,6 @@ fyne-cross linux --pull
 ```
 
 will pull only the `fyne-cross:base-latest` image required to cross compile for linux target.   
-
-### Development release
-
-To install a preview of the v2 version or help in testing:
-
-```
-go get github.com/fyne-io/fyne-cross/cmd/fyne-cross@develop
-```
 
 ## Usage
 

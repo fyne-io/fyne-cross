@@ -12,7 +12,7 @@ RUN GO111MODULE=on go get -ldflags="-w -s" -v "fyne.io/fyne/cmd/fyne@${FYNE_VERS
 FROM dockercore/golang-cross@${DOCKER_CROSS_VERSION} AS gowindres
 WORKDIR /app
 COPY . .
-RUN GO111MODULE=on go build -o /go/bin/gowindres -ldflags="-w -s" ./cmd/gowindres
+RUN GO111MODULE=on go build -o /go/bin/gowindres -ldflags="-w -s" ./internal/cmd/gowindres
 
 # Build the fyne-cross base image
 FROM dockercore/golang-cross@${DOCKER_CROSS_VERSION}
