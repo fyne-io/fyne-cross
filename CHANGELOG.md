@@ -1,7 +1,7 @@
 # Changelog - Fyne.io fyne-cross
 
-## [1.0.0]
-- Releaseing under project namespace with previous 2.2.1 becoming 1.0.0 in fyne-io namespace
+## [0.9.0]
+- Releaseing under project namespace with previous 2.2.1 becoming 0.9.0 in fyne-io namespace
 
 
 # Archive - lucor/fyne-cross
