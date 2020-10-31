@@ -190,6 +190,7 @@ func fynePackage(ctx Context) error {
 		"-name", ctx.Output,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
 		"-appID", ctx.AppID,
+		"-appBuild", ctx.AppBuild,
 	}
 
 	// workDir default value

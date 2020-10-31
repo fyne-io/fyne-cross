@@ -15,6 +15,9 @@ var flagSet = flag.NewFlagSet("fyne-cross", flag.ExitOnError)
 
 // CommonFlags holds the flags shared between all commands
 type CommonFlags struct {
+	// AppBuild represents the build number, should be greater than 0 and
+	// incremented for each build
+	AppBuild int
 	// AppID represents the application ID used for distribution
 	AppID string
 	// CacheDir is the directory used to share/cache sources and dependencies.
@@ -67,6 +70,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	}
 
 	flags := &CommonFlags{}
+	flagSet.IntVar(&flags.AppBuild, "app-build", 1, "Build number, should be greater than 0 and incremented for each build")
 	flagSet.StringVar(&flags.AppID, "app-id", output, "Application ID used for distribution")
 	flagSet.StringVar(&flags.CacheDir, "cache", cacheDir, "Directory used to share/cache sources and dependencies")
 	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")

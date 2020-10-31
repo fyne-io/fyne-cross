@@ -2,9 +2,11 @@ package command
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -41,6 +43,7 @@ type Context struct {
 	OS           string   // OS defines the target OS
 	Tags         []string // Tags defines the tags to use
 
+	AppBuild     string // Build number
 	AppID        string // AppID is the appID to use for distribution
 	CacheEnabled bool   // CacheEnabled if true enable go build cache
 	DockerImage  string // DockerImage defines the docker image used to build
@@ -87,6 +90,12 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		Volume:       vol,
 		Pull:         flags.Pull,
 	}
+
+	if flags.AppBuild <= 0 {
+		return ctx, errors.New("build number should be greater than 0")
+	}
+
+	ctx.AppBuild = strconv.Itoa(flags.AppBuild)
 
 	ctx.Package, err = packageFromArgs(args, vol)
 	if err != nil {
