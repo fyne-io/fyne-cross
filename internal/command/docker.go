@@ -225,6 +225,50 @@ func fynePackage(ctx Context) error {
 	return nil
 }
 
+// fyneRelease package and release the application using the fyne cli tool
+// Note: at the moment this is used only for the android builds
+func fyneRelease(ctx Context) error {
+
+	if ctx.Debug {
+		err := Run(ctx.DockerImage, ctx.Volume, Options{Debug: ctx.Debug}, []string{fyneBin, "version"})
+		if err != nil {
+			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
+		}
+	}
+
+	args := []string{
+		fyneBin, "release",
+		"-os", ctx.OS,
+		"-name", ctx.Output,
+		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
+		"-appID", ctx.AppID,
+		"-appBuild", ctx.AppBuild,
+		"-appVersion", ctx.AppVersion,
+		"-release",
+	}
+
+	// workDir default value
+	workDir := ctx.WorkDirContainer()
+
+	switch ctx.OS {
+	case androidOS:
+		workDir = volume.JoinPathContainer(workDir, ctx.Package)
+		args = append(args, "-keyStore", ctx.Keystore)
+	}
+
+	runOpts := Options{
+		CacheEnabled: ctx.CacheEnabled,
+		WorkDir:      workDir,
+		Debug:        ctx.Debug,
+	}
+
+	err := Run(ctx.DockerImage, ctx.Volume, runOpts, args)
+	if err != nil {
+		return fmt.Errorf("could not package the Fyne app: %v", err)
+	}
+	return nil
+}
+
 // WindowsResource create a windows resource under the project root
 // that will be automatically linked by compliler during the build
 func WindowsResource(ctx Context) (string, error) {

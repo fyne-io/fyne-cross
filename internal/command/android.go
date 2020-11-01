@@ -42,6 +42,8 @@ func (cmd *Android) Parse(args []string) error {
 		CommonFlags: commonFlags,
 	}
 
+	flagSet.StringVar(&flags.Keystore, "keystore", "", "The location of .keystore file containing signing information")
+
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
@@ -95,7 +97,11 @@ func (cmd *Android) Run() error {
 		return err
 	}
 
-	err = fynePackage(ctx)
+	if ctx.Release {
+		err = fyneRelease(ctx)
+	} else {
+		err = fynePackage(ctx)
+	}
 	if err != nil {
 		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
@@ -142,6 +148,8 @@ Options:
 // androidFlags defines the command-line flags for the android command
 type androidFlags struct {
 	*CommonFlags
+
+	Keystore string //Keystore represents the location of .keystore file containing signing information
 }
 
 // makeAndroidContext returns the command context for an android target
@@ -158,6 +166,8 @@ func makeAndroidContext(flags *androidFlags, args []string) (Context, error) {
 
 	ctx.OS = androidOS
 	ctx.ID = androidOS
+
+	ctx.Keystore = flags.Keystore
 
 	// set context based on command-line flags
 	if flags.DockerImage == "" {

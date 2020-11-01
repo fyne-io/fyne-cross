@@ -55,6 +55,9 @@ type Context struct {
 	StripDebug   bool   // StripDebug if true, strips binary output
 	Debug        bool   // Debug if true enable debug log
 	Pull         bool   // Pull if true attempts to pull a newer version of the docker image
+
+	// Release context
+	Keystore    string //Keystore represents the location of .keystore file containing signing information [Android]
 }
 
 // String implements the Stringer interface
