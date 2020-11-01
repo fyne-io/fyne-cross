@@ -171,6 +171,34 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "invalid app build",
+			args: args{
+				flags: &CommonFlags{
+					AppBuild: 0,
+				},
+			},
+			want:    Context{},
+			wantErr: true,
+		},
+		{
+			name: "release mode enabled",
+			args: args{
+				flags: &CommonFlags{
+					AppBuild: 1,
+					Release:  true,
+				},
+			},
+			want: Context{
+				AppBuild:     "1",
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Release:      true,
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

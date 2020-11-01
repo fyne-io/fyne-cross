@@ -193,6 +193,11 @@ func fynePackage(ctx Context) error {
 		"-appBuild", ctx.AppBuild,
 	}
 
+	// Enable release mode, if specified
+	if ctx.Release {
+		args = append(args, "-release")
+	}
+
 	// workDir default value
 	workDir := ctx.WorkDirContainer()
 

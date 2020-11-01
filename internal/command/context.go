@@ -50,6 +50,7 @@ type Context struct {
 	Icon         string // Icon is the optional icon in png format to use for distribution
 	Output       string // Output is the name output
 	Package      string // Package is the package to build named by the import path as per 'go build'
+	Release      bool   // Enable release mode. If true, prepares an application for public distribution
 	StripDebug   bool   // StripDebug if true, strips binary output
 	Debug        bool   // Debug if true enable debug log
 	Pull         bool   // Pull if true attempts to pull a newer version of the docker image
@@ -89,6 +90,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		Debug:        flags.Debug,
 		Volume:       vol,
 		Pull:         flags.Pull,
+		Release:      flags.Release,
 	}
 
 	if flags.AppBuild <= 0 {
