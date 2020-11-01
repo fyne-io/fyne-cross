@@ -191,6 +191,7 @@ func fynePackage(ctx Context) error {
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
 		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
+		"-appVersion", ctx.AppVersion,
 	}
 
 	// Enable release mode, if specified

@@ -45,6 +45,7 @@ type Context struct {
 
 	AppBuild     string // Build number
 	AppID        string // AppID is the appID to use for distribution
+	AppVersion   string // AppVersion is the version number in the form x, x.y or x.y.z semantic version
 	CacheEnabled bool   // CacheEnabled if true enable go build cache
 	DockerImage  string // DockerImage defines the docker image used to build
 	Icon         string // Icon is the optional icon in png format to use for distribution
@@ -80,6 +81,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 	// set context based on command-line flags
 	ctx := Context{
 		AppID:        flags.AppID,
+		AppVersion:   flags.AppVersion,
 		CacheEnabled: !flags.NoCache,
 		DockerImage:  flags.DockerImage,
 		Env:          flags.Env,
