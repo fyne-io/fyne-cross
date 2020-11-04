@@ -3,11 +3,9 @@ package command
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 
-	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
@@ -45,6 +43,10 @@ func (cmd *IOS) Parse(args []string) error {
 		CommonFlags: commonFlags,
 	}
 
+	// flags used only in release mode
+	flagSet.StringVar(&flags.Certificate, "certificate", "", "The name of the certificate to sign the build")
+	flagSet.StringVar(&flags.Profile, "profile", "", "The name of the provisioning profile for this release build")
+
 	flagAppID := flagSet.Lookup("app-id")
 	flagAppID.Usage = fmt.Sprintf("%s. Must match a valid provisioning profile [required]", flagAppID.Usage)
 
@@ -67,27 +69,9 @@ func (cmd *IOS) Run() error {
 	log.Debugf("%#v", ctx)
 
 	//
-	// check requirements
-	// until a docker image for iOS will be available the packaging of iOS app
-	// is supported only on darwin hosts via the fyne command.
-	// Requirements:
-	// - fyne binary
-	// - XCode
-	//
-	fyne, err := exec.LookPath("fyne")
-	if err != nil {
-		return fmt.Errorf("missed requirement: fyne. To install: `go get fyne.io/fyne/cmd/fyne` and add $GOPATH/bin to $PATH")
-	}
-
-	err = exec.Command("xcrun", "xcodebuild", "-version").Run()
-	if err != nil {
-		return fmt.Errorf("missed requirement: XCode")
-	}
-
-	//
 	// pull image, if requested
 	//
-	err = pullImage(ctx)
+	err := pullImage(ctx)
 	if err != nil {
 		return err
 	}
@@ -105,38 +89,24 @@ func (cmd *IOS) Run() error {
 		return err
 	}
 
-	//
-	// package
-	//
-
-	log.Info("[i] Packaging app...")
-
-	packageName := fmt.Sprintf("%s.app", ctx.Output)
-
 	err = prepareIcon(ctx)
 	if err != nil {
 		return err
 	}
 
-	args := []string{
-		"package",
-		"-os", ctx.OS,
-		"-name", ctx.Output,
-		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
-		"-appID", ctx.AppID,
+	log.Info("[i] Packaging app...")
+
+	var packageName string
+	if ctx.Release {
+		// Release mode
+		packageName = fmt.Sprintf("%s.ipa", ctx.Output)
+		err = fyneReleaseHost(ctx)
+	} else {
+		// Build mode
+		packageName = fmt.Sprintf("%s.app", ctx.Output)
+		err = fynePackageHost(ctx)
 	}
 
-	// run the command inside the container
-	fynePackageCmd := exec.Command(fyne, args...)
-	fynePackageCmd.Dir = ctx.WorkDirHost()
-	fynePackageCmd.Stdout = os.Stdout
-	fynePackageCmd.Stderr = os.Stderr
-
-	if ctx.Debug {
-		log.Debug(fynePackageCmd)
-	}
-
-	err = fynePackageCmd.Run()
 	if err != nil {
 		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
@@ -185,6 +155,12 @@ Options:
 // iosFlags defines the command-line flags for the ios command
 type iosFlags struct {
 	*CommonFlags
+
+	//Certificate represents the name of the certificate to sign the build
+	Certificate string
+
+	//Profile represents the name of the provisioning profile for this release build
+	Profile string
 }
 
 // makeIOSContext returns the command context for an iOS target
@@ -206,6 +182,8 @@ func makeIOSContext(flags *iosFlags, args []string) (Context, error) {
 
 	ctx.OS = iosOS
 	ctx.ID = iosOS
+	ctx.Certificate = flags.Certificate
+	ctx.Profile = flags.Profile
 
 	// set context based on command-line flags
 	if flags.DockerImage == "" {

@@ -19,7 +19,9 @@ Supported targets are:
   -  android
   -  ios
 
-> Note: iOS compilation is supported only on darwin hosts. See [fyne README mobile](https://github.com/fyne-io/fyne/blob/v1.2.4/README-mobile.md#ios) for pre-requisites.
+> Note: 
+> - iOS compilation is supported only on darwin hosts. See [fyne pre-requisites](https://developer.fyne.io/started/#prerequisites) for details.
+> - windows packaging for public distrubution (release mode) is supported only on windows hosts.
 
 ## Requirements
 

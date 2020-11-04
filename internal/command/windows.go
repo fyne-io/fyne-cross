@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
@@ -51,6 +52,11 @@ func (cmd *Windows) Parse(args []string) error {
 
 	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, windowsArchSupported))
 	flagSet.BoolVar(&flags.Console, "console", false, "If set writes a 'console binary' instead of 'GUI binary'")
+
+	// flags used only in release mode
+	flagSet.StringVar(&flags.Certificate, "certificate", "", "The name of the certificate to sign the build")
+	flagSet.StringVar(&flags.Developer, "developer", "", "The developer identity for your Microsoft store account")
+	flagSet.StringVar(&flags.Password, "password", "", "The password for the certificate used to sign the build")
 
 	// Add exe extension to default output
 	flagOutput := flagSet.Lookup("output")
@@ -102,6 +108,38 @@ func (cmd *Windows) Run() error {
 			return err
 		}
 
+		// Release mode
+		if ctx.Release {
+			if runtime.GOOS != windowsOS {
+				return fmt.Errorf("windows release build is supported only on windows hosts")
+			}
+
+			err = fyneReleaseHost(ctx)
+			if err != nil {
+				return fmt.Errorf("could not package the Fyne app: %v", err)
+			}
+
+			packageName := ctx.Output + ".appx"
+			if pos := strings.LastIndex(ctx.Output, ".exe"); pos > 0 {
+				packageName = ctx.Output[:pos] + ".appx"
+			}
+
+			// move the dist package into the "dist" folder
+			srcFile := volume.JoinPathHost(ctx.WorkDirHost(), packageName)
+			distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
+			err = os.MkdirAll(filepath.Dir(distFile), 0755)
+			if err != nil {
+				return fmt.Errorf("could not create the dist package dir: %v", err)
+			}
+
+			err = os.Rename(srcFile, distFile)
+			if err != nil {
+				return err
+			}
+			return nil
+		}
+
+		// Build mode
 		windres, err := WindowsResource(ctx)
 		if err != nil {
 			return err
@@ -174,6 +212,13 @@ type windowsFlags struct {
 
 	// Console defines if the Windows app will build as "console binary" instead of "GUI binary"
 	Console bool
+
+	//Certificate represents the name of the certificate to sign the build
+	Certificate string
+	//Developer represents the developer identity for your Microsoft store account
+	Developer string
+	//Password represents the password for the certificate used to sign the build [Windows]
+	Password string
 }
 
 // makeWindowsContext returns the command context for a windows target
@@ -194,6 +239,10 @@ func makeWindowsContext(flags *windowsFlags, args []string) ([]Context, error) {
 		ctx.Architecture = arch
 		ctx.OS = windowsOS
 		ctx.ID = fmt.Sprintf("%s-%s", ctx.OS, ctx.Architecture)
+
+		ctx.Certificate = flags.Certificate
+		ctx.Developer = flags.Developer
+		ctx.Password = flags.Password
 
 		switch arch {
 		case ArchAmd64:

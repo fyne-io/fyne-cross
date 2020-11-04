@@ -202,7 +202,7 @@ func fynePackage(ctx Context) error {
 	// workDir default value
 	workDir := ctx.WorkDirContainer()
 
-	if ctx.OS == androidOS || ctx.OS == iosOS {
+	if ctx.OS == androidOS {
 		workDir = volume.JoinPathContainer(workDir, ctx.Package)
 	}
 
@@ -244,7 +244,6 @@ func fyneRelease(ctx Context) error {
 		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
-		"-release",
 	}
 
 	// workDir default value
@@ -254,6 +253,13 @@ func fyneRelease(ctx Context) error {
 	case androidOS:
 		workDir = volume.JoinPathContainer(workDir, ctx.Package)
 		args = append(args, "-keyStore", ctx.Keystore)
+	case iosOS:
+		args = append(args, "-certificate", ctx.Certificate)
+		args = append(args, "-profile", ctx.Profile)
+	case windowsOS:
+		args = append(args, "-certificate", ctx.Certificate)
+		args = append(args, "-developer", ctx.Developer)
+		args = append(args, "-password", ctx.Password)
 	}
 
 	runOpts := Options{
