@@ -5,6 +5,9 @@ All notable changes to the fyne-cross docker images will be documented in this f
 Release cycle won't follow the fyne-cross one, so the images will be tagged using the label
 year.month.day along with the latest one.
 
+# Release 20.11.04
+- fyne cli updated to v1.4.0
+
 # Archive
 
 These releases occurred in the original namspace, lucor/fyne-cross
