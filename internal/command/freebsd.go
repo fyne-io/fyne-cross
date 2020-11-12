@@ -2,9 +2,12 @@ package command
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 	"runtime"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
+	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
 const (
@@ -98,7 +101,34 @@ func (cmd *FreeBSD) Run() error {
 		//
 		// package
 		//
-		log.Infof("[!] Packaging for %s not implemented yet", ctx.OS)
+		log.Info("[i] Packaging app...")
+
+		packageName := fmt.Sprintf("%s.tar.gz", ctx.Output)
+
+		err = prepareIcon(ctx)
+		if err != nil {
+			return err
+		}
+
+		err = fynePackage(ctx)
+		if err != nil {
+			return fmt.Errorf("could not package the Fyne app: %v", err)
+		}
+
+		// move the dist package into the "dist" folder
+		srcFile := volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, packageName)
+		distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
+		err = os.MkdirAll(filepath.Dir(distFile), 0755)
+		if err != nil {
+			return fmt.Errorf("could not create the dist package dir: %v", err)
+		}
+
+		err = os.Rename(srcFile, distFile)
+		if err != nil {
+			return err
+		}
+
+		log.Infof("[✓] Package: %s", distFile)
 	}
 
 	return nil
