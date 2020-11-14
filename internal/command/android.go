@@ -107,7 +107,23 @@ func (cmd *Android) Run() error {
 	}
 
 	// move the dist package into the "dist" folder
-	srcFile := volume.JoinPathHost(ctx.WorkDirHost(), ctx.Package, packageName)
+	// The fyne tool sanitizes the package name to be acceptable as a
+	// android package name. For details, see:
+	// https://github.com/fyne-io/fyne/blob/v1.4.0/cmd/fyne/internal/mobile/build_androidapp.go#L297
+	// To avoid to duplicate the fyne tool sanitize logic here, the location of
+	// the dist package to move will be detected using a matching pattern
+	apkFilePattern := volume.JoinPathHost(ctx.WorkDirHost(), ctx.Package, "*.apk")
+	apks, err := filepath.Glob(apkFilePattern)
+	if err != nil {
+		return fmt.Errorf("could not find any apk file matching %q: %v", apkFilePattern, err)
+	}
+	if apks == nil {
+		return fmt.Errorf("could not find any apk file matching %q", apkFilePattern)
+	}
+	if len(apks) > 1 {
+		return fmt.Errorf("multiple apk files matching %q: %v. Please remove and build again", apkFilePattern, apks)
+	}
+	srcFile := apks[0]
 	distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
 	err = os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
