@@ -206,8 +206,9 @@ func fynePackage(ctx Context) error {
 		workDir = volume.JoinPathContainer(workDir, ctx.Package)
 	}
 
-	// set executable flag for linux and darwin targets
-	if ctx.OS == linuxOS || ctx.OS == darwinOS {
+	// linux, darwin and freebsd targets are built by fyne-cross
+	// in these cases fyne tool is used only to package the app specifying the executable flag
+	if ctx.OS == linuxOS || ctx.OS == darwinOS || ctx.OS == freebsdOS {
 		args = append(args, "-executable", volume.JoinPathContainer(ctx.BinDirContainer(), ctx.ID, ctx.Output))
 		workDir = volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID)
 	}
