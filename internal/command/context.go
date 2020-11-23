@@ -57,11 +57,13 @@ type Context struct {
 	Pull         bool   // Pull if true attempts to pull a newer version of the docker image
 
 	// Release context
-	Certificate string //Certificate represents the name of the certificate to sign the build [iOS, Windows]
-	Developer   string //Developer represents the developer identity for your Microsoft store account [Windows]
-	Keystore    string //Keystore represents the location of .keystore file containing signing information [Android]
-	Password    string //Password represents the password for the certificate used to sign the build [Windows]
-	Profile     string //Profile represents the name of the provisioning profile for this release build [iOS]
+	Certificate  string //Certificate represents the name of the certificate to sign the build [iOS, Windows]
+	Developer    string //Developer represents the developer identity for your Microsoft store account [Windows]
+	Keystore     string //Keystore represents the location of .keystore file containing signing information [Android]
+	KeystorePass string //KeystorePass represents the password for the .keystore file [Android]
+	KeyPass      string //KeyPass represents the assword for the signer's private key, which is needed if the private key is password-protected [Android]
+	Password     string //Password represents the password for the certificate used to sign the build [Windows]
+	Profile      string //Profile represents the name of the provisioning profile for this release build [iOS]
 }
 
 // String implements the Stringer interface

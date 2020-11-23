@@ -43,6 +43,8 @@ func (cmd *Android) Parse(args []string) error {
 	}
 
 	flagSet.StringVar(&flags.Keystore, "keystore", "", "The location of .keystore file containing signing information")
+	flagSet.StringVar(&flags.KeystorePass, "keystore-pass", "", "Password for the .keystore file")
+	flagSet.StringVar(&flags.KeyPass, "key-pass", "", "Password for the signer's private key, which is needed if the private key is password-protected")
 
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
@@ -165,7 +167,9 @@ Options:
 type androidFlags struct {
 	*CommonFlags
 
-	Keystore string //Keystore represents the location of .keystore file containing signing information
+	Keystore     string //Keystore represents the location of .keystore file containing signing information
+	KeystorePass string //Password for the .keystore file
+	KeyPass      string //Password for the signer's private key, which is needed if the private key is password-protected
 }
 
 // makeAndroidContext returns the command context for an android target
@@ -184,6 +188,8 @@ func makeAndroidContext(flags *androidFlags, args []string) (Context, error) {
 	ctx.ID = androidOS
 
 	ctx.Keystore = flags.Keystore
+	ctx.KeystorePass = flags.KeystorePass
+	ctx.KeyPass = flags.KeyPass
 
 	// set context based on command-line flags
 	if flags.DockerImage == "" {

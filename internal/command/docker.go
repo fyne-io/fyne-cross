@@ -254,6 +254,8 @@ func fyneRelease(ctx Context) error {
 	case androidOS:
 		workDir = volume.JoinPathContainer(workDir, ctx.Package)
 		args = append(args, "-keyStore", ctx.Keystore)
+		args = append(args, "-keyStorePass", ctx.KeystorePass)
+		args = append(args, "-keyPass", ctx.KeyPass)
 	case iosOS:
 		args = append(args, "-certificate", ctx.Certificate)
 		args = append(args, "-profile", ctx.Profile)
