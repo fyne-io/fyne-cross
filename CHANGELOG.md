@@ -3,7 +3,7 @@
 ## Unreleased
 - Add support for "fyne release" #3
 - Add support for creating packaged .tar.gz bundles on freebsd #6
-- Update fyne cli to v1.4.2-0.20201122132119-67b762f56dc0 fyne-io#1527
+- Update fyne cli to v1.4.2-0.20201125075943-97ad77d2abe0 (fyne-io#1538 fyne-io#1527)
 
 ## [0.9.0]
 - Releaseing under project namespace with previous 2.2.1 becoming 0.9.0 in fyne-io namespace

@@ -5,6 +5,9 @@ All notable changes to the fyne-cross docker images will be documented in this f
 Release cycle won't follow the fyne-cross one, so the images will be tagged using the label
 year.month.day along with the latest one.
 
+# Release 20.11.25
+- Update fyne cli to v1.4.2-0.20201125075943-97ad77d2abe0 fyne-io#1538
+
 # Release 20.11.23
 - Update fyne cli to v1.4.2-0.20201122132119-67b762f56dc0 fyne-io#1527
 

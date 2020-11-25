@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -132,6 +133,12 @@ func fynePackageHost(ctx Context) error {
 		"-appVersion", ctx.AppVersion,
 	}
 
+	// add tags to command, if any
+	tags := ctx.Tags
+	if len(tags) > 0 {
+		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+	}
+
 	// run the command from the host
 	fyneCmd := exec.Command(fyne, args...)
 	fyneCmd.Dir = ctx.WorkDirHost()
@@ -166,6 +173,12 @@ func fyneReleaseHost(ctx Context) error {
 		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
+	}
+
+	// add tags to command, if any
+	tags := ctx.Tags
+	if len(tags) > 0 {
+		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
 	}
 
 	switch ctx.OS {

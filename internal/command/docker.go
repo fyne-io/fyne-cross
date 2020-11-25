@@ -194,6 +194,12 @@ func fynePackage(ctx Context) error {
 		"-appVersion", ctx.AppVersion,
 	}
 
+	// add tags to command, if any
+	tags := ctx.Tags
+	if len(tags) > 0 {
+		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+	}
+
 	// Enable release mode, if specified
 	if ctx.Release {
 		args = append(args, "-release")
@@ -217,6 +223,7 @@ func fynePackage(ctx Context) error {
 		CacheEnabled: ctx.CacheEnabled,
 		WorkDir:      workDir,
 		Debug:        ctx.Debug,
+		Env:          ctx.Env,
 	}
 
 	err := Run(ctx.DockerImage, ctx.Volume, runOpts, args)
@@ -247,6 +254,12 @@ func fyneRelease(ctx Context) error {
 		"-appVersion", ctx.AppVersion,
 	}
 
+	// add tags to command, if any
+	tags := ctx.Tags
+	if len(tags) > 0 {
+		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+	}
+
 	// workDir default value
 	workDir := ctx.WorkDirContainer()
 
@@ -269,6 +282,7 @@ func fyneRelease(ctx Context) error {
 		CacheEnabled: ctx.CacheEnabled,
 		WorkDir:      workDir,
 		Debug:        ctx.Debug,
+		Env:          ctx.Env,
 	}
 
 	err := Run(ctx.DockerImage, ctx.Volume, runOpts, args)
