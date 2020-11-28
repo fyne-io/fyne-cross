@@ -48,7 +48,10 @@ func (cmd *Darwin) Parse(args []string) error {
 		CommonFlags: commonFlags,
 		TargetArch:  &targetArchFlag{runtime.GOARCH},
 	}
-	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, windowsArchSupported))
+	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, darwinArchSupported))
+
+	// flags used only in release mode
+	flagSet.StringVar(&flags.Category, "category", "", "The name of the certificate to sign the build")
 
 	flagAppID := flagSet.Lookup("app-id")
 	flagAppID.Usage = fmt.Sprintf("%s [required]", flagAppID.Usage)
@@ -93,10 +96,7 @@ func (cmd *Darwin) Run() error {
 			return err
 		}
 
-		//
-		// build
-		//
-		err = goBuild(ctx)
+		err = prepareIcon(ctx)
 		if err != nil {
 			return err
 		}
@@ -106,20 +106,36 @@ func (cmd *Darwin) Run() error {
 		//
 		log.Info("[i] Packaging app...")
 
-		packageName := fmt.Sprintf("%s.app", ctx.Output)
+		var packageName string
+		var srcFile string
+		if ctx.Release {
+			if runtime.GOOS != darwinOS {
+				return fmt.Errorf("darwin release build is supported only on darwin hosts")
+			}
 
-		err = prepareIcon(ctx)
-		if err != nil {
-			return err
+			packageName = fmt.Sprintf("%s.pkg", ctx.Output)
+			srcFile = volume.JoinPathHost(ctx.WorkDirHost(), packageName)
+
+			err = fyneReleaseHost(ctx)
+			if err != nil {
+				return fmt.Errorf("could not package the Fyne app: %v", err)
+			}
+		} else {
+			err = goBuild(ctx)
+			if err != nil {
+				return err
+			}
+
+			packageName = fmt.Sprintf("%s.app", ctx.Output)
+			srcFile = volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, packageName)
+
+			err = fynePackage(ctx)
+			if err != nil {
+				return fmt.Errorf("could not package the Fyne app: %v", err)
+			}
 		}
 
-		err = fynePackage(ctx)
-		if err != nil {
-			return fmt.Errorf("could not package the Fyne app: %v", err)
-		}
-
-		// move the dist package into the "dist" folder
-		srcFile := volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, packageName)
+		// move the package into the "dist" folder
 		distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
 		err = os.MkdirAll(filepath.Dir(distFile), 0755)
 		if err != nil {
@@ -163,6 +179,9 @@ Options:
 type darwinFlags struct {
 	*CommonFlags
 
+	//Category represents the category of the app for store listing
+	Category string
+
 	// TargetArch represents a list of target architecture to build on separated by comma
 	TargetArch *targetArchFlag
 }
@@ -186,6 +205,7 @@ func darwinContext(flags *darwinFlags, args []string) ([]Context, error) {
 		ctx.Architecture = arch
 		ctx.OS = darwinOS
 		ctx.ID = fmt.Sprintf("%s-%s", ctx.OS, ctx.Architecture)
+		ctx.Category = flags.Category
 
 		switch arch {
 		case ArchAmd64:

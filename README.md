@@ -21,6 +21,7 @@ Supported targets are:
 
 > Note: 
 > - iOS compilation is supported only on darwin hosts. See [fyne pre-requisites](https://developer.fyne.io/started/#prerequisites) for details.
+> - macOS packaging for public distrubution (release mode) is supported only on darwin hosts.
 > - windows packaging for public distrubution (release mode) is supported only on windows hosts.
 
 ## Requirements

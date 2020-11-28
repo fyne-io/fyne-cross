@@ -57,6 +57,7 @@ type Context struct {
 	Pull         bool   // Pull if true attempts to pull a newer version of the docker image
 
 	// Release context
+	Category     string //Category represents the category of the app for store listing [macOS]
 	Certificate  string //Certificate represents the name of the certificate to sign the build [iOS, Windows]
 	Developer    string //Developer represents the developer identity for your Microsoft store account [Windows]
 	Keystore     string //Keystore represents the location of .keystore file containing signing information [Android]

@@ -106,11 +106,20 @@ func printUsage(template string, data interface{}) {
 }
 
 // checkFyneBinHost checks if the fyne cli tool is installed on the host
-func checkFyneBinHost() (string, error) {
+func checkFyneBinHost(ctx Context) (string, error) {
 	fyne, err := exec.LookPath("fyne")
 	if err != nil {
 		return "", fmt.Errorf("missed requirement: fyne. To install: `go get fyne.io/fyne/cmd/fyne` and add $GOPATH/bin to $PATH")
 	}
+
+	if ctx.Debug {
+		out, err := exec.Command(fyne, "version").Output()
+		if err != nil {
+			return fyne, fmt.Errorf("could not get fyne cli %s version: %v", fyne, err)
+		}
+		log.Debugf("%s", out)
+	}
+
 	return fyne, nil
 }
 
@@ -118,7 +127,7 @@ func checkFyneBinHost() (string, error) {
 // Note: at the moment this is used only for the ios builds
 func fynePackageHost(ctx Context) error {
 
-	fyne, err := checkFyneBinHost()
+	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {
 		return err
 	}
@@ -160,7 +169,7 @@ func fynePackageHost(ctx Context) error {
 // Note: at the moment this is used only for the ios and windows builds
 func fyneReleaseHost(ctx Context) error {
 
-	fyne, err := checkFyneBinHost()
+	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {
 		return err
 	}
@@ -182,6 +191,8 @@ func fyneReleaseHost(ctx Context) error {
 	}
 
 	switch ctx.OS {
+	case darwinOS:
+		args = append(args, "-category", ctx.Category)
 	case iosOS:
 		args = append(args, "-certificate", ctx.Certificate)
 		args = append(args, "-profile", ctx.Profile)
