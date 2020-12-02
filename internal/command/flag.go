@@ -15,8 +15,13 @@ var flagSet = flag.NewFlagSet("fyne-cross", flag.ExitOnError)
 
 // CommonFlags holds the flags shared between all commands
 type CommonFlags struct {
+	// AppBuild represents the build number, should be greater than 0 and
+	// incremented for each build
+	AppBuild int
 	// AppID represents the application ID used for distribution
 	AppID string
+	// AppVersion represents the version number in the form x, x.y or x.y.z semantic version
+	AppVersion string
 	// CacheDir is the directory used to share/cache sources and dependencies.
 	// Default to system cache directory (i.e. $HOME/.cache/fyne-cross)
 	CacheDir string
@@ -36,6 +41,8 @@ type CommonFlags struct {
 	NoStripDebug bool
 	// Output represents the named output file
 	Output string
+	// Release represents if the package should be prepared for release (disable debug etc)
+	Release bool
 	// RootDir represents the project root directory
 	RootDir string
 	// Silent enables the silent mode
@@ -67,7 +74,9 @@ func newCommonFlags() (*CommonFlags, error) {
 	}
 
 	flags := &CommonFlags{}
+	flagSet.IntVar(&flags.AppBuild, "app-build", 1, "Build number, should be greater than 0 and incremented for each build")
 	flagSet.StringVar(&flags.AppID, "app-id", output, "Application ID used for distribution")
+	flagSet.StringVar(&flags.AppVersion, "app-version", "1.0", "Version number in the form x, x.y or x.y.z semantic version")
 	flagSet.StringVar(&flags.CacheDir, "cache", cacheDir, "Directory used to share/cache sources and dependencies")
 	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")
 	flagSet.Var(&flags.Env, "env", "List of additional env variables specified as KEY=VALUE and separated by comma")
@@ -77,6 +86,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.Var(&flags.Tags, "tags", "List of additional build tags separated by comma")
 	flagSet.BoolVar(&flags.NoStripDebug, "no-strip-debug", false, "Do not strip debug information from binaries")
 	flagSet.StringVar(&flags.Output, "output", output, "Named output file")
+	flagSet.BoolVar(&flags.Release, "release", false, "Release mode. Prepares the application for public distribution")
 	flagSet.StringVar(&flags.RootDir, "dir", rootDir, "Fyne app root directory")
 	flagSet.BoolVar(&flags.Silent, "silent", false, "Silent mode")
 	flagSet.BoolVar(&flags.Debug, "debug", false, "Debug mode")

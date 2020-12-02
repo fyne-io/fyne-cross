@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
+	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -101,4 +103,118 @@ func prepareIcon(ctx Context) error {
 
 func printUsage(template string, data interface{}) {
 	log.PrintTemplate(os.Stderr, template, data)
+}
+
+// checkFyneBinHost checks if the fyne cli tool is installed on the host
+func checkFyneBinHost(ctx Context) (string, error) {
+	fyne, err := exec.LookPath("fyne")
+	if err != nil {
+		return "", fmt.Errorf("missed requirement: fyne. To install: `go get fyne.io/fyne/cmd/fyne` and add $GOPATH/bin to $PATH")
+	}
+
+	if ctx.Debug {
+		out, err := exec.Command(fyne, "version").Output()
+		if err != nil {
+			return fyne, fmt.Errorf("could not get fyne cli %s version: %v", fyne, err)
+		}
+		log.Debugf("%s", out)
+	}
+
+	return fyne, nil
+}
+
+// fynePackageHost package the application using the fyne cli tool from the host
+// Note: at the moment this is used only for the ios builds
+func fynePackageHost(ctx Context) error {
+
+	fyne, err := checkFyneBinHost(ctx)
+	if err != nil {
+		return err
+	}
+
+	args := []string{
+		"package",
+		"-os", ctx.OS,
+		"-name", ctx.Output,
+		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
+		"-appID", ctx.AppID,
+		"-appBuild", ctx.AppBuild,
+		"-appVersion", ctx.AppVersion,
+	}
+
+	// add tags to command, if any
+	tags := ctx.Tags
+	if len(tags) > 0 {
+		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+	}
+
+	// run the command from the host
+	fyneCmd := exec.Command(fyne, args...)
+	fyneCmd.Dir = ctx.WorkDirHost()
+	fyneCmd.Stdout = os.Stdout
+	fyneCmd.Stderr = os.Stderr
+
+	if ctx.Debug {
+		log.Debug(fyneCmd)
+	}
+
+	err = fyneCmd.Run()
+	if err != nil {
+		return fmt.Errorf("could not package the Fyne app: %v", err)
+	}
+	return nil
+}
+
+// fyneReleaseHost package and release the application using the fyne cli tool from the host
+// Note: at the moment this is used only for the ios and windows builds
+func fyneReleaseHost(ctx Context) error {
+
+	fyne, err := checkFyneBinHost(ctx)
+	if err != nil {
+		return err
+	}
+
+	args := []string{
+		"release",
+		"-os", ctx.OS,
+		"-name", ctx.Output,
+		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
+		"-appID", ctx.AppID,
+		"-appBuild", ctx.AppBuild,
+		"-appVersion", ctx.AppVersion,
+	}
+
+	// add tags to command, if any
+	tags := ctx.Tags
+	if len(tags) > 0 {
+		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+	}
+
+	switch ctx.OS {
+	case darwinOS:
+		args = append(args, "-category", ctx.Category)
+	case iosOS:
+		args = append(args, "-certificate", ctx.Certificate)
+		args = append(args, "-profile", ctx.Profile)
+	case windowsOS:
+		args = append(args, "-certificate", ctx.Certificate)
+		args = append(args, "-developer", ctx.Developer)
+		args = append(args, "-password", ctx.Password)
+	}
+
+	// run the command from the host
+	fyneCmd := exec.Command(fyne, args...)
+	fyneCmd.Dir = ctx.WorkDirHost()
+	fyneCmd.Stdout = os.Stdout
+	fyneCmd.Stderr = os.Stderr
+
+	if ctx.Debug {
+		log.Debug(fyneCmd)
+	}
+
+	err = fyneCmd.Run()
+	if err != nil {
+		return fmt.Errorf("could not package the Fyne app: %v", err)
+	}
+	return nil
 }

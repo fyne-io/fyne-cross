@@ -190,12 +190,25 @@ func fynePackage(ctx Context) error {
 		"-name", ctx.Output,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
 		"-appID", ctx.AppID,
+		"-appBuild", ctx.AppBuild,
+		"-appVersion", ctx.AppVersion,
+	}
+
+	// add tags to command, if any
+	tags := ctx.Tags
+	if len(tags) > 0 {
+		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+	}
+
+	// Enable release mode, if specified
+	if ctx.Release {
+		args = append(args, "-release")
 	}
 
 	// workDir default value
 	workDir := ctx.WorkDirContainer()
 
-	if ctx.OS == androidOS || ctx.OS == iosOS {
+	if ctx.OS == androidOS {
 		workDir = volume.JoinPathContainer(workDir, ctx.Package)
 	}
 
@@ -210,6 +223,66 @@ func fynePackage(ctx Context) error {
 		CacheEnabled: ctx.CacheEnabled,
 		WorkDir:      workDir,
 		Debug:        ctx.Debug,
+		Env:          ctx.Env,
+	}
+
+	err := Run(ctx.DockerImage, ctx.Volume, runOpts, args)
+	if err != nil {
+		return fmt.Errorf("could not package the Fyne app: %v", err)
+	}
+	return nil
+}
+
+// fyneRelease package and release the application using the fyne cli tool
+// Note: at the moment this is used only for the android builds
+func fyneRelease(ctx Context) error {
+
+	if ctx.Debug {
+		err := Run(ctx.DockerImage, ctx.Volume, Options{Debug: ctx.Debug}, []string{fyneBin, "version"})
+		if err != nil {
+			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
+		}
+	}
+
+	args := []string{
+		fyneBin, "release",
+		"-os", ctx.OS,
+		"-name", ctx.Output,
+		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
+		"-appID", ctx.AppID,
+		"-appBuild", ctx.AppBuild,
+		"-appVersion", ctx.AppVersion,
+	}
+
+	// add tags to command, if any
+	tags := ctx.Tags
+	if len(tags) > 0 {
+		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+	}
+
+	// workDir default value
+	workDir := ctx.WorkDirContainer()
+
+	switch ctx.OS {
+	case androidOS:
+		workDir = volume.JoinPathContainer(workDir, ctx.Package)
+		args = append(args, "-keyStore", ctx.Keystore)
+		args = append(args, "-keyStorePass", ctx.KeystorePass)
+		args = append(args, "-keyPass", ctx.KeyPass)
+	case iosOS:
+		args = append(args, "-certificate", ctx.Certificate)
+		args = append(args, "-profile", ctx.Profile)
+	case windowsOS:
+		args = append(args, "-certificate", ctx.Certificate)
+		args = append(args, "-developer", ctx.Developer)
+		args = append(args, "-password", ctx.Password)
+	}
+
+	runOpts := Options{
+		CacheEnabled: ctx.CacheEnabled,
+		WorkDir:      workDir,
+		Debug:        ctx.Debug,
+		Env:          ctx.Env,
 	}
 
 	err := Run(ctx.DockerImage, ctx.Volume, runOpts, args)

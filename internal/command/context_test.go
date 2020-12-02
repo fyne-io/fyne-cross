@@ -27,9 +27,12 @@ func Test_makeDefaultContext(t *testing.T) {
 		{
 			name: "default",
 			args: args{
-				flags: &CommonFlags{},
+				flags: &CommonFlags{
+					AppBuild: 1,
+				},
 			},
 			want: Context{
+				AppBuild:     "1",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -41,10 +44,12 @@ func Test_makeDefaultContext(t *testing.T) {
 			name: "custom env",
 			args: args{
 				flags: &CommonFlags{
-					Env: envFlag{"TEST=true"},
+					AppBuild: 1,
+					Env:      envFlag{"TEST=true"},
 				},
 			},
 			want: Context{
+				AppBuild:     "1",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -57,10 +62,12 @@ func Test_makeDefaultContext(t *testing.T) {
 			name: "custom ldflags",
 			args: args{
 				flags: &CommonFlags{
-					Ldflags: "-X main.version=1.2.3",
+					AppBuild: 1,
+					Ldflags:  "-X main.version=1.2.3",
 				},
 			},
 			want: Context{
+				AppBuild:     "1",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -72,9 +79,12 @@ func Test_makeDefaultContext(t *testing.T) {
 		{
 			name: "package default",
 			args: args{
-				flags: &CommonFlags{},
+				flags: &CommonFlags{
+					AppBuild: 1,
+				},
 			},
 			want: Context{
+				AppBuild:     "1",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -85,10 +95,13 @@ func Test_makeDefaultContext(t *testing.T) {
 		{
 			name: "package dot",
 			args: args{
-				flags: &CommonFlags{},
-				args:  []string{"."},
+				flags: &CommonFlags{
+					AppBuild: 1,
+				},
+				args: []string{"."},
 			},
 			want: Context{
+				AppBuild:     "1",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -99,10 +112,13 @@ func Test_makeDefaultContext(t *testing.T) {
 		{
 			name: "package relative",
 			args: args{
-				flags: &CommonFlags{},
-				args:  []string{"./cmd/command"},
+				flags: &CommonFlags{
+					AppBuild: 1,
+				},
+				args: []string{"./cmd/command"},
 			},
 			want: Context{
+				AppBuild:     "1",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -113,10 +129,13 @@ func Test_makeDefaultContext(t *testing.T) {
 		{
 			name: "package absolute",
 			args: args{
-				flags: &CommonFlags{},
-				args:  []string{volume.JoinPathHost(vol.WorkDirHost(), "cmd/command")},
+				flags: &CommonFlags{
+					AppBuild: 1,
+				},
+				args: []string{volume.JoinPathHost(vol.WorkDirHost(), "cmd/command")},
 			},
 			want: Context{
+				AppBuild:     "1",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -127,8 +146,10 @@ func Test_makeDefaultContext(t *testing.T) {
 		{
 			name: "package absolute outside work dir",
 			args: args{
-				flags: &CommonFlags{},
-				args:  []string{os.TempDir()},
+				flags: &CommonFlags{
+					AppBuild: 1,
+				},
+				args: []string{os.TempDir()},
 			},
 			wantErr: true,
 		},
@@ -136,15 +157,65 @@ func Test_makeDefaultContext(t *testing.T) {
 			name: "custom tags",
 			args: args{
 				flags: &CommonFlags{
-					Tags: tagsFlag{"hints", "gles"},
+					AppBuild: 1,
+					Tags:     tagsFlag{"hints", "gles"},
 				},
 			},
 			want: Context{
+				AppBuild:     "1",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
 				Package:      ".",
 				Tags:         []string{"hints", "gles"},
+			},
+			wantErr: false,
+		},
+		{
+			name: "invalid app build",
+			args: args{
+				flags: &CommonFlags{
+					AppBuild: 0,
+				},
+			},
+			want:    Context{},
+			wantErr: true,
+		},
+		{
+			name: "release mode enabled",
+			args: args{
+				flags: &CommonFlags{
+					AppBuild: 1,
+					Release:  true,
+				},
+			},
+			want: Context{
+				AppBuild:     "1",
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Release:      true,
+			},
+			wantErr: false,
+		},
+		{
+			name: "app version",
+			args: args{
+				flags: &CommonFlags{
+					AppBuild:   1,
+					AppVersion: "1.0",
+					Release:    true,
+				},
+			},
+			want: Context{
+				AppBuild:     "1",
+				AppVersion:   "1.0",
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Release:      true,
 			},
 			wantErr: false,
 		},

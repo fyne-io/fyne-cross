@@ -2,9 +2,11 @@ package command
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -41,15 +43,28 @@ type Context struct {
 	OS           string   // OS defines the target OS
 	Tags         []string // Tags defines the tags to use
 
+	AppBuild     string // Build number
 	AppID        string // AppID is the appID to use for distribution
+	AppVersion   string // AppVersion is the version number in the form x, x.y or x.y.z semantic version
 	CacheEnabled bool   // CacheEnabled if true enable go build cache
 	DockerImage  string // DockerImage defines the docker image used to build
 	Icon         string // Icon is the optional icon in png format to use for distribution
 	Output       string // Output is the name output
 	Package      string // Package is the package to build named by the import path as per 'go build'
+	Release      bool   // Enable release mode. If true, prepares an application for public distribution
 	StripDebug   bool   // StripDebug if true, strips binary output
 	Debug        bool   // Debug if true enable debug log
 	Pull         bool   // Pull if true attempts to pull a newer version of the docker image
+
+	// Release context
+	Category     string //Category represents the category of the app for store listing [macOS]
+	Certificate  string //Certificate represents the name of the certificate to sign the build [iOS, Windows]
+	Developer    string //Developer represents the developer identity for your Microsoft store account [Windows]
+	Keystore     string //Keystore represents the location of .keystore file containing signing information [Android]
+	KeystorePass string //KeystorePass represents the password for the .keystore file [Android]
+	KeyPass      string //KeyPass represents the assword for the signer's private key, which is needed if the private key is password-protected [Android]
+	Password     string //Password represents the password for the certificate used to sign the build [Windows]
+	Profile      string //Profile represents the name of the provisioning profile for this release build [iOS]
 }
 
 // String implements the Stringer interface
@@ -76,6 +91,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 	// set context based on command-line flags
 	ctx := Context{
 		AppID:        flags.AppID,
+		AppVersion:   flags.AppVersion,
 		CacheEnabled: !flags.NoCache,
 		DockerImage:  flags.DockerImage,
 		Env:          flags.Env,
@@ -86,7 +102,14 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		Debug:        flags.Debug,
 		Volume:       vol,
 		Pull:         flags.Pull,
+		Release:      flags.Release,
 	}
+
+	if flags.AppBuild <= 0 {
+		return ctx, errors.New("build number should be greater than 0")
+	}
+
+	ctx.AppBuild = strconv.Itoa(flags.AppBuild)
 
 	ctx.Package, err = packageFromArgs(args, vol)
 	if err != nil {

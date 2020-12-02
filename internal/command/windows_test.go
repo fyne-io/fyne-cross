@@ -25,12 +25,15 @@ func Test_makeWindowsContext(t *testing.T) {
 			name: "default",
 			args: args{
 				flags: &windowsFlags{
-					CommonFlags: &CommonFlags{},
-					TargetArch:  &targetArchFlag{"amd64"},
+					CommonFlags: &CommonFlags{
+						AppBuild: 1,
+					},
+					TargetArch: &targetArchFlag{"amd64"},
 				},
 			},
 			want: []Context{
 				{
+					AppBuild:     "1",
 					Volume:       vol,
 					CacheEnabled: true,
 					StripDebug:   true,
@@ -48,13 +51,16 @@ func Test_makeWindowsContext(t *testing.T) {
 			name: "console",
 			args: args{
 				flags: &windowsFlags{
-					CommonFlags: &CommonFlags{},
-					TargetArch:  &targetArchFlag{"386"},
-					Console:     true,
+					CommonFlags: &CommonFlags{
+						AppBuild: 1,
+					},
+					TargetArch: &targetArchFlag{"386"},
+					Console:    true,
 				},
 			},
 			want: []Context{
 				{
+					AppBuild:     "1",
 					Volume:       vol,
 					CacheEnabled: true,
 					StripDebug:   true,
@@ -72,13 +78,15 @@ func Test_makeWindowsContext(t *testing.T) {
 			args: args{
 				flags: &windowsFlags{
 					CommonFlags: &CommonFlags{
-						Ldflags: "-X main.version=1.2.3",
+						AppBuild: 1,
+						Ldflags:  "-X main.version=1.2.3",
 					},
 					TargetArch: &targetArchFlag{"amd64"},
 				},
 			},
 			want: []Context{
 				{
+					AppBuild:     "1",
 					Volume:       vol,
 					CacheEnabled: true,
 					StripDebug:   true,
@@ -97,6 +105,7 @@ func Test_makeWindowsContext(t *testing.T) {
 			args: args{
 				flags: &windowsFlags{
 					CommonFlags: &CommonFlags{
+						AppBuild:    1,
 						DockerImage: "test",
 					},
 					TargetArch: &targetArchFlag{"amd64"},
@@ -104,6 +113,7 @@ func Test_makeWindowsContext(t *testing.T) {
 			},
 			want: []Context{
 				{
+					AppBuild:     "1",
 					Volume:       vol,
 					CacheEnabled: true,
 					StripDebug:   true,
