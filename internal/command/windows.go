@@ -59,9 +59,9 @@ func (cmd *Windows) Parse(args []string) error {
 	flagSet.StringVar(&flags.Password, "password", "", "The password for the certificate used to sign the build")
 
 	// Add exe extension to default output
-	flagOutput := flagSet.Lookup("output")
-	flagOutput.DefValue = fmt.Sprintf("%s.exe", flagOutput.DefValue)
-	flagOutput.Value.Set(flagOutput.DefValue)
+	flagName := flagSet.Lookup("name")
+	flagName.DefValue = fmt.Sprintf("%s.exe", flagName.DefValue)
+	flagName.Value.Set(flagName.DefValue)
 
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
@@ -119,9 +119,9 @@ func (cmd *Windows) Run() error {
 				return fmt.Errorf("could not package the Fyne app: %v", err)
 			}
 
-			packageName := ctx.Output + ".appx"
-			if pos := strings.LastIndex(ctx.Output, ".exe"); pos > 0 {
-				packageName = ctx.Output[:pos] + ".appx"
+			packageName := ctx.Name + ".appx"
+			if pos := strings.LastIndex(ctx.Name, ".exe"); pos > 0 {
+				packageName = ctx.Name[:pos] + ".appx"
 			}
 
 			// move the dist package into the "dist" folder
@@ -164,8 +164,8 @@ func (cmd *Windows) Run() error {
 
 		// create a zip archive from the compiled binary under the "bin" folder
 		// and place it under the "dist" folder
-		srcFile := volume.JoinPathHost(ctx.BinDirHost(), ctx.ID, ctx.Output)
-		distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, ctx.Output+".zip")
+		srcFile := volume.JoinPathHost(ctx.BinDirHost(), ctx.ID, ctx.Name)
+		distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, ctx.Name+".zip")
 		err = os.MkdirAll(filepath.Dir(distFile), 0755)
 		if err != nil {
 			return fmt.Errorf("could not create the dist package dir: %v", err)

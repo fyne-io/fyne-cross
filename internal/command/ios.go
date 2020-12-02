@@ -99,11 +99,11 @@ func (cmd *IOS) Run() error {
 	var packageName string
 	if ctx.Release {
 		// Release mode
-		packageName = fmt.Sprintf("%s.ipa", ctx.Output)
+		packageName = fmt.Sprintf("%s.ipa", ctx.Name)
 		err = fyneReleaseHost(ctx)
 	} else {
 		// Build mode
-		packageName = fmt.Sprintf("%s.app", ctx.Output)
+		packageName = fmt.Sprintf("%s.app", ctx.Name)
 		err = fynePackageHost(ctx)
 	}
 

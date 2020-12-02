@@ -113,7 +113,7 @@ func (cmd *Darwin) Run() error {
 				return fmt.Errorf("darwin release build is supported only on darwin hosts")
 			}
 
-			packageName = fmt.Sprintf("%s.pkg", ctx.Output)
+			packageName = fmt.Sprintf("%s.pkg", ctx.Name)
 			srcFile = volume.JoinPathHost(ctx.WorkDirHost(), packageName)
 
 			err = fyneReleaseHost(ctx)
@@ -126,7 +126,7 @@ func (cmd *Darwin) Run() error {
 				return err
 			}
 
-			packageName = fmt.Sprintf("%s.app", ctx.Output)
+			packageName = fmt.Sprintf("%s.app", ctx.Name)
 			srcFile = volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, packageName)
 
 			err = fynePackage(ctx)
