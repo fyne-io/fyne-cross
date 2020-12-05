@@ -51,7 +51,7 @@ func (cmd *Darwin) Parse(args []string) error {
 	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, darwinArchSupported))
 
 	// flags used only in release mode
-	flagSet.StringVar(&flags.Category, "category", "", "The name of the certificate to sign the build")
+	flagSet.StringVar(&flags.Category, "category", "", "The category of the app for store listing")
 
 	flagAppID := flagSet.Lookup("app-id")
 	flagAppID.Usage = fmt.Sprintf("%s [required]", flagAppID.Usage)
