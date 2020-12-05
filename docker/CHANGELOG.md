@@ -5,6 +5,10 @@ All notable changes to the fyne-cross docker images will be documented in this f
 Release cycle won't follow the fyne-cross one, so the images will be tagged using the label
 year.month.day along with the latest one.
 
+# Release 20.12.05
+- Update fyne cli to v1.4.2-0.20201204171445-8f33697cf611
+- Add support for Linux Wayland #10
+
 # Release 20.11.28
 - Update fyne cli to v1.4.2-0.20201127180716-f9f91c194737 fyne-io#1609
 

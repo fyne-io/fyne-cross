@@ -1,7 +1,7 @@
 # docker cross 1.13.15
 ARG DOCKER_CROSS_VERSION=sha256:11a04661d910f74c419623ef7880024694f9151c17578af15e86c45cdf6c8588
 # fyne stable branch
-ARG FYNE_VERSION=f9f91c1947370189c73384fb12ee799b1cf68638
+ARG FYNE_VERSION=8f33697cf6117da329412c6614e188fa55423b85
 
 # Build the fyne command utility
 FROM dockercore/golang-cross@${DOCKER_CROSS_VERSION} AS fyne
@@ -30,6 +30,8 @@ RUN apt-get update -qq \
         unzip \
         # headers needed by xorg-dev
         x11proto-dev \
+        # deps to support wayland
+        libxkbcommon-dev \
     && apt-get -qy autoremove \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*;

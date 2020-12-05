@@ -40,5 +40,7 @@ RUN dpkg --add-architecture arm64 \
         libxxf86vm-dev:arm64 \
         xserver-xorg-dev:arm64 \
         xtrans-dev:arm64 \
+        # deps to support wayland
+        libxkbcommon-dev:arm64 \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*;

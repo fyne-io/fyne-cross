@@ -40,5 +40,7 @@ RUN dpkg --add-architecture armhf \
         libxxf86vm-dev:armhf \
         xserver-xorg-dev:armhf \
         xtrans-dev:armhf \
+        # deps to support wayland
+        libxkbcommon-dev:armhf \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*;
