@@ -114,7 +114,7 @@ func goModInit(ctx Context) error {
 
 	log.Info("[i] go.mod not found, creating a temporary one...")
 	runOpts := Options{Debug: ctx.Debug}
-	err = Run(ctx.DockerImage, ctx.Volume, runOpts, []string{"go", "mod", "init", ctx.Output})
+	err = Run(ctx.DockerImage, ctx.Volume, runOpts, []string{"go", "mod", "init", ctx.Name})
 	if err != nil {
 		return fmt.Errorf("could not generate the temporary go module: %v", err)
 	}
@@ -147,7 +147,7 @@ func goBuild(ctx Context) error {
 	}
 
 	// set output folder to fyne-cross/bin/<target>
-	output := volume.JoinPathContainer(ctx.Volume.BinDirContainer(), ctx.ID, ctx.Output)
+	output := volume.JoinPathContainer(ctx.Volume.BinDirContainer(), ctx.ID, ctx.Name)
 
 	args = append(args, "-o", output)
 
@@ -170,7 +170,7 @@ func goBuild(ctx Context) error {
 		return err
 	}
 
-	log.Infof("[✓] Binary: %s", volume.JoinPathHost(ctx.BinDirHost(), ctx.ID, ctx.Output))
+	log.Infof("[✓] Binary: %s", volume.JoinPathHost(ctx.BinDirHost(), ctx.ID, ctx.Name))
 	return nil
 }
 
@@ -187,7 +187,7 @@ func fynePackage(ctx Context) error {
 	args := []string{
 		fyneBin, "package",
 		"-os", ctx.OS,
-		"-name", ctx.Output,
+		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
 		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
@@ -215,7 +215,7 @@ func fynePackage(ctx Context) error {
 	// linux, darwin and freebsd targets are built by fyne-cross
 	// in these cases fyne tool is used only to package the app specifying the executable flag
 	if ctx.OS == linuxOS || ctx.OS == darwinOS || ctx.OS == freebsdOS {
-		args = append(args, "-executable", volume.JoinPathContainer(ctx.BinDirContainer(), ctx.ID, ctx.Output))
+		args = append(args, "-executable", volume.JoinPathContainer(ctx.BinDirContainer(), ctx.ID, ctx.Name))
 		workDir = volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID)
 	}
 
@@ -247,7 +247,7 @@ func fyneRelease(ctx Context) error {
 	args := []string{
 		fyneBin, "release",
 		"-os", ctx.OS,
-		"-name", ctx.Output,
+		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
 		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
@@ -296,12 +296,12 @@ func fyneRelease(ctx Context) error {
 // that will be automatically linked by compliler during the build
 func WindowsResource(ctx Context) (string, error) {
 
-	windres := ctx.Output + ".syso"
+	windres := ctx.Name + ".syso"
 
 	args := []string{
 		gowindresBin,
 		"-arch", ctx.Architecture.String(),
-		"-output", ctx.Output,
+		"-output", ctx.Name,
 		"-workdir", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID),
 	}
 

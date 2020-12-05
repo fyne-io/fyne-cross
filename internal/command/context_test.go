@@ -219,6 +219,42 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			wantErr: false,
 		},
+		{
+			name: "deprecate output flag in favour of name",
+			args: args{
+				flags: &CommonFlags{
+					AppBuild: 1,
+					Name:     "./test",
+				},
+			},
+			want: Context{
+				AppBuild:     "1",
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Name:         "./test",
+			},
+			wantErr: true,
+		},
+		{
+			name: "valid name",
+			args: args{
+				flags: &CommonFlags{
+					AppBuild: 1,
+					Name:     "test",
+				},
+			},
+			want: Context{
+				AppBuild:     "1",
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Name:         "test",
+			},
+			wantErr: false,
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
