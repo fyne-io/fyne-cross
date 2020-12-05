@@ -103,7 +103,7 @@ func (cmd *FreeBSD) Run() error {
 		//
 		log.Info("[i] Packaging app...")
 
-		packageName := fmt.Sprintf("%s.tar.gz", ctx.Output)
+		packageName := fmt.Sprintf("%s.tar.gz", ctx.Name)
 
 		err = prepareIcon(ctx)
 		if err != nil {

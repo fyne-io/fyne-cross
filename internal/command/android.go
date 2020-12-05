@@ -92,7 +92,7 @@ func (cmd *Android) Run() error {
 	//
 	log.Info("[i] Packaging app...")
 
-	packageName := fmt.Sprintf("%s.apk", cmd.Context.Output)
+	packageName := fmt.Sprintf("%s.apk", cmd.Context.Name)
 
 	err = prepareIcon(ctx)
 	if err != nil {

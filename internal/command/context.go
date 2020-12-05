@@ -49,7 +49,7 @@ type Context struct {
 	CacheEnabled bool   // CacheEnabled if true enable go build cache
 	DockerImage  string // DockerImage defines the docker image used to build
 	Icon         string // Icon is the optional icon in png format to use for distribution
-	Output       string // Output is the name output
+	Name         string // Name is the application name
 	Package      string // Package is the package to build named by the import path as per 'go build'
 	Release      bool   // Enable release mode. If true, prepares an application for public distribution
 	StripDebug   bool   // StripDebug if true, strips binary output
@@ -74,7 +74,7 @@ func (ctx Context) String() string {
 	template := `
 Architecture: {{ .Architecture }}
 OS: {{ .OS }}
-Output: {{ .Output }}
+Name: {{ .Name }}
 `
 
 	log.PrintTemplate(buf, template, ctx)
@@ -97,7 +97,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		Env:          flags.Env,
 		Tags:         flags.Tags,
 		Icon:         flags.Icon,
-		Output:       flags.Output,
+		Name:         flags.Name,
 		StripDebug:   !flags.NoStripDebug,
 		Debug:        flags.Debug,
 		Volume:       vol,
@@ -107,6 +107,14 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 
 	if flags.AppBuild <= 0 {
 		return ctx, errors.New("build number should be greater than 0")
+	}
+
+	// the flag name that replace the deprecated output should not be used
+	// as path. Returns error if contains \ or /
+	// Fixes: #9
+	// TODO: update the error message once the output flag is removed
+	if strings.ContainsAny(flags.Name, "\\/") {
+		return ctx, errors.New("output and app name should not be used as path")
 	}
 
 	ctx.AppBuild = strconv.Itoa(flags.AppBuild)

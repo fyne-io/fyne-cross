@@ -86,7 +86,7 @@ func prepareIcon(ctx Context) error {
 
 	if ctx.OS == "windows" {
 		// convert the png icon to ico format and store under the temp directory
-		icoIcon := volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, ctx.Output+".ico")
+		icoIcon := volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, ctx.Name+".ico")
 		err := icon.ConvertPngToIco(ctx.Icon, icoIcon)
 		if err != nil {
 			return fmt.Errorf("could not create the windows ico: %v", err)
@@ -135,7 +135,7 @@ func fynePackageHost(ctx Context) error {
 	args := []string{
 		"package",
 		"-os", ctx.OS,
-		"-name", ctx.Output,
+		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
 		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
@@ -177,7 +177,7 @@ func fyneReleaseHost(ctx Context) error {
 	args := []string{
 		"release",
 		"-os", ctx.OS,
-		"-name", ctx.Output,
+		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
 		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,

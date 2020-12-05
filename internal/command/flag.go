@@ -39,8 +39,8 @@ type CommonFlags struct {
 	NoCache bool
 	// NoStripDebug if true will not strip debug information from binaries
 	NoStripDebug bool
-	// Output represents the named output file
-	Output string
+	// Name represents the application name
+	Name string
 	// Release represents if the package should be prepared for release (disable debug etc)
 	Release bool
 	// RootDir represents the project root directory
@@ -55,7 +55,7 @@ type CommonFlags struct {
 
 // newCommonFlags defines all the flags for the shared options
 func newCommonFlags() (*CommonFlags, error) {
-	output, err := defaultOutput()
+	name, err := defaultName()
 	if err != nil {
 		return nil, err
 	}
@@ -75,7 +75,7 @@ func newCommonFlags() (*CommonFlags, error) {
 
 	flags := &CommonFlags{}
 	flagSet.IntVar(&flags.AppBuild, "app-build", 1, "Build number, should be greater than 0 and incremented for each build")
-	flagSet.StringVar(&flags.AppID, "app-id", output, "Application ID used for distribution")
+	flagSet.StringVar(&flags.AppID, "app-id", name, "Application ID used for distribution")
 	flagSet.StringVar(&flags.AppVersion, "app-version", "1.0", "Version number in the form x, x.y or x.y.z semantic version")
 	flagSet.StringVar(&flags.CacheDir, "cache", cacheDir, "Directory used to share/cache sources and dependencies")
 	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")
@@ -85,7 +85,8 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.StringVar(&flags.Ldflags, "ldflags", "", "Additional flags to pass to the external linker")
 	flagSet.Var(&flags.Tags, "tags", "List of additional build tags separated by comma")
 	flagSet.BoolVar(&flags.NoStripDebug, "no-strip-debug", false, "Do not strip debug information from binaries")
-	flagSet.StringVar(&flags.Output, "output", output, "Named output file")
+	flagSet.StringVar(&flags.Name, "name", name, "The name of the application")
+	flagSet.StringVar(&flags.Name, "output", name, "Named output file. Deprecated in favour of 'name'")
 	flagSet.BoolVar(&flags.Release, "release", false, "Release mode. Prepares the application for public distribution")
 	flagSet.StringVar(&flags.RootDir, "dir", rootDir, "Fyne app root directory")
 	flagSet.BoolVar(&flags.Silent, "silent", false, "Silent mode")
@@ -94,7 +95,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	return flags, nil
 }
 
-func defaultOutput() (string, error) {
+func defaultName() (string, error) {
 	wd, err := os.Getwd()
 	if err != nil {
 		return "", fmt.Errorf("cannot get the path for current directory %s", err)
