@@ -3,7 +3,8 @@
 ## Unreleased
 - Add support for "fyne release" #3
 - Add support for creating packaged .tar.gz bundles on freebsd #6
-- Update fyne cli to v1.4.2-0.20201125075943-97ad77d2abe0 (fyne-io#1538 fyne-io#1527)
+- Add support for Linux Wayland #10
+- Update fyne cli to v1.4.2-0.20201204171445-8f33697cf611 (fyne-io#1538 fyne-io#1527)
 - Deprecate `output` flag in favour of `name`
 
 ## [0.9.0]

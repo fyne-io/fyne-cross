@@ -40,5 +40,7 @@ RUN dpkg --add-architecture i386 \
         libxxf86vm-dev:i386 \
         xserver-xorg-dev:i386 \
         xtrans-dev:i386 \
+        # deps to support wayland
+        libxkbcommon-dev:i386 \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*;
