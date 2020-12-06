@@ -166,7 +166,7 @@ func packageFromArgs(args []string, vol volume.Volume) (string, error) {
 	return pkg, nil
 }
 
-// targetArchFromFlag validates and returns the architecture specified using flag againts the supported ones.
+// targetArchFromFlag validates and returns the architecture specified using flag against the supported ones.
 // If flagVar contains the wildcard char "*" all the supported architecture are returned.
 func targetArchFromFlag(flagVar []string, supportedArch []Architecture) ([]Architecture, error) {
 	targetArch := []Architecture{}
