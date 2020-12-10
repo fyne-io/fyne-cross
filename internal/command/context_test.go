@@ -59,6 +59,24 @@ func Test_makeDefaultContext(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name: "custom env containg =",
+			args: args{
+				flags: &CommonFlags{
+					AppBuild: 1,
+					Env:      envFlag{"GOFLAGS=-mod=vendor"},
+				},
+			},
+			want: Context{
+				AppBuild:     "1",
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Env:          []string{"GOFLAGS=-mod=vendor"},
+			},
+			wantErr: false,
+		},
+		{
 			name: "custom ldflags",
 			args: args{
 				flags: &CommonFlags{

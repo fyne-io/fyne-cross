@@ -6,6 +6,7 @@
 - Add support for Linux Wayland #10
 - Update fyne cli to v1.4.2-0.20201204171445-8f33697cf611 (fyne-io#1538 fyne-io#1527)
 - Deprecate `output` flag in favour of `name`
+- Fix env flag validation #14
 
 ## [0.9.0]
 - Releaseing under project namespace with previous 2.2.1 becoming 0.9.0 in fyne-io namespace

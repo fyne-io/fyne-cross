@@ -123,14 +123,12 @@ func (ef *envFlag) Set(value string) error {
 	}
 
 	for _, v := range strings.Split(value, ",") {
-
 		*ef = append(*ef, v)
 	}
 
 	// validate env vars
 	for _, v := range *ef {
-		parts := strings.Split(v, "=")
-		if len(parts) != 2 {
+		if !strings.Contains(v, "=") {
 			return errors.New("env var must defined as KEY=VALUE or KEY=")
 		}
 	}
