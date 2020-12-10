@@ -14,11 +14,15 @@ WORKDIR /app
 COPY . .
 RUN GO111MODULE=on go build -o /go/bin/gowindres -ldflags="-w -s" ./internal/cmd/gowindres
 
+FROM golang:1.14.13-buster AS golang
+
 # Build the fyne-cross base image
 FROM dockercore/golang-cross@${DOCKER_CROSS_VERSION}
 
 COPY --from=fyne /go/bin/fyne /usr/local/bin
 COPY --from=gowindres /go/bin/gowindres /usr/local/bin
+RUN rm -rf /usr/local/go
+COPY --from=golang /usr/local/go /usr/local/go
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
