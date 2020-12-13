@@ -5,8 +5,12 @@ All notable changes to the fyne-cross docker images will be documented in this f
 Release cycle won't follow the fyne-cross one, so the images will be tagged using the label
 year.month.day along with the latest one.
 
+# Release 20.12.13
+- Update Go to v1.14.13
+
 # Release 20.12.10
 - Update fyne cli to v1.4.2
+> Note: this version is the last that provides Go v1.13.x
 
 # Release 20.12.05
 - Update fyne cli to v1.4.2-0.20201204171445-8f33697cf611
