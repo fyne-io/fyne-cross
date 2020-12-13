@@ -7,7 +7,7 @@ year.month.day along with the latest one.
 
 # Release 20.12.13
 - Update Go to v1.14.13
-- Fix fails to build for linux mobile #19
+- Fix build failure for Linux mobile #19
 
 # Release 20.12.10
 - Update fyne cli to v1.4.2

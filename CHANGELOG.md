@@ -7,7 +7,7 @@
 - Update fyne cli to v1.4.2 (fyne-io#1538 fyne-io#1527)
 - Deprecate `output` flag in favour of `name`
 - Fix env flag validation #14
-- Fix fails to build for linux mobile #19
+- Fix build failure for Linux mobile #19
 - Update Go to v1.14.13
 
 ## [0.9.0]
