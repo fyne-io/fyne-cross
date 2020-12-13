@@ -6,6 +6,7 @@ RUN dpkg --add-architecture armhf \
         gccgo-arm-linux-gnueabihf \
         libgl1-mesa-dev:armhf \
         libegl1-mesa-dev:armhf \
+        libgles2-mesa-dev:armhf \
         libdmx-dev:armhf \
         libfontenc-dev:armhf \
         libfs-dev:armhf \

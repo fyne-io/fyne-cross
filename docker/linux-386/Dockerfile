@@ -6,6 +6,7 @@ RUN dpkg --add-architecture i386 \
         gccgo-i686-linux-gnu \
         libgl1-mesa-dev:i386 \
         libegl1-mesa-dev:i386 \
+        libgles2-mesa-dev:i386 \
         libdmx-dev:i386 \
         libfontenc-dev:i386 \
         libfs-dev:i386 \

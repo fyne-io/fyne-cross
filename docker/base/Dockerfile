@@ -28,6 +28,7 @@ RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
         libgl1-mesa-dev \
         libegl1-mesa-dev \
+        libgles2-mesa-dev \
         xorg-dev \
         gosu \
         zip \
