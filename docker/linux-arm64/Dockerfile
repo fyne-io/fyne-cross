@@ -6,6 +6,7 @@ RUN dpkg --add-architecture arm64 \
         gccgo-aarch64-linux-gnu \
         libgl1-mesa-dev:arm64 \
         libegl1-mesa-dev:arm64 \
+        libgles2-mesa-dev:arm64 \
         libdmx-dev:arm64 \
         libfontenc-dev:arm64 \
         libfs-dev:arm64 \
