@@ -266,16 +266,32 @@ func fyneRelease(ctx Context) error {
 	switch ctx.OS {
 	case androidOS:
 		workDir = volume.JoinPathContainer(workDir, ctx.Package)
-		args = append(args, "-keyStore", ctx.Keystore)
-		args = append(args, "-keyStorePass", ctx.KeystorePass)
-		args = append(args, "-keyPass", ctx.KeyPass)
+		if ctx.Keystore != "" {
+			args = append(args, "-keyStore", ctx.Keystore)
+		}
+		if ctx.KeystorePass != "" {
+			args = append(args, "-keyStorePass", ctx.KeystorePass)
+		}
+		if ctx.KeyPass != "" {
+			args = append(args, "-keyPass", ctx.KeyPass)
+		}
 	case iosOS:
-		args = append(args, "-certificate", ctx.Certificate)
-		args = append(args, "-profile", ctx.Profile)
+		if ctx.Certificate != "" {
+			args = append(args, "-certificate", ctx.Certificate)
+		}
+		if ctx.Profile != "" {
+			args = append(args, "-profile", ctx.Profile)
+		}
 	case windowsOS:
-		args = append(args, "-certificate", ctx.Certificate)
-		args = append(args, "-developer", ctx.Developer)
-		args = append(args, "-password", ctx.Password)
+		if ctx.Certificate != "" {
+			args = append(args, "-certificate", ctx.Certificate)
+		}
+		if ctx.Developer != "" {
+			args = append(args, "-developer", ctx.Developer)
+		}
+		if ctx.Password != "" {
+			args = append(args, "-password", ctx.Password)
+		}
 	}
 
 	runOpts := Options{
