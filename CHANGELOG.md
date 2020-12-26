@@ -1,5 +1,8 @@
 # Changelog - Fyne.io fyne-cross
 
+## Unreleased
+- Fix android keystore path is not resolved correctly
+
 ## [1.0.0]
 - Add support for "fyne release" #3
 - Add support for creating packaged .tar.gz bundles on freebsd #6

@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -187,7 +188,16 @@ func makeAndroidContext(flags *androidFlags, args []string) (Context, error) {
 	ctx.OS = androidOS
 	ctx.ID = androidOS
 
-	ctx.Keystore = flags.Keystore
+	if path.IsAbs(flags.Keystore) {
+		return Context{}, fmt.Errorf("keystore location must be relative to the project root: %s", ctx.Volume.WorkDirHost())
+	}
+
+	_, err = os.Stat(volume.JoinPathHost(ctx.Volume.WorkDirHost(), flags.Keystore))
+	if err != nil {
+		return Context{}, fmt.Errorf("keystore location must be under the project root: %s", ctx.Volume.WorkDirHost())
+	}
+
+	ctx.Keystore = volume.JoinPathContainer(ctx.Volume.WorkDirContainer(), flags.Keystore)
 	ctx.KeystorePass = flags.KeystorePass
 	ctx.KeyPass = flags.KeyPass
 
