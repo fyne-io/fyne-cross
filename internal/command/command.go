@@ -192,14 +192,26 @@ func fyneReleaseHost(ctx Context) error {
 
 	switch ctx.OS {
 	case darwinOS:
-		args = append(args, "-category", ctx.Category)
+		if ctx.Category != "" {
+			args = append(args, "-category", ctx.Category)
+		}
 	case iosOS:
-		args = append(args, "-certificate", ctx.Certificate)
-		args = append(args, "-profile", ctx.Profile)
+		if ctx.Certificate != "" {
+			args = append(args, "-certificate", ctx.Certificate)
+		}
+		if ctx.Profile != "" {
+			args = append(args, "-profile", ctx.Profile)
+		}
 	case windowsOS:
-		args = append(args, "-certificate", ctx.Certificate)
-		args = append(args, "-developer", ctx.Developer)
-		args = append(args, "-password", ctx.Password)
+		if ctx.Certificate != "" {
+			args = append(args, "-certificate", ctx.Certificate)
+		}
+		if ctx.Developer != "" {
+			args = append(args, "-developer", ctx.Developer)
+		}
+		if ctx.Password != "" {
+			args = append(args, "-password", ctx.Password)
+		}
 	}
 
 	// run the command from the host
