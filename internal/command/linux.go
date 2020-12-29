@@ -51,7 +51,7 @@ func (cmd *Linux) Parse(args []string) error {
 		CommonFlags: commonFlags,
 		TargetArch:  &targetArchFlag{runtime.GOARCH},
 	}
-	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, windowsArchSupported))
+	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, linuxArchSupported))
 
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
