@@ -75,7 +75,7 @@ func newCommonFlags() (*CommonFlags, error) {
 
 	flags := &CommonFlags{}
 	flagSet.IntVar(&flags.AppBuild, "app-build", 1, "Build number, should be greater than 0 and incremented for each build")
-	flagSet.StringVar(&flags.AppID, "app-id", name, "Application ID used for distribution")
+	flagSet.StringVar(&flags.AppID, "app-id", "", "Application ID used for distribution")
 	flagSet.StringVar(&flags.AppVersion, "app-version", "1.0", "Version number in the form x, x.y or x.y.z semantic version")
 	flagSet.StringVar(&flags.CacheDir, "cache", cacheDir, "Directory used to share/cache sources and dependencies")
 	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")
