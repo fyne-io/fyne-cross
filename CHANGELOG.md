@@ -3,6 +3,7 @@
 ## Unreleased
 - Fix android keystore path is not resolved correctly
 - Fix some release flags are always set even if empty
+- Fix appID flag should not have a default #25
 
 ## [1.0.0]
 - Add support for "fyne release" #3

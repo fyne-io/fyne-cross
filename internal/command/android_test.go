@@ -27,7 +27,7 @@ func Test_makeAndroidContext(t *testing.T) {
 				flags: &androidFlags{
 					CommonFlags: &CommonFlags{
 						AppBuild: 1,
-						AppID:    "test",
+						AppID:    "com.example.test",
 					},
 					Keystore: "/tmp/my.keystore",
 				},
@@ -41,7 +41,7 @@ func Test_makeAndroidContext(t *testing.T) {
 				flags: &androidFlags{
 					CommonFlags: &CommonFlags{
 						AppBuild: 1,
-						AppID:    "test",
+						AppID:    "com.example.test",
 					},
 					Keystore: "my.keystore",
 				},
@@ -55,14 +55,14 @@ func Test_makeAndroidContext(t *testing.T) {
 				flags: &androidFlags{
 					CommonFlags: &CommonFlags{
 						AppBuild: 1,
-						AppID:    "test",
+						AppID:    "com.example.test",
 					},
 					Keystore: "testdata/my.keystore",
 				},
 			},
 			want: Context{
 				AppBuild:     "1",
-				AppID:        "test",
+				AppID:        "com.example.test",
 				ID:           androidOS,
 				OS:           androidOS,
 				DockerImage:  androidImage,
@@ -80,14 +80,14 @@ func Test_makeAndroidContext(t *testing.T) {
 				flags: &androidFlags{
 					CommonFlags: &CommonFlags{
 						AppBuild: 1,
-						AppID:    "test",
+						AppID:    "com.example.test",
 					},
 					Keystore: "./testdata/my.keystore",
 				},
 			},
 			want: Context{
 				AppBuild:     "1",
-				AppID:        "test",
+				AppID:        "com.example.test",
 				ID:           androidOS,
 				OS:           androidOS,
 				DockerImage:  androidImage,
@@ -98,6 +98,19 @@ func Test_makeAndroidContext(t *testing.T) {
 				Keystore:     "/app/testdata/my.keystore",
 			},
 			wantErr: false,
+		},
+		{
+			name: "appID is mandatory",
+			args: args{
+				flags: &androidFlags{
+					CommonFlags: &CommonFlags{
+						AppBuild: 1,
+					},
+					Keystore: "./testdata/my.keystore",
+				},
+			},
+			want:    Context{},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
