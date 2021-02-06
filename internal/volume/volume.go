@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -103,7 +104,7 @@ func Mount(workDirHost string, cacheDirHost string) (Volume, error) {
 // JoinPathContainer joins any number of path elements into a single path,
 // separating them with the Container OS specific Separator.
 func JoinPathContainer(elem ...string) string {
-	return filepath.Clean(strings.Join(elem, "/"))
+	return path.Clean(strings.Join(elem, "/"))
 }
 
 // JoinPathHost joins any number of path elements into a single path,
