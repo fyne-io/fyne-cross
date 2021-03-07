@@ -2,13 +2,11 @@
 
 [![CI](https://github.com/fyne-io/fyne-cross/workflows/CI/badge.svg)](https://github.com/fyne-io/fyne-cross/actions?query=workflow%3ACI) [![Go Report Card](https://goreportcard.com/badge/github.com/fyne-io/fyne-cross)](https://goreportcard.com/report/github.com/fyne-io/fyne-cross) [![GoDoc](https://godoc.org/github.com/fyne-io/fyne-cross?status.svg)](http://godoc.org/github.com/fyne-io/fyne-cross) [![version](https://img.shields.io/github/v/tag/fyne-io/fyne-cross?label=version)]()
 
-fyne-cross is a simple tool to cross compile and create distribution packages for [Fyne](https://fyne.io) applications.
-
-It has been inspired by [xgo](https://github.com/karalabe/xgo) and uses a [docker image](https://hub.docker.com/r/fyneio/fyne-cross) built on top of the [golang-cross](https://github.com/docker/golang-cross) image, that includes the MinGW compiler for windows, and an OSX SDK, along with the Fyne requirements.
+fyne-cross is a simple tool to cross compile and create distribution packages for [Fyne](https://fyne.io) applications using docker images that include the MinGW compiler for windows, and a macOS SDK, along with the Fyne requirements.
 
 Supported targets are:
   -  darwin/amd64
-  -  darwin/386
+  -  darwin/arm64
   -  freebsd/amd64
   -  linux/amd64
   -  linux/386
@@ -20,6 +18,7 @@ Supported targets are:
   -  ios
 
 > Note: 
+> - starting from v1.1.0 the image with the OSX SDK is no more available via docker hub and has to be build manually, see the [Build the darwin image](#build_darwin_image) section below.
 > - iOS compilation is supported only on darwin hosts. See [fyne pre-requisites](https://developer.fyne.io/started/#prerequisites) for details.
 > - macOS packaging for public distrubution (release mode) is supported only on darwin hosts.
 > - windows packaging for public distrubution (release mode) is supported only on windows hosts.
@@ -109,6 +108,26 @@ fyne-cross linux
 fyne-cross linux -output bugs ./cmd/bugs
 ```
 
+## <a name="build_darwin_image"></a>Build the docker image for OSX/Darwin/Apple builds
+The docker image for the darwin image is not provided via docker hub and need to build manually since depends on the OSX SDK.
+
+**[Please ensure you have read and understood the Xcode license
+   terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
+
+To build the image:
+1. Clone this project
+2. [Download Xcode](https://developer.apple.com/download/more) >= 12.4
+3. Save the XCode*.xip into the project root
+4. Run: `make darwin`
+
+The command above will:
+- install the dependencies required by [osxcross](https://github.com/tpoechtrager/osxcross) to package the macOS SDK and compile the macOS cross toolchain.
+- package the macOS SDK
+- compile the macOS cross toolchain
+- create the `fyneio/fyne-cross:darwin-latest` image that will be used by fyne-cross
+
+> NOTE: the creation of the image may take several minutes and may require more than 25 GB of free disk space.
+
 ## Contribute
 
 - Fork and clone the repository
@@ -119,8 +138,8 @@ fyne-cross linux -output bugs ./cmd/bugs
 
 See [contributors](https://github.com/fyne-io/fyne-cross/graphs/contributors) page
 
-## Legal note
+## Credits
 
-OSX/Darwin/Apple builds: 
-**[Please ensure you have read and understood the Xcode license
-   terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
+- [osxcross](https://github.com/tpoechtrager/osxcross) for the macOS Cross toolchain for Linux
+- [golang-cross](https://github.com/docker/golang-cross) for the inspiration and the docker images used in the initial versions
+- [xgo](https://github.com/karalabe/xgo) for the inspiration

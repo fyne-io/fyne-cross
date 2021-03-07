@@ -1,7 +1,12 @@
 tag := $(shell date +"%y.%m.%d")
 
-build-images:
+base:
 	@docker build -f ${CURDIR}/docker/base/Dockerfile -t fyneio/fyne-cross:base-latest .
+
+darwin:
+	@docker build -f ${CURDIR}/docker/darwin/Dockerfile -t fyneio/fyne-cross:darwin-latest .
+
+build-images: base
 	@docker tag fyneio/fyne-cross:base-latest fyneio/fyne-cross:base-$(tag)
 	@docker build -f ${CURDIR}/docker/linux-386/Dockerfile -t fyneio/fyne-cross:linux-386-latest .
 	@docker tag fyneio/fyne-cross:linux-386-latest fyneio/fyne-cross:linux-386-$(tag)
