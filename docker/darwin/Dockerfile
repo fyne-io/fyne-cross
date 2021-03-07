@@ -3,7 +3,7 @@ ARG OSX_VERSION_MIN=10.12
 ARG OSX_CROSS_COMMIT="035cc170338b7b252e3f13b0e3ccbf4411bffc41"
 
 ## Install latest version of llvm and clang
-FROM fyneio/fyne-cross:base-latest AS builder
+FROM fyneio/fyne-cross:base-latest AS darwin-base
 ARG LLVM_VERSION
 
 RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
@@ -19,7 +19,7 @@ RUN wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | apt-key add - \
 ENV PATH=/usr/lib/llvm-${LLVM_VERSION}/bin:${PATH}
 
 ## Build osxcross toolchain
-FROM builder as osxcross
+FROM darwin-base as osxcross
 ARG OSX_CROSS_COMMIT
 ARG OSX_VERSION_MIN
 
@@ -51,7 +51,7 @@ RUN UNATTENDED=yes OSX_VERSION_MIN=${OSX_VERSION_MIN} ./build.sh
 
 
 ## Build darwin-latest image
-FROM fyneio/fyne-cross:base-latest
+FROM darwin-base
 
 COPY --from=osxcross /osxcross/target /osxcross/target
 ENV PATH=/osxcross/target/bin:$PATH

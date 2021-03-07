@@ -209,7 +209,7 @@ func darwinContext(flags *darwinFlags, args []string) ([]Context, error) {
 
 		switch arch {
 		case ArchAmd64:
-			ctx.Env = append(ctx.Env, "CGO_CFLAGS=-mmacosx-version-min=10.12", "CGO_LDFLAGS=-mmacosx-version-min=10.12", "GOOS=darwin", "GOARCH=amd64", "CC=o64-clang")
+			ctx.Env = append(ctx.Env, "GOOS=darwin", "CGO_CFLAGS=-mmacosx-version-min=10.12", "CGO_LDFLAGS=-mmacosx-version-min=10.12", "GOARCH=amd64", "CC=o64-clang")
 		case ArchArm64:
 			ctx.Env = append(ctx.Env, "GOOS=darwin", "CGO_CFLAGS=-mmacosx-version-min=10.12", "CGO_LDFLAGS=-mmacosx-version-min=10.12", "GOARCH=arm64", "CC=o64-clang")
 		}
