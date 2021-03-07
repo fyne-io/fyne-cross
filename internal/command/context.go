@@ -109,10 +109,6 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		return ctx, errors.New("build number should be greater than 0")
 	}
 
-	if flags.AppID == "" {
-		return ctx, errors.New("app ID is required")
-	}
-
 	// the flag name that replace the deprecated output should not be used
 	// as path. Returns error if contains \ or /
 	// Fixes: #9

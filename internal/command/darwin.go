@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -200,6 +201,9 @@ func darwinContext(flags *darwinFlags, args []string) ([]Context, error) {
 		ctx, err := makeDefaultContext(flags.CommonFlags, args)
 		if err != nil {
 			return ctxs, err
+		}
+		if ctx.AppID == "" {
+			return ctxs, errors.New("appID is mandatory")
 		}
 
 		ctx.Architecture = arch
