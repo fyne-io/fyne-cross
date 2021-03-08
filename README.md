@@ -116,8 +116,8 @@ The docker image for the darwin image is not provided via docker hub and need to
 
 To build the image:
 1. Clone this project
-2. [Download Xcode](https://developer.apple.com/download/more) >= 12.4
-3. Save the XCode*.xip into the project root
+2. [Download Command Line Tools for Xcode](https://developer.apple.com/download/more) >= 12.4
+3. Save the Command_Line_Tools_for_Xcode_*.dmg into the project root
 4. Run: `make darwin`
 
 The command above will:

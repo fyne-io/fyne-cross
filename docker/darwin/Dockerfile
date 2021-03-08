@@ -35,7 +35,7 @@ RUN apt-get update -qq && apt-get install -y -q --no-install-recommends \
     libxml2-dev \
  && rm -rf /var/lib/apt/lists/*
 
-COPY *.xip /tmp/xcode.xip
+COPY *.dmg /tmp/command_line_tools_for_xcode.dmg
 
 WORKDIR "/osxcross"
 
@@ -43,9 +43,9 @@ RUN git clone https://github.com/tpoechtrager/osxcross.git . \
  && git checkout -q "${OSX_CROSS_COMMIT}" \
  && rm -rf ./.git
 
-RUN ./tools/gen_sdk_package_pbzx.sh /tmp/xcode.xip
+RUN ./tools/gen_sdk_package_tools_dmg.sh /tmp/command_line_tools_for_xcode.dmg
 
-RUN mv MacOSX*.tar.bz2 tarballs
+RUN mv MacOSX11*.tar.bz2 tarballs
 
 RUN UNATTENDED=yes OSX_VERSION_MIN=${OSX_VERSION_MIN} ./build.sh
 
