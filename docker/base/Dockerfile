@@ -5,19 +5,13 @@ ARG FYNE_VERSION=v2.0.1
 FROM golang:${GO_VERSION}-buster AS tools
 ARG FYNE_VERSION
 
-WORKDIR /app
-COPY . .
-
 # Install the fyne CLI tool
 RUN go get -ldflags="-w -s" -v "fyne.io/fyne/v2/cmd/fyne@${FYNE_VERSION}"
-# Build the gowindres CLI tool
-RUN go build -o /go/bin/gowindres -ldflags="-w -s" ./internal/cmd/gowindres
 
 # Build the fyne-cross base image
 FROM golang:${GO_VERSION}-buster AS base
 
 COPY --from=tools /go/bin/fyne /usr/local/bin
-COPY --from=tools /go/bin/gowindres /usr/local/bin
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \

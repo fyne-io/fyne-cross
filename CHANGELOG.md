@@ -5,6 +5,7 @@
 - Update fyne cli to v2.0.1
 - Add darwin arm64 target #33
 - Remove darwin 386 target
+- Add dedicated docker image for windows
 - Fix android keystore path is not resolved correctly
 - Fix some release flags are always set even if empty
 - Fix appID flag should not have a default #25
