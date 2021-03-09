@@ -373,3 +373,33 @@ func pullImage(ctx Context) error {
 	log.Infof("[✓] Image is up to date")
 	return nil
 }
+
+// darwinSignBinary fake signs ARM binaries
+// with ldid tool provided by osxcross
+func darwinSignBinary(ctx Context) error {
+	log.Infof("[i] Signing arm64 binary using a fake certificate...")
+
+	if ctx.OS != darwinOS || ctx.Architecture != ArchArm64 {
+		return fmt.Errorf("binary signing is supported only for darwin arm64")
+	}
+
+	bin := volume.JoinPathContainer(ctx.BinDirContainer(), ctx.ID, ctx.Name)
+	args := []string{"ldid", "-S", bin}
+
+	// workDir default value
+	workDir := ctx.WorkDirContainer()
+
+	runOpts := Options{
+		CacheEnabled: ctx.CacheEnabled,
+		WorkDir:      workDir,
+		Debug:        ctx.Debug,
+		Env:          ctx.Env,
+	}
+
+	err := Run(ctx.DockerImage, ctx.Volume, runOpts, args)
+	if err != nil {
+		return fmt.Errorf("could not sign the binary %s,  %v", bin, err)
+	}
+	log.Infof("[✓] Signed binary: %s", bin)
+	return nil
+}
