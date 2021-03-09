@@ -127,14 +127,6 @@ func (cmd *Darwin) Run() error {
 				return err
 			}
 
-			if ctx.Architecture == ArchArm64 {
-				// arm64 arch requires that executables are signed (using any signature).
-				err = darwinSignBinary(ctx)
-				if err != nil {
-					return err
-				}
-			}
-
 			packageName = fmt.Sprintf("%s.app", ctx.Name)
 			srcFile = volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, packageName)
 
