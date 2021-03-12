@@ -33,6 +33,7 @@ RUN apt-get update -qq && apt-get install -y -q --no-install-recommends \
     zlib1g-dev \
     liblzma-dev \
     libxml2-dev \
+    uuid-dev \
  && rm -rf /var/lib/apt/lists/*
 
 COPY *.dmg /tmp/command_line_tools_for_xcode.dmg
