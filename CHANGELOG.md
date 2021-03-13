@@ -4,6 +4,7 @@
 - Update Go to v1.16.2
 - Update fyne cli to v2.0.1
 - Add darwin arm64 target #33
+- Add the `darwin-image` command to build the darwin docker image
 - Remove darwin 386 target
 - Add dedicated docker image for windows
 - Fix android keystore path is not resolved correctly
