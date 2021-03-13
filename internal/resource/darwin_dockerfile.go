@@ -61,4 +61,3 @@ FROM darwin-base
 COPY --from=osxcross /osxcross/target /osxcross/target
 ENV PATH=/osxcross/target/bin:$PATH
 `
-
