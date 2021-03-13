@@ -1,7 +1,7 @@
 # Changelog - Fyne.io fyne-cross
 
 ## Unreleased
-- Update Go to v1.16.0
+- Update Go to v1.16.2
 - Update fyne cli to v2.0.1
 - Add darwin arm64 target #33
 - Remove darwin 386 target

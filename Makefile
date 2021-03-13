@@ -47,3 +47,6 @@ push-images:
 	@docker push fyneio/fyne-cross:windows-latest
 	@docker tag fyneio/fyne-cross:windows-latest fyneio/fyne-cross:windows-$(tag)
 	@docker push fyneio/fyne-cross:windows-$(tag)
+
+embed:
+	go run internal/cmd/embed/main.go

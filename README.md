@@ -115,10 +115,8 @@ The docker image for the darwin image is not provided via docker hub and need to
    terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
 
 To build the image:
-1. Clone this project
-2. [Download Command Line Tools for Xcode](https://developer.apple.com/download/more) >= 12.4
-3. Save the Command_Line_Tools_for_Xcode_*.dmg into the project root
-4. Run: `make darwin`
+1. [Download Command Line Tools for Xcode](https://developer.apple.com/download/more) >= 12.4
+2. Run: `fyne-cross darwin-image --xcode-path /path/to/Command_Line_Tools_for_Xcode_<version>.dmg`
 
 The command above will:
 - install the dependencies required by [osxcross](https://github.com/tpoechtrager/osxcross) to package the macOS SDK and compile the macOS cross toolchain.
