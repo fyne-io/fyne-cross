@@ -25,6 +25,8 @@ RUN apt-get update -qq \
         libxml2-dev \
         libzstd-dev \
         bsdtar \
+        clang \
+        llvm \
     && mkdir /pkg \
     && curl -L https://github.com/freebsd/pkg/archive/1.12.0.tar.gz | bsdtar -xf - -C /pkg \
     && cd /pkg/pkg-* \ 
