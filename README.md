@@ -122,7 +122,7 @@ The command above will:
 - install the dependencies required by [osxcross](https://github.com/tpoechtrager/osxcross) to package the macOS SDK and compile the macOS cross toolchain.
 - package the macOS SDK
 - compile the macOS cross toolchain
-- create the `fyneio/fyne-cross:darwin-latest` image that will be used by fyne-cross
+- build the `fyneio/fyne-cross:<ver>-darwin` image that will be used by fyne-cross
 
 > NOTE: the creation of the image may take several minutes and may require more than 25 GB of free disk space.
 

@@ -18,9 +18,9 @@ const (
 
 var (
 	// darwinArchSupported defines the supported target architectures on darwin
-	darwinArchSupported = []Architecture{ArchAmd64, ArchArm64}
+	darwinArchSupported = []Architecture{ArchAmd64}
 	// darwinImage is the fyne-cross image for the Darwin OS
-	darwinImage = "fyneio/fyne-cross:darwin-latest"
+	darwinImage = "fyneio/fyne-cross:1.1-darwin"
 )
 
 // Darwin build and package the fyne app for the darwin OS
@@ -215,7 +215,7 @@ func darwinContext(flags *darwinFlags, args []string) ([]Context, error) {
 		case ArchAmd64:
 			ctx.Env = append(ctx.Env, "GOOS=darwin", "GOARCH=amd64", "CC=o64-clang", "CGO_CFLAGS=-mmacosx-version-min=10.12", "CGO_LDFLAGS=-mmacosx-version-min=10.12")
 		case ArchArm64:
-			ctx.Env = append(ctx.Env, "GOOS=darwin", "GOARCH=arm64", "CC=oa64-clang", "CGO_CFLAGS=-mmacosx-version-min=11.1", "CGO_LDFLAGS=-mmacosx-version-min=11.1")
+			ctx.Env = append(ctx.Env, "CGO_LDFLAGS=-fuse-ld=lld", "GOOS=darwin", "GOARCH=arm64", "CC=oa64-clang", "CGO_CFLAGS=-mmacosx-version-min=11.1", "CGO_LDFLAGS=-mmacosx-version-min=11.1")
 		}
 
 		// set context based on command-line flags

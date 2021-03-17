@@ -1,5 +1,7 @@
+ARG FYNE_CROSS_VERSION
+
 ## Build the gowindres CLI tool
-FROM fyneio/fyne-cross:base-latest AS builder
+FROM fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base AS builder
 
 WORKDIR /app
 COPY . .
@@ -7,7 +9,7 @@ COPY . .
 RUN go build -o /go/bin/gowindres -ldflags="-w -s" ./internal/cmd/gowindres
 
 # Build the windows-base image
-FROM fyneio/fyne-cross:base-latest AS windows-base
+FROM fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base AS windows-base
 
 COPY --from=builder /go/bin/gowindres /usr/local/bin
 
