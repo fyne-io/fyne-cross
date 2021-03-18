@@ -5,7 +5,7 @@ package resource
 const DockerfileDarwin = `ARG LLVM_VERSION=12
 ARG OSX_VERSION_MIN=10.12
 ARG OSX_CROSS_COMMIT="035cc170338b7b252e3f13b0e3ccbf4411bffc41"
-ARG FYNE_CROSS_VERSION
+ARG FYNE_CROSS_VERSION=1.1
 
 ## Build osxcross toolchain
 FROM fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-llvm as osxcross
