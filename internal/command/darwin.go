@@ -25,7 +25,8 @@ var (
 
 // Darwin build and package the fyne app for the darwin OS
 type Darwin struct {
-	Context []Context
+	Context  []Context
+	NoDocker bool
 }
 
 // Name returns the one word command name
@@ -50,6 +51,11 @@ func (cmd *Darwin) Parse(args []string) error {
 		TargetArch:  &targetArchFlag{runtime.GOARCH},
 	}
 	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, darwinArchSupported))
+
+	// Add flags to use only on darwin host
+	if runtime.GOOS == darwinOS {
+		flagSet.BoolVar(&cmd.NoDocker, "no-docker", false, "If set uses the fyne CLI tool installed on the host in place of the docker images")
+	}
 
 	// flags used only in release mode
 	flagSet.StringVar(&flags.Category, "category", "", "The category of the app for store listing")
@@ -118,6 +124,14 @@ func (cmd *Darwin) Run() error {
 			srcFile = volume.JoinPathHost(ctx.WorkDirHost(), packageName)
 
 			err = fyneReleaseHost(ctx)
+			if err != nil {
+				return fmt.Errorf("could not package the Fyne app: %v", err)
+			}
+		} else if cmd.NoDocker {
+			packageName = fmt.Sprintf("%s.app", ctx.Name)
+			srcFile = volume.JoinPathHost(ctx.WorkDirHost(), packageName)
+
+			err = fynePackageHost(ctx)
 			if err != nil {
 				return fmt.Errorf("could not package the Fyne app: %v", err)
 			}
