@@ -6,7 +6,8 @@
 
 - Add FreeBSD on arm64 target #29
 - Add the `darwin-image` command to build the darwin docker image
-- Add a dedicated docker image for windows
+- Add a dedicated docker image for macOS
+- Add a dedicated docker image for Windows
 
 ### Changed
 

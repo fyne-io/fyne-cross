@@ -4,7 +4,7 @@ All notable changes to the fyne-cross docker images will be documented in this f
 
 ## fyne 1.1.x compatible
 
-Latest versions available on dockerhub are
+Latest versions available on Docker Hub are:
 
 - fyneio/fyne-cross:1.1-base
 - fyneio/fyne-cross:1.1-base-llvm
@@ -17,13 +17,15 @@ Latest versions available on dockerhub are
 - fyneio/fyne-cross:1.1-linux-arm
 - fyneio/fyne-cross:1.1-windows
 
-Release cycle won't follow the fyne-cross one, so the images will be tagged and available on dockehub using the label year.month.day along with the version one.
+Release cycle won't follow the fyne-cross one, so the images will be tagged and
+available on Docker Hub using the label year.month.day along with the tags
+above.
 
 Example: `fyneio/fyne-cross:1.1-base-21.03.17`
 
 ## fyne 1.0.x compatible
 
-Latest version available on dockerhub are:
+Latest versions available on Docker Hub are:
 - fyneio/fyne-cross:base-latest
 - fyneio/fyne-cross:darwin-latest
 - fyneio/fyne-cross:linux-386-latest
@@ -32,7 +34,9 @@ Latest version available on dockerhub are:
 - fyneio/fyne-cross:android-latest
 - fyneio/fyne-cross:freebsd-latest
 
-Release cycle won't follow the fyne-cross one, so the images will be tagged and available on dockehub using the label year.month.day along with the version one.
+Release cycle won't follow the fyne-cross one, so the images will be tagged and
+available on Docker Hub using the label year.month.day along with the tags
+above.
 
 Example: `fyneio/fyne-cross:base-20.12.13`
 
