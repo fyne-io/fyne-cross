@@ -25,8 +25,8 @@ var (
 
 // Darwin build and package the fyne app for the darwin OS
 type Darwin struct {
-	Context  []Context
-	NoDocker bool
+	Context    []Context
+	localBuild bool
 }
 
 // Name returns the one word command name
@@ -54,7 +54,7 @@ func (cmd *Darwin) Parse(args []string) error {
 
 	// Add flags to use only on darwin host
 	if runtime.GOOS == darwinOS {
-		flagSet.BoolVar(&cmd.NoDocker, "no-docker", false, "If set uses the fyne CLI tool installed on the host in place of the docker images")
+		flagSet.BoolVar(&cmd.localBuild, "local", false, "If set uses the fyne CLI tool installed on the host in place of the docker images")
 	}
 
 	// flags used only in release mode
@@ -127,7 +127,7 @@ func (cmd *Darwin) Run() error {
 			if err != nil {
 				return fmt.Errorf("could not package the Fyne app: %v", err)
 			}
-		} else if cmd.NoDocker {
+		} else if cmd.localBuild {
 			packageName = fmt.Sprintf("%s.app", ctx.Name)
 			srcFile = volume.JoinPathHost(ctx.WorkDirHost(), packageName)
 
