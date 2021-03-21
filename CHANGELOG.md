@@ -12,7 +12,7 @@
 
 - Update Go to v1.16.2
 - Update fyne CLI to v2.0.1
-- Update FreeBSD to v12.2 #29
+- Update FreeBSD SDK to v12.2 #29
 - Refactor docker images layout to ensure compatibility with previous versions of
   fyne-cross
 
