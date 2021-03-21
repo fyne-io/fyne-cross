@@ -109,7 +109,7 @@ fyne-cross linux -output bugs ./cmd/bugs
 ```
 
 ## <a name="build_darwin_image"></a>Build the docker image for OSX/Darwin/Apple builds
-The docker image for the darwin image is not provided via docker hub and need to build manually since depends on the OSX SDK.
+The docker image for darwin is not provided via docker hub and need to build manually since it depends on the OSX SDK.
 
 **[Please ensure you have read and understood the Xcode license
    terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
