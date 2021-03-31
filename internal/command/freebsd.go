@@ -14,12 +14,14 @@ const (
 	// freebsdOS it the freebsd OS name
 	freebsdOS = "freebsd"
 	// freebsdImageAmd64 is the fyne-cross image for the FreeBSD OS amd64 arch
-	freebsdImageAmd64 = "fyneio/fyne-cross:freebsd-latest"
+	freebsdImageAmd64 = "fyneio/fyne-cross:1.1-freebsd-amd64"
+	// freebsdImageArm64 is the fyne-cross image for the FreeBSD OS arm64 arch
+	freebsdImageArm64 = "fyneio/fyne-cross:1.1-freebsd-arm64"
 )
 
 var (
 	// freebsdArchSupported defines the supported target architectures on freebsd
-	freebsdArchSupported = []Architecture{ArchAmd64}
+	freebsdArchSupported = []Architecture{ArchAmd64, ArchArm64}
 )
 
 // FreeBSD build and package the fyne app for the freebsd OS
@@ -188,7 +190,10 @@ func freebsdContext(flags *freebsdFlags, args []string) ([]Context, error) {
 		switch arch {
 		case ArchAmd64:
 			defaultDockerImage = freebsdImageAmd64
-			ctx.Env = append(ctx.Env, "GOOS=freebsd", "GOARCH=amd64", "CC=x86_64-unknown-freebsd11-clang")
+			ctx.Env = append(ctx.Env, "GOOS=freebsd", "GOARCH=amd64", "CC=x86_64-unknown-freebsd12-clang")
+		case ArchArm64:
+			defaultDockerImage = freebsdImageArm64
+			ctx.Env = append(ctx.Env, "CGO_LDFLAGS=-fuse-ld=lld", "GOOS=freebsd", "GOARCH=arm64", "CC=aarch64-unknown-freebsd12-clang")
 		}
 
 		// set context based on command-line flags

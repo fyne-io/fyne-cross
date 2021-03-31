@@ -1,4 +1,5 @@
-FROM fyneio/fyne-cross:base-latest
+ARG FYNE_CROSS_VERSION
+FROM fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base
 
 ENV JAVA_HOME /usr/local/android_jdk8
 ENV ANDROID_HOME /usr/local/android_sdk

@@ -14,7 +14,7 @@ const (
 	// androidOS is the android OS name
 	androidOS = "android"
 	// androidImage is the fyne-cross image for the Android OS
-	androidImage = "fyneio/fyne-cross:android-latest"
+	androidImage = "fyneio/fyne-cross:1.1-android"
 )
 
 // Android build and package the fyne app for the android OS
