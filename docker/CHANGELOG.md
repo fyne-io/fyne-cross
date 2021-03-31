@@ -2,31 +2,66 @@
 
 All notable changes to the fyne-cross docker images will be documented in this file.
 
-Release cycle won't follow the fyne-cross one, so the images will be tagged using the label
-year.month.day along with the latest one.
+## fyne 1.1.x compatible
 
-# Release 20.12.13
+Latest versions available on Docker Hub are:
+
+- fyneio/fyne-cross:1.1-base
+- fyneio/fyne-cross:1.1-base-llvm
+- fyneio/fyne-cross:1.1-base-freebsd
+- fyneio/fyne-cross:1.1-android
+- fyneio/fyne-cross:1.1-freebsd-amd64
+- fyneio/fyne-cross:1.1-freebsd-arm64
+- fyneio/fyne-cross:1.1-linux-386
+- fyneio/fyne-cross:1.1-linux-arm64
+- fyneio/fyne-cross:1.1-linux-arm
+- fyneio/fyne-cross:1.1-windows
+
+Release cycle won't follow the fyne-cross one, so the images will be tagged and
+available on Docker Hub using the label year.month.day along with the tags
+above.
+
+Example: `fyneio/fyne-cross:1.1-base-21.03.17`
+
+## fyne 1.0.x compatible
+
+Latest versions available on Docker Hub are:
+- fyneio/fyne-cross:base-latest
+- fyneio/fyne-cross:darwin-latest
+- fyneio/fyne-cross:linux-386-latest
+- fyneio/fyne-cross:linux-arm64-latest
+- fyneio/fyne-cross:linux-arm-latest
+- fyneio/fyne-cross:android-latest
+- fyneio/fyne-cross:freebsd-latest
+
+Release cycle won't follow the fyne-cross one, so the images will be tagged and
+available on Docker Hub using the label year.month.day along with the tags
+above.
+
+Example: `fyneio/fyne-cross:base-20.12.13`
+
+### Release 20.12.13
 - Update Go to v1.14.13
 - Fix build failure for Linux mobile #19
 
-# Release 20.12.10
+### Release 20.12.10
 - Update fyne cli to v1.4.2
 > Note: this version is the last that provides Go v1.13.x
 
-# Release 20.12.05
+### Release 20.12.05
 - Update fyne cli to v1.4.2-0.20201204171445-8f33697cf611
 - Add support for Linux Wayland #10
 
-# Release 20.11.28
+### Release 20.11.28
 - Update fyne cli to v1.4.2-0.20201127180716-f9f91c194737 fyne-io#1609
 
-# Release 20.11.25
+### Release 20.11.25
 - Update fyne cli to v1.4.2-0.20201125075943-97ad77d2abe0 fyne-io#1538
 
-# Release 20.11.23
+### Release 20.11.23
 - Update fyne cli to v1.4.2-0.20201122132119-67b762f56dc0 fyne-io#1527
 
-# Release 20.11.04
+### Release 20.11.04
 - fyne cli updated to v1.4.0
 
 # Archive

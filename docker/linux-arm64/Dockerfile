@@ -1,5 +1,7 @@
+ARG FYNE_CROSS_VERSION
+
 # fyne-cross linux arm64 image
-FROM fyneio/fyne-cross:base-latest
+FROM fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base
 RUN dpkg --add-architecture arm64 \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \

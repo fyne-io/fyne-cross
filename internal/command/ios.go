@@ -14,7 +14,7 @@ const (
 	// iosOS it the ios OS name
 	iosOS = "ios"
 	// iosImage is the fyne-cross image for the iOS OS
-	iosImage = "fyneio/fyne-cross:base-latest"
+	iosImage = "fyneio/fyne-cross:1.1-base"
 )
 
 // IOS build and package the fyne app for the ios OS
