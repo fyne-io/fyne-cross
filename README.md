@@ -10,6 +10,7 @@ requirements.
 Supported targets are:
   -  darwin/amd64
   -  freebsd/amd64
+  -  freebsd/arm64
   -  linux/amd64
   -  linux/386
   -  linux/arm
