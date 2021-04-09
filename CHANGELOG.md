@@ -12,8 +12,8 @@
 
 ### Changed
 
-- Update Go to v1.16.2
-- Update fyne CLI to v2.0.1
+- Update Go to v1.16.3
+- Update fyne CLI to v2.0.2
 - Update FreeBSD SDK to v12.2 #29
 - Refactor docker images layout to ensure compatibility with previous versions of fyne-cross
 
@@ -22,6 +22,7 @@
 - Fix android keystore path is not resolved correctly
 - Fix some release flags are always set even if empty
 - Fix appID flag should not have a default #25
+- Fix the option --env does not allow values containing comma #35
 
 ### Removed
 
