@@ -92,7 +92,7 @@ func (cmd *DarwinImage) Run() error {
 
 	err = dockerCmd.Run()
 	if err != nil {
-		return fmt.Errorf("could not package the Fyne app: %v", err)
+		return fmt.Errorf("could not create the docker darwin image: %v", err)
 	}
 	log.Infof("[✓] Docker image created: %s", darwinImage)
 	return nil
