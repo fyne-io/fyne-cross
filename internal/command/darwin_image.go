@@ -85,7 +85,7 @@ func (cmd *DarwinImage) Run() error {
 	log.Info("[i] Building docker image...")
 
 	// run the command from the host
-	dockerCmd := exec.Command("docker", "build", "-t", darwinImage, ".")
+	dockerCmd := exec.Command("docker", "build", "--pull", "-t", darwinImage, ".")
 	dockerCmd.Dir = workDir
 	dockerCmd.Stdout = os.Stdout
 	dockerCmd.Stderr = os.Stderr
