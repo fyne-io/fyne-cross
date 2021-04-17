@@ -13,7 +13,7 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
-// DarwinImage build and package the fyne app for the freebsd OS
+// DarwinImage builds the darwin docker image
 type DarwinImage struct {
 	sdkPath string
 }
