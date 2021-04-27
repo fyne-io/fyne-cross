@@ -95,13 +95,8 @@ func Test_makeWindowsContext(t *testing.T) {
 					OS:           "windows",
 					Architecture: "amd64",
 					Env:          []string{"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
-<<<<<<< HEAD
-					LdFlags:      []string{"-X main.version=1.2.3", "-H windowsgui"},
-					DockerImage:  windowsImage,
-=======
 					LdFlags:      []string{"-X main.version=1.2.3", "-H=windowsgui"},
-					DockerImage:  "fyneio/fyne-cross:base-latest",
->>>>>>> d219030 (Propose the ability to use podman)
+					DockerImage:  windowsImage,
 				},
 			},
 		},
