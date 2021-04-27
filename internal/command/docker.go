@@ -46,7 +46,7 @@ func IsPodman() bool {
 	}
 	// There should be an indication about the remote socket that is commonly named
 	// like /path/to/podman.sock
-	return strings.Index(string(out), "podman") > -1
+	return strings.Contains(string(out), "podman")
 }
 
 // Cmd returns a command to run in a new container for the specified image
