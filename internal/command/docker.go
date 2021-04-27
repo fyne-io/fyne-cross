@@ -2,6 +2,7 @@ package command
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"os"
 	"os/user"
@@ -139,6 +140,16 @@ func goModInit(ctx Context) error {
 	return nil
 }
 
+// findGoFlags return the index of context where GOFLAGS is set.
+func findGoFlags(ctx Context) (int, error) {
+	for i, env := range ctx.Env {
+		if strings.Index(env, "GOFLAGS") == 0 {
+			return i, nil
+		}
+	}
+	return -1, errors.New("GOFLAGS not found in context")
+}
+
 // goBuild run the go build command in the container
 func goBuild(ctx Context) error {
 	log.Infof("[i] Building binary...")
@@ -157,7 +168,16 @@ func goBuild(ctx Context) error {
 		for i, flag := range ldflags {
 			flags[i] = fmt.Sprintf("-ldflags=%s", flag)
 		}
-		ctx.Env = append(ctx.Env, fmt.Sprintf("GOFLAGS=%s", strings.Join(flags, " ")))
+
+		// ensure that GOFLAGS is not overwritten as they can be passed
+		// by he --env argument
+		if idx, err := findGoFlags(ctx); err == nil {
+			// append the ldflags after the existing GOFLAGS
+			ctx.Env[idx] += " " + strings.Join(flags, " ")
+		} else {
+			// create the GOFLAGS environment variable
+			ctx.Env = append(ctx.Env, fmt.Sprintf("GOFLAGS=%s", strings.Join(flags, " ")))
+		}
 	}
 	// add tags to command, if any
 	tags := ctx.Tags
