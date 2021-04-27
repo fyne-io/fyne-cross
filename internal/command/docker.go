@@ -38,6 +38,17 @@ type Options struct {
 	Debug        bool     // Debug if true enable log verbosity
 }
 
+// IsPodman returns true if docker is an alias to podman (e.g. via podman-docker).
+func IsPodman() bool {
+	out, err := exec.Command("docker", "info", "-f", "{{.Host.RemoteSocket.Path}}").Output()
+	if err != nil {
+		return false
+	}
+	// There should be an indication about the remote socket that is commonly named
+	// like /path/to/podman.sock
+	return strings.Index(string(out), "podman") > -1
+}
+
 // Cmd returns a command to run in a new container for the specified image
 func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execabs.Cmd {
 
@@ -50,12 +61,17 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 	args := []string{
 		"run", "--rm", "-t",
 		"-w", w, // set workdir
-		"-v", fmt.Sprintf("%s:%s", vol.WorkDirHost(), vol.WorkDirContainer()), // mount the working dir
+		"-v", fmt.Sprintf("%s:%s:z", vol.WorkDirHost(), vol.WorkDirContainer()), // mount the working dir
+	}
+
+	if IsPodman() {
+		log.Info("USE PODMAN")
+		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
 	}
 
 	// mount the cache dir if cache is enabled
 	if opts.CacheEnabled {
-		args = append(args, "-v", fmt.Sprintf("%s:%s", vol.CacheDirHost(), vol.CacheDirContainer()))
+		args = append(args, "-v", fmt.Sprintf("%s:%s:z", vol.CacheDirHost(), vol.CacheDirContainer()))
 	}
 
 	// add default env variables
@@ -137,9 +153,12 @@ func goBuild(ctx Context) error {
 
 	// add ldflags to command, if any
 	if len(ldflags) > 0 {
-		args = append(args, "-ldflags", fmt.Sprintf("'%s'", strings.Join(ldflags, " ")))
+		flags := make([]string, len(ldflags))
+		for i, flag := range ldflags {
+			flags[i] = fmt.Sprintf("-ldflags=%s", flag)
+		}
+		ctx.Env = append(ctx.Env, fmt.Sprintf("GOFLAGS=%s", strings.Join(flags, " ")))
 	}
-
 	// add tags to command, if any
 	tags := ctx.Tags
 	if len(tags) > 0 {
