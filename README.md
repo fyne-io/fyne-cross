@@ -9,6 +9,7 @@ requirements.
 
 Supported targets are:
   -  darwin/amd64
+  -  darwin/arm64
   -  freebsd/amd64
   -  freebsd/arm64
   -  linux/amd64
@@ -21,10 +22,12 @@ Supported targets are:
   -  ios
 
 > Note: 
-> - starting from v1.1.0 the image with the OSX SDK is no more available via docker hub and has to be build manually, see the [Build the darwin image](#build_darwin_image) section below.
 > - iOS compilation is supported only on darwin hosts. See [fyne pre-requisites](https://developer.fyne.io/started/#prerequisites) for details.
 > - macOS packaging for public distrubution (release mode) is supported only on darwin hosts.
 > - windows packaging for public distrubution (release mode) is supported only on windows hosts.
+> - starting from v1.1.0:
+>   - cross-compile from NOT `darwin` (i.e. linux) to `darwin`: the image with the OSX SDK is no more available via docker hub and has to be built manually, see the [Build the darwin image](#build_darwin_image) section below.
+>   - cross-compile from `darwin` to `darwin` by default will use under the hood the fyne CLI tool and requires Go and the macOS SDK installed on the host.
 
 ## Requirements
 

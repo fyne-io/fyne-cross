@@ -109,7 +109,7 @@ func printUsage(template string, data interface{}) {
 func checkFyneBinHost(ctx Context) (string, error) {
 	fyne, err := exec.LookPath("fyne")
 	if err != nil {
-		return "", fmt.Errorf("missed requirement: fyne. To install: `go get fyne.io/fyne/cmd/fyne` and add $GOPATH/bin to $PATH")
+		return "", fmt.Errorf("missed requirement: fyne. To install: `go get fyne.io/fyne/v2/cmd/fyne` and add $GOPATH/bin to $PATH")
 	}
 
 	if ctx.Debug {

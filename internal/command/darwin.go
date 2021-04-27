@@ -18,7 +18,7 @@ const (
 
 var (
 	// darwinArchSupported defines the supported target architectures on darwin
-	darwinArchSupported = []Architecture{ArchAmd64}
+	darwinArchSupported = []Architecture{ArchAmd64, ArchArm64}
 	// darwinImage is the fyne-cross image for the Darwin OS
 	darwinImage = "fyneio/fyne-cross:1.1-darwin"
 )
@@ -54,7 +54,7 @@ func (cmd *Darwin) Parse(args []string) error {
 
 	// Add flags to use only on darwin host
 	if runtime.GOOS == darwinOS {
-		flagSet.BoolVar(&cmd.localBuild, "local", false, "If set uses the fyne CLI tool installed on the host in place of the docker images")
+		flagSet.BoolVar(&cmd.localBuild, "local", true, "If set uses the fyne CLI tool installed on the host in place of the docker images")
 	}
 
 	// flags used only in release mode

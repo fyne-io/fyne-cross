@@ -13,7 +13,7 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
-// DarwinImage build and package the fyne app for the freebsd OS
+// DarwinImage builds the darwin docker image
 type DarwinImage struct {
 	sdkPath string
 }
@@ -85,14 +85,14 @@ func (cmd *DarwinImage) Run() error {
 	log.Info("[i] Building docker image...")
 
 	// run the command from the host
-	dockerCmd := exec.Command("docker", "build", "-t", darwinImage, ".")
+	dockerCmd := exec.Command("docker", "build", "--pull", "-t", darwinImage, ".")
 	dockerCmd.Dir = workDir
 	dockerCmd.Stdout = os.Stdout
 	dockerCmd.Stderr = os.Stderr
 
 	err = dockerCmd.Run()
 	if err != nil {
-		return fmt.Errorf("could not package the Fyne app: %v", err)
+		return fmt.Errorf("could not create the docker darwin image: %v", err)
 	}
 	log.Infof("[✓] Docker image created: %s", darwinImage)
 	return nil
