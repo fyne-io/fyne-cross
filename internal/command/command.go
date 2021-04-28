@@ -137,9 +137,13 @@ func fynePackageHost(ctx Context) error {
 		"-os", ctx.OS,
 		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
-		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
+	}
+
+	// add appID to command, if any
+	if ctx.AppID != "" {
+		args = append(args, "-appID", ctx.AppID)
 	}
 
 	// add tags to command, if any
@@ -179,9 +183,13 @@ func fyneReleaseHost(ctx Context) error {
 		"-os", ctx.OS,
 		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
-		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
+	}
+
+	// add appID to command, if any
+	if ctx.AppID != "" {
+		args = append(args, "-appID", ctx.AppID)
 	}
 
 	// add tags to command, if any
