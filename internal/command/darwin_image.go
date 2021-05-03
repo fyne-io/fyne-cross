@@ -32,7 +32,7 @@ func (cmd *DarwinImage) Description() string {
 // Parse parses the arguments and set the usage for the command
 func (cmd *DarwinImage) Parse(args []string) error {
 	flagSet.StringVar(&cmd.sdkPath, "xcode-path", "", "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.4.dmg")
-	flagSet.StringVar(&cmd.sdkVersion, "sdk-version", "11.0", "SDK Version to use")
+	flagSet.StringVar(&cmd.sdkVersion, "sdk-version", "11.1", "SDK Version to use")
 
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
