@@ -40,6 +40,18 @@ above.
 
 Example: `fyneio/fyne-cross:base-20.12.13`
 
+### Release 21.05.03
+- Refactor docker images layout to ensure compatibility with previous versions of fyne-cross
+- Add FreeBSD on arm64 target
+- Add a dedicated docker image for macOS
+- Add a dedicated docker image for Windows
+- Update Go to v1.16.3
+- Update fyne CLI to v2.0.2
+- Update FreeBSD SDK to v12.2
+- Remove the dependency from the docker/golang-cross image for the base image
+
+> Note: the docker image for darwin is not provided anymore and need to build manually since it depends on the OSX SDK.
+
 ### Release 20.12.13
 - Update Go to v1.14.13
 - Fix build failure for Linux mobile #19
