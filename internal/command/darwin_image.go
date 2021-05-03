@@ -15,7 +15,8 @@ import (
 
 // DarwinImage builds the darwin docker image
 type DarwinImage struct {
-	sdkPath string
+	sdkPath    string
+	sdkVersion string
 }
 
 // Name returns the one word command name
@@ -31,6 +32,7 @@ func (cmd *DarwinImage) Description() string {
 // Parse parses the arguments and set the usage for the command
 func (cmd *DarwinImage) Parse(args []string) error {
 	flagSet.StringVar(&cmd.sdkPath, "xcode-path", "", "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.4.dmg")
+	flagSet.StringVar(&cmd.sdkVersion, "sdk-version", "11.0", "SDK Version to use")
 
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
@@ -85,7 +87,7 @@ func (cmd *DarwinImage) Run() error {
 	log.Info("[i] Building docker image...")
 
 	// run the command from the host
-	dockerCmd := exec.Command("docker", "build", "--pull", "-t", darwinImage, ".")
+	dockerCmd := exec.Command("docker", "build", "--pull", "-e", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")
 	dockerCmd.Dir = workDir
 	dockerCmd.Stdout = os.Stdout
 	dockerCmd.Stderr = os.Stderr
