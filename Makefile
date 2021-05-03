@@ -36,7 +36,7 @@ build-images: base android freebsd linux windows
 tag-images:
 	# tag base images
 	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-$(tag)
-	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-llvm fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-llmv-$(tag)
+	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-llvm fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-llvm-$(tag)
 	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-freebsd fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-freebsd-$(tag)
 	# tag android images
 	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-android fyneio/fyne-cross:${FYNE_CROSS_VERSION}-android-$(tag)
@@ -45,8 +45,8 @@ tag-images:
 	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-linux-arm fyneio/fyne-cross:${FYNE_CROSS_VERSION}-linux-arm-$(tag)
 	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-linux-arm64 fyneio/fyne-cross:${FYNE_CROSS_VERSION}-linux-arm64-$(tag)
 	# tag freebsd images
-	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-amd64-$(tag)
-	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-arm64-$(tag)
+	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-amd64 fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-amd64-$(tag)
+	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-arm64 fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-arm64-$(tag)
 	# tag windows images
 	@docker tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-windows fyneio/fyne-cross:${FYNE_CROSS_VERSION}-windows-$(tag)
 
