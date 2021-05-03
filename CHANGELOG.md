@@ -4,6 +4,7 @@
 
 ### Added
 
+- Add darwin arm64 target #39
 - Add FreeBSD on arm64 target #29
 - Add the `darwin-image` command to build the darwin docker image
 - Add the `local` flag for darwin to build directly from the host
