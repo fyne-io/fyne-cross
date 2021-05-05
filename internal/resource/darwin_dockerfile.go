@@ -33,7 +33,7 @@ RUN curl -L https://github.com/tpoechtrager/osxcross/archive/${OSX_CROSS_COMMIT}
 
 RUN ./tools/gen_sdk_package_tools_dmg.sh /tmp/command_line_tools_for_xcode.dmg
 
-RUN mv MacOSX11*.tar.bz2 tarballs
+RUN mv MacOSX*.tar.bz2 tarballs
 
 ARG SDK_VERSION
 RUN UNATTENDED=yes SDK_VERSION=${SDK_VERSION} OSX_VERSION_MIN=${OSX_VERSION_MIN} ./build.sh
