@@ -85,9 +85,10 @@ func (cmd *DarwinImage) Run() error {
 	log.Infof("[✓] Dockerfile created")
 
 	log.Info("[i] Building docker image...")
+	log.Info("[i] macOS SDK: ", cmd.sdkVersion)
 
 	// run the command from the host
-	dockerCmd := exec.Command("docker", "build", "--pull", "-e", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")
+	dockerCmd := exec.Command("docker", "build", "--pull", "--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")
 	dockerCmd.Dir = workDir
 	dockerCmd.Stdout = os.Stdout
 	dockerCmd.Stderr = os.Stderr
