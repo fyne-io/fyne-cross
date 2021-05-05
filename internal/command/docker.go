@@ -2,7 +2,6 @@ package command
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"os/user"
@@ -140,14 +139,14 @@ func goModInit(ctx Context) error {
 	return nil
 }
 
-// findGoFlags return the index of context where GOFLAGS is set.
-func findGoFlags(ctx Context) (int, error) {
+// findGoFlags return the index of context where GOFLAGS is set, or -1 if it is not present.
+func findGoFlags(ctx Context) int {
 	for i, env := range ctx.Env {
-		if strings.Index(env, "GOFLAGS") == 0 {
-			return i, nil
+		if strings.HasPrefix(env, "GOFLAGS") {
+			return i
 		}
 	}
-	return -1, errors.New("GOFLAGS not found in context")
+	return -1
 }
 
 // goBuild run the go build command in the container
@@ -171,7 +170,7 @@ func goBuild(ctx Context) error {
 
 		// ensure that GOFLAGS is not overwritten as they can be passed
 		// by he --env argument
-		if idx, err := findGoFlags(ctx); err == nil {
+		if idx := findGoFlags(ctx); idx > -1 {
 			// append the ldflags after the existing GOFLAGS
 			ctx.Env[idx] += " " + strings.Join(flags, " ")
 		} else {
