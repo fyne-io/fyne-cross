@@ -26,7 +26,7 @@ Supported targets are:
 > - macOS packaging for public distrubution (release mode) is supported only on darwin hosts.
 > - windows packaging for public distrubution (release mode) is supported only on windows hosts.
 > - starting from v1.1.0:
->   - cross-compile from NOT `darwin` (i.e. linux) to `darwin`: the image with the OSX SDK is no more available via docker hub and has to be built manually, see the [Build the darwin image](#build_darwin_image) section below.
+>   - cross-compile from NOT `darwin` (i.e. linux) to `darwin`: the image with the macOS SDK is no more available via docker hub and has to be built manually, see the [Build the darwin image](#build_darwin_image) section below.
 >   - cross-compile from `darwin` to `darwin` by default will use under the hood the fyne CLI tool and requires Go and the macOS SDK installed on the host.
 
 ## Requirements
@@ -115,7 +115,7 @@ fyne-cross linux -output bugs ./cmd/bugs
 ```
 
 ## <a name="build_darwin_image"></a>Build the docker image for OSX/Darwin/Apple cross-compiling
-The docker image for darwin is not provided via docker hub and need to build manually since it depends on the OSX SDK.
+The docker image for darwin is not provided via docker hub and need to build manually since it depends on the macOS SDK.
 
 **[Please ensure you have read and understood the Xcode license
    terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**

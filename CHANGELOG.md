@@ -1,6 +1,6 @@
 # Changelog - Fyne.io fyne-cross
 
-## 1.1.0 - 03 May 2021
+## 1.1.0 - 14 May 2021
 
 ### Added
 
