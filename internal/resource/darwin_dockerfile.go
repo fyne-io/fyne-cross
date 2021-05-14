@@ -4,7 +4,7 @@ package resource
 
 const DockerfileDarwin = `ARG LLVM_VERSION=12
 ARG OSX_VERSION_MIN=10.12
-ARG OSX_CROSS_COMMIT="035cc170338b7b252e3f13b0e3ccbf4411bffc41"
+ARG OSX_CROSS_COMMIT="8a716a43a72dab1db9630d7824ee0af3730cb8f9"
 ARG FYNE_CROSS_VERSION=1.1
 
 ## Build osxcross toolchain
@@ -33,9 +33,14 @@ RUN curl -L https://github.com/tpoechtrager/osxcross/archive/${OSX_CROSS_COMMIT}
 
 RUN ./tools/gen_sdk_package_tools_dmg.sh /tmp/command_line_tools_for_xcode.dmg
 
-RUN mv MacOSX11*.tar.bz2 tarballs
+ARG SDK_VERSION
+RUN echo "Available SDKs:" && ls -1 MacOSX*.tar.bz2 && \
+    if [ -z "$SDK_VERSION" ] ;\
+     then ls -1 MacOSX*.tar.bz2 | sort -Vr | head -1 | xargs -i mv {} tarballs ;\
+     else mv MacOSX*.tar.bz2 tarballs ; \
+    fi
 
-RUN UNATTENDED=yes OSX_VERSION_MIN=${OSX_VERSION_MIN} ./build.sh
+RUN UNATTENDED=yes SDK_VERSION=${SDK_VERSION} OSX_VERSION_MIN=${OSX_VERSION_MIN} ./build.sh
 
 
 ## Build darwin-latest image

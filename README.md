@@ -114,15 +114,15 @@ fyne-cross linux
 fyne-cross linux -output bugs ./cmd/bugs
 ```
 
-## <a name="build_darwin_image"></a>Build the docker image for OSX/Darwin/Apple builds
+## <a name="build_darwin_image"></a>Build the docker image for OSX/Darwin/Apple cross-compiling
 The docker image for darwin is not provided via docker hub and need to build manually since it depends on the OSX SDK.
 
 **[Please ensure you have read and understood the Xcode license
    terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
 
 To build the image:
-1. [Download Command Line Tools for Xcode](https://developer.apple.com/download/more) >= 12.4
-2. Run: `fyne-cross darwin-image --xcode-path /path/to/Command_Line_Tools_for_Xcode_<version>.dmg`
+1. [Download Command Line Tools for Xcode](https://developer.apple.com/download/more) >= 12.4 (macOS SDK 11.x)
+2. Run: `fyne-cross darwin-image --xcode-path /path/to/Command_Line_Tools_for_Xcode_12.5.dmg`
 
 The command above will:
 - install the dependencies required by [osxcross](https://github.com/tpoechtrager/osxcross) to package the macOS SDK and compile the macOS cross toolchain.
@@ -131,6 +131,16 @@ The command above will:
 - build the `fyneio/fyne-cross:<ver>-darwin` image that will be used by fyne-cross
 
 > NOTE: the creation of the image may take several minutes and may require more than 25 GB of free disk space.
+
+### [EXPERIMENTAL] Build using a different SDK version
+
+By default fyne-cross will attempt to auto-detect the latest version of SDK provided by the Xcode package. If for any reason a different SDK version is required, it can be specified using the `--sdk-version` flag.
+
+Example:
+
+`fyne-cross darwin-image --sdk-version 11.1 --xcode-path /path/to/Command_Line_Tools_for_Xcode_12.4.dmg`
+
+> Note: this feature is marked as EXPERIMENTAL
 
 ## Contribute
 
