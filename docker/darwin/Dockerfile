@@ -29,9 +29,13 @@ RUN curl -L https://github.com/tpoechtrager/osxcross/archive/${OSX_CROSS_COMMIT}
 
 RUN ./tools/gen_sdk_package_tools_dmg.sh /tmp/command_line_tools_for_xcode.dmg
 
-RUN mv MacOSX*.tar.bz2 tarballs && echo "Available SDKs:" && ls -1 tarballs
-
 ARG SDK_VERSION
+RUN echo "Available SDKs:" && ls -1 MacOSX*.tar.bz2 && \
+    if [ -z "$SDK_VERSION" ] ;\
+     then ls -1 MacOSX*.tar.bz2 | sort -Vr | head -1 | xargs -i mv {} tarballs ;\
+     else mv MacOSX*.tar.bz2 tarballs ; \
+    fi
+
 RUN UNATTENDED=yes SDK_VERSION=${SDK_VERSION} OSX_VERSION_MIN=${OSX_VERSION_MIN} ./build.sh
 
 

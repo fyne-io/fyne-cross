@@ -13,12 +13,6 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
-const (
-	// macOSSDKDefault is the latest macOS SDK version
-	// known to work with fyne-cross and used as default
-	macOSSDKDefault = "11.3"
-)
-
 // DarwinImage builds the darwin docker image
 type DarwinImage struct {
 	sdkPath    string
@@ -37,8 +31,8 @@ func (cmd *DarwinImage) Description() string {
 
 // Parse parses the arguments and set the usage for the command
 func (cmd *DarwinImage) Parse(args []string) error {
-	flagSet.StringVar(&cmd.sdkPath, "xcode-path", "", "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.4.dmg")
-	flagSet.StringVar(&cmd.sdkVersion, "sdk-version", macOSSDKDefault, "SDK Version to use")
+	flagSet.StringVar(&cmd.sdkPath, "xcode-path", "", "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.5.dmg)")
+	flagSet.StringVar(&cmd.sdkVersion, "sdk-version", "", "SDK version to use. Default to automatic detection")
 
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
@@ -91,7 +85,11 @@ func (cmd *DarwinImage) Run() error {
 	log.Infof("[✓] Dockerfile created")
 
 	log.Info("[i] Building docker image...")
-	log.Info("[i] macOS SDK: ", cmd.sdkVersion)
+	ver := "auto"
+	if cmd.sdkVersion != "" {
+		ver = cmd.sdkVersion
+	}
+	log.Info("[i] macOS SDK: ", ver)
 
 	// run the command from the host
 	dockerCmd := exec.Command("docker", "build", "--pull", "--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")

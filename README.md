@@ -121,7 +121,7 @@ The docker image for darwin is not provided via docker hub and need to build man
    terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
 
 To build the image:
-1. [Download Command Line Tools for Xcode](https://developer.apple.com/download/more) 12.5 (macOS SDK 11.3)
+1. [Download Command Line Tools for Xcode](https://developer.apple.com/download/more) >= 12.4 (macOS SDK 11.x)
 2. Run: `fyne-cross darwin-image --xcode-path /path/to/Command_Line_Tools_for_Xcode_12.5.dmg`
 
 The command above will:
@@ -134,13 +134,13 @@ The command above will:
 
 ### [EXPERIMENTAL] Build using a different SDK version
 
-If for any reason a different SDK version is required, it can be specified using the `--sdk-version` flag.
+By default fyne-cross will attempt to auto-detect the latest version of SDK provided by the Xcode package. If for any reason a different SDK version is required, it can be specified using the `--sdk-version` flag.
 
 Example:
 
 `fyne-cross darwin-image --sdk-version 11.1 --xcode-path /path/to/Command_Line_Tools_for_Xcode_12.4.dmg`
 
-> Note: this feature is marked as EXPERIMENTAL. The `darwin-image` has been configured and tested against the SDK version reported above. It *may* work with different versions. If not, please feel free to open an [issue](https://github.com/fyne-io/fyne-cross/issues) with the details.
+> Note: this feature is marked as EXPERIMENTAL
 
 ## Contribute
 
