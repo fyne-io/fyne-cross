@@ -10,6 +10,7 @@
 - Add the `local` flag for darwin to build directly from the host
 - Add a dedicated docker image for macOS
 - Add a dedicated docker image for Windows
+- Darwin image build: add support for SDK version #45
 
 ### Changed
 
