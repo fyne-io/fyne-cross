@@ -33,6 +33,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -50,6 +51,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -68,6 +70,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -86,6 +89,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -103,6 +107,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -120,6 +125,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -137,6 +143,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -154,6 +161,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -181,6 +189,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -209,6 +218,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -228,6 +238,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				AppVersion:   "1.0",
 				Volume:       vol,
 				CacheEnabled: true,
@@ -247,6 +258,7 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,
@@ -265,6 +277,27 @@ func Test_makeDefaultContext(t *testing.T) {
 			},
 			want: Context{
 				AppBuild:     "1",
+				AppID:        "",
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Name:         "test",
+			},
+			wantErr: false,
+		},
+		{
+			name: "appID",
+			args: args{
+				flags: &CommonFlags{
+					AppBuild: 1,
+					AppID:    "com.example.test",
+					Name:     "test",
+				},
+			},
+			want: Context{
+				AppBuild:     "1",
+				AppID:        "com.example.test",
 				Volume:       vol,
 				CacheEnabled: true,
 				StripDebug:   true,

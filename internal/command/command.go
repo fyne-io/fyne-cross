@@ -109,7 +109,7 @@ func printUsage(template string, data interface{}) {
 func checkFyneBinHost(ctx Context) (string, error) {
 	fyne, err := exec.LookPath("fyne")
 	if err != nil {
-		return "", fmt.Errorf("missed requirement: fyne. To install: `go get fyne.io/fyne/cmd/fyne` and add $GOPATH/bin to $PATH")
+		return "", fmt.Errorf("missed requirement: fyne. To install: `go get fyne.io/fyne/v2/cmd/fyne` and add $GOPATH/bin to $PATH")
 	}
 
 	if ctx.Debug {
@@ -137,9 +137,13 @@ func fynePackageHost(ctx Context) error {
 		"-os", ctx.OS,
 		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
-		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
+	}
+
+	// add appID to command, if any
+	if ctx.AppID != "" {
+		args = append(args, "-appID", ctx.AppID)
 	}
 
 	// add tags to command, if any
@@ -179,9 +183,13 @@ func fyneReleaseHost(ctx Context) error {
 		"-os", ctx.OS,
 		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
-		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
+	}
+
+	// add appID to command, if any
+	if ctx.AppID != "" {
+		args = append(args, "-appID", ctx.AppID)
 	}
 
 	// add tags to command, if any
@@ -192,14 +200,26 @@ func fyneReleaseHost(ctx Context) error {
 
 	switch ctx.OS {
 	case darwinOS:
-		args = append(args, "-category", ctx.Category)
+		if ctx.Category != "" {
+			args = append(args, "-category", ctx.Category)
+		}
 	case iosOS:
-		args = append(args, "-certificate", ctx.Certificate)
-		args = append(args, "-profile", ctx.Profile)
+		if ctx.Certificate != "" {
+			args = append(args, "-certificate", ctx.Certificate)
+		}
+		if ctx.Profile != "" {
+			args = append(args, "-profile", ctx.Profile)
+		}
 	case windowsOS:
-		args = append(args, "-certificate", ctx.Certificate)
-		args = append(args, "-developer", ctx.Developer)
-		args = append(args, "-password", ctx.Password)
+		if ctx.Certificate != "" {
+			args = append(args, "-certificate", ctx.Certificate)
+		}
+		if ctx.Developer != "" {
+			args = append(args, "-developer", ctx.Developer)
+		}
+		if ctx.Password != "" {
+			args = append(args, "-password", ctx.Password)
+		}
 	}
 
 	// run the command from the host

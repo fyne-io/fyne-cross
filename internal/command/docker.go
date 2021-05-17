@@ -189,9 +189,13 @@ func fynePackage(ctx Context) error {
 		"-os", ctx.OS,
 		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
-		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
+	}
+
+	// add appID to command, if any
+	if ctx.AppID != "" {
+		args = append(args, "-appID", ctx.AppID)
 	}
 
 	// add tags to command, if any
@@ -249,9 +253,13 @@ func fyneRelease(ctx Context) error {
 		"-os", ctx.OS,
 		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
-		"-appID", ctx.AppID,
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
+	}
+
+	// add appID to command, if any
+	if ctx.AppID != "" {
+		args = append(args, "-appID", ctx.AppID)
 	}
 
 	// add tags to command, if any
@@ -266,16 +274,32 @@ func fyneRelease(ctx Context) error {
 	switch ctx.OS {
 	case androidOS:
 		workDir = volume.JoinPathContainer(workDir, ctx.Package)
-		args = append(args, "-keyStore", ctx.Keystore)
-		args = append(args, "-keyStorePass", ctx.KeystorePass)
-		args = append(args, "-keyPass", ctx.KeyPass)
+		if ctx.Keystore != "" {
+			args = append(args, "-keyStore", ctx.Keystore)
+		}
+		if ctx.KeystorePass != "" {
+			args = append(args, "-keyStorePass", ctx.KeystorePass)
+		}
+		if ctx.KeyPass != "" {
+			args = append(args, "-keyPass", ctx.KeyPass)
+		}
 	case iosOS:
-		args = append(args, "-certificate", ctx.Certificate)
-		args = append(args, "-profile", ctx.Profile)
+		if ctx.Certificate != "" {
+			args = append(args, "-certificate", ctx.Certificate)
+		}
+		if ctx.Profile != "" {
+			args = append(args, "-profile", ctx.Profile)
+		}
 	case windowsOS:
-		args = append(args, "-certificate", ctx.Certificate)
-		args = append(args, "-developer", ctx.Developer)
-		args = append(args, "-password", ctx.Password)
+		if ctx.Certificate != "" {
+			args = append(args, "-certificate", ctx.Certificate)
+		}
+		if ctx.Developer != "" {
+			args = append(args, "-developer", ctx.Developer)
+		}
+		if ctx.Password != "" {
+			args = append(args, "-password", ctx.Password)
+		}
 	}
 
 	runOpts := Options{

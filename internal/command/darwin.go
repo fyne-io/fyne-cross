@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -17,14 +18,15 @@ const (
 
 var (
 	// darwinArchSupported defines the supported target architectures on darwin
-	darwinArchSupported = []Architecture{ArchAmd64, Arch386}
+	darwinArchSupported = []Architecture{ArchAmd64, ArchArm64}
 	// darwinImage is the fyne-cross image for the Darwin OS
-	darwinImage = "fyneio/fyne-cross:base-latest"
+	darwinImage = "fyneio/fyne-cross:1.1-darwin"
 )
 
 // Darwin build and package the fyne app for the darwin OS
 type Darwin struct {
-	Context []Context
+	Context    []Context
+	localBuild bool
 }
 
 // Name returns the one word command name
@@ -49,6 +51,11 @@ func (cmd *Darwin) Parse(args []string) error {
 		TargetArch:  &targetArchFlag{runtime.GOARCH},
 	}
 	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, darwinArchSupported))
+
+	// Add flags to use only on darwin host
+	if runtime.GOOS == darwinOS {
+		flagSet.BoolVar(&cmd.localBuild, "local", true, "If set uses the fyne CLI tool installed on the host in place of the docker images")
+	}
 
 	// flags used only in release mode
 	flagSet.StringVar(&flags.Category, "category", "", "The category of the app for store listing")
@@ -117,6 +124,14 @@ func (cmd *Darwin) Run() error {
 			srcFile = volume.JoinPathHost(ctx.WorkDirHost(), packageName)
 
 			err = fyneReleaseHost(ctx)
+			if err != nil {
+				return fmt.Errorf("could not package the Fyne app: %v", err)
+			}
+		} else if cmd.localBuild {
+			packageName = fmt.Sprintf("%s.app", ctx.Name)
+			srcFile = volume.JoinPathHost(ctx.WorkDirHost(), packageName)
+
+			err = fynePackageHost(ctx)
 			if err != nil {
 				return fmt.Errorf("could not package the Fyne app: %v", err)
 			}
@@ -201,6 +216,9 @@ func darwinContext(flags *darwinFlags, args []string) ([]Context, error) {
 		if err != nil {
 			return ctxs, err
 		}
+		if ctx.AppID == "" {
+			return ctxs, errors.New("appID is mandatory")
+		}
 
 		ctx.Architecture = arch
 		ctx.OS = darwinOS
@@ -209,9 +227,9 @@ func darwinContext(flags *darwinFlags, args []string) ([]Context, error) {
 
 		switch arch {
 		case ArchAmd64:
-			ctx.Env = append(ctx.Env, "GOOS=darwin", "GOARCH=amd64", "CC=o32-clang")
-		case Arch386:
-			ctx.Env = append(ctx.Env, "GOOS=darwin", "GOARCH=386", "CC=o32-clang")
+			ctx.Env = append(ctx.Env, "GOOS=darwin", "GOARCH=amd64", "CC=o64-clang", "CGO_CFLAGS=-mmacosx-version-min=10.12", "CGO_LDFLAGS=-mmacosx-version-min=10.12")
+		case ArchArm64:
+			ctx.Env = append(ctx.Env, "CGO_LDFLAGS=-fuse-ld=lld", "GOOS=darwin", "GOARCH=arm64", "CC=oa64-clang", "CGO_CFLAGS=-mmacosx-version-min=11.1", "CGO_LDFLAGS=-mmacosx-version-min=11.1")
 		}
 
 		// set context based on command-line flags

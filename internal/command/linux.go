@@ -14,10 +14,10 @@ const (
 	// linuxOS it the linux OS name
 	linuxOS = "linux"
 	// linuxImage is the fyne-cross image for the Linux OS
-	linuxImageAmd64 = "fyneio/fyne-cross:base-latest"
-	linuxImage386   = "fyneio/fyne-cross:linux-386-latest"
-	linuxImageArm64 = "fyneio/fyne-cross:linux-arm64-latest"
-	linuxImageArm   = "fyneio/fyne-cross:linux-arm-latest"
+	linuxImageAmd64 = "fyneio/fyne-cross:1.1-base"
+	linuxImage386   = "fyneio/fyne-cross:1.1-linux-386"
+	linuxImageArm64 = "fyneio/fyne-cross:1.1-linux-arm64"
+	linuxImageArm   = "fyneio/fyne-cross:1.1-linux-arm"
 )
 
 var (
@@ -51,7 +51,7 @@ func (cmd *Linux) Parse(args []string) error {
 		CommonFlags: commonFlags,
 		TargetArch:  &targetArchFlag{runtime.GOARCH},
 	}
-	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, windowsArchSupported))
+	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, linuxArchSupported))
 
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)

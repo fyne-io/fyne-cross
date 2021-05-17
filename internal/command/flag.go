@@ -75,11 +75,11 @@ func newCommonFlags() (*CommonFlags, error) {
 
 	flags := &CommonFlags{}
 	flagSet.IntVar(&flags.AppBuild, "app-build", 1, "Build number, should be greater than 0 and incremented for each build")
-	flagSet.StringVar(&flags.AppID, "app-id", name, "Application ID used for distribution")
+	flagSet.StringVar(&flags.AppID, "app-id", "", "Application ID used for distribution")
 	flagSet.StringVar(&flags.AppVersion, "app-version", "1.0", "Version number in the form x, x.y or x.y.z semantic version")
 	flagSet.StringVar(&flags.CacheDir, "cache", cacheDir, "Directory used to share/cache sources and dependencies")
 	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")
-	flagSet.Var(&flags.Env, "env", "List of additional env variables specified as KEY=VALUE and separated by comma")
+	flagSet.Var(&flags.Env, "env", "List of additional env variables specified as KEY=VALUE")
 	flagSet.StringVar(&flags.Icon, "icon", defaultIcon, "Application icon used for distribution")
 	flagSet.StringVar(&flags.DockerImage, "image", "", "Custom docker image to use for build")
 	flagSet.StringVar(&flags.Ldflags, "ldflags", "", "Additional flags to pass to the external linker")
@@ -115,23 +115,11 @@ func (ef *envFlag) String() string {
 
 // Set is the method to set the flag value, part of the flag.Value interface.
 // Set's argument is a string to be parsed to set the flag.
-// It's a comma-separated list, so we split it.
 func (ef *envFlag) Set(value string) error {
-	*ef = []string{}
-	if len(*ef) > 1 {
-		return errors.New("flag already set")
+	if !strings.Contains(value, "=") {
+		return errors.New("env var must defined as KEY=VALUE or KEY=")
 	}
-
-	for _, v := range strings.Split(value, ",") {
-		*ef = append(*ef, v)
-	}
-
-	// validate env vars
-	for _, v := range *ef {
-		if !strings.Contains(v, "=") {
-			return errors.New("env var must defined as KEY=VALUE or KEY=")
-		}
-	}
+	*ef = append(*ef, value)
 
 	return nil
 }

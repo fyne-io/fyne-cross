@@ -9,6 +9,7 @@ import (
 	"io"
 	"io/ioutil"
 	"os"
+	"path"
 	"path/filepath"
 	"strings"
 
@@ -103,13 +104,13 @@ func Mount(workDirHost string, cacheDirHost string) (Volume, error) {
 // JoinPathContainer joins any number of path elements into a single path,
 // separating them with the Container OS specific Separator.
 func JoinPathContainer(elem ...string) string {
-	return strings.Join(elem, "/")
+	return path.Clean(strings.Join(elem, "/"))
 }
 
 // JoinPathHost joins any number of path elements into a single path,
 // separating them with the Host OS specific Separator.
 func JoinPathHost(elem ...string) string {
-	return filepath.Join(elem...)
+	return filepath.Clean(filepath.Join(elem...))
 }
 
 // Zip compress the source file into a zip archive

@@ -1,6 +1,37 @@
 # Changelog - Fyne.io fyne-cross
 
-## [1.0.0]
+## 1.1.0 - 14 May 2021
+
+### Added
+
+- Add darwin arm64 target #39
+- Add FreeBSD on arm64 target #29
+- Add the `darwin-image` command to build the darwin docker image
+- Add the `local` flag for darwin to build directly from the host
+- Add a dedicated docker image for macOS
+- Add a dedicated docker image for Windows
+- Darwin image build: add support for SDK version #45
+
+### Changed
+
+- Update Go to v1.16.4
+- Update fyne CLI to v2.0.3
+- Update FreeBSD SDK to v12.2 #29
+- Refactor docker images layout to ensure compatibility with previous versions of fyne-cross
+
+### Fixed
+
+- Fix android keystore path is not resolved correctly
+- Fix some release flags are always set even if empty
+- Fix appID flag should not have a default #25
+- Fix the option --env does not allow values containing comma #35
+
+### Removed
+
+- Remove darwin 386 target
+- Remove the dependency from the docker/golang-cross image for the base image
+
+## 1.0.0 - 13 December 2020
 - Add support for "fyne release" #3
 - Add support for creating packaged .tar.gz bundles on freebsd #6
 - Add support for Linux Wayland #10
@@ -10,7 +41,7 @@
 - Fix build failure for Linux mobile #19
 - Update Go to v1.14.13
 
-## [0.9.0]
+## 0.9.0 - 17 October 2020
 - Releaseing under project namespace with previous 2.2.1 becoming 0.9.0 in fyne-io namespace
 
 
