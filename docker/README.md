@@ -8,7 +8,6 @@ It provides the following images:
 - fyneio/fyne-cross:1.1-base-llvm
 - fyneio/fyne-cross:1.1-base-freebsd
 - fyneio/fyne-cross:1.1-android
-- fyneio/fyne-cross:1.1-darwin
 - fyneio/fyne-cross:1.1-freebsd-amd64
 - fyneio/fyne-cross:1.1-freebsd-arm64
 - fyneio/fyne-cross:1.1-linux-386

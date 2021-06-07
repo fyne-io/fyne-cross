@@ -1,19 +1,21 @@
 # Changelog - Fyne.io fyne-cross
 
-## [1.1.0] Unreleased
+## 1.1.0 - 14 May 2021
 
 ### Added
 
+- Add darwin arm64 target #39
 - Add FreeBSD on arm64 target #29
 - Add the `darwin-image` command to build the darwin docker image
 - Add the `local` flag for darwin to build directly from the host
 - Add a dedicated docker image for macOS
 - Add a dedicated docker image for Windows
+- Darwin image build: add support for SDK version #45
 
 ### Changed
 
-- Update Go to v1.16.3
-- Update fyne CLI to v2.0.2
+- Update Go to v1.16.4
+- Update fyne CLI to v2.0.3
 - Update FreeBSD SDK to v12.2 #29
 - Refactor docker images layout to ensure compatibility with previous versions of fyne-cross
 
