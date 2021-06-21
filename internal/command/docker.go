@@ -165,7 +165,7 @@ func goBuild(ctx Context) error {
 	if len(ldflags) > 0 {
 		flags := make([]string, len(ldflags))
 		for i, flag := range ldflags {
-			flags[i] = fmt.Sprintf("-ldflags=%s", flag)
+			flags[i] = "-ldflags=" + flag
 		}
 
 		// ensure that GOFLAGS is not overwritten as they can be passed
