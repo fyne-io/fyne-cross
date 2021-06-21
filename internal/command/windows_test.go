@@ -95,7 +95,7 @@ func Test_makeWindowsContext(t *testing.T) {
 					OS:           "windows",
 					Architecture: "amd64",
 					Env:          []string{"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
-					LdFlags:      []string{"-X main.version=1.2.3", "-H=windowsgui"},
+					LdFlags:      []string{"-X main.version=1.2.3", "-H windowsgui"},
 					DockerImage:  windowsImage,
 				},
 			},
