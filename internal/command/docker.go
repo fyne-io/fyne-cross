@@ -3,7 +3,9 @@ package command
 import (
 	"bytes"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"os/user"
 	"runtime"
 	"strings"
@@ -13,6 +15,9 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/volume"
 	"golang.org/x/sys/execabs"
 )
+
+// IsPodman is set by init() function, and is true if podman is used
+var IsPodman bool
 
 const (
 	// fyneBin is the path of the fyne binary into the docker image
@@ -30,6 +35,11 @@ func CheckRequirements() error {
 	return nil
 }
 
+func init() {
+	// Initialise podman detection once
+	IsPodman = initIsPodman()
+}
+
 // Options define the options for the docker run command
 type Options struct {
 	CacheEnabled bool     // CacheEnabled if true enable go build cache
@@ -38,15 +48,28 @@ type Options struct {
 	Debug        bool     // Debug if true enable log verbosity
 }
 
-// IsPodman returns true if docker is an alias to podman (e.g. via podman-docker).
-func IsPodman() bool {
-	out, err := exec.Command("docker", "info", "-f", "{{.Host.RemoteSocket.Path}}").Output()
+// initIsPodman returns true if docker is an alias to podman (e.g. via podman-docker).
+func initIsPodman() bool {
+	// read the "docker" executable to check if it's a podman wrapper
+
+	execPath, err := exec.LookPath("docker")
+	if err != nil {
+		// docker is not installed, is there "podman" ?
+		if _, err = exec.LookPath("podman"); err == nil {
+			return true
+		}
+	}
+
+	// OK, let's see if "docker" comes from "podman-docker" aliases
+	f, err := os.Open(execPath)
 	if err != nil {
 		return false
 	}
-	// There should be an indication about the remote socket that is commonly named
-	// like /path/to/podman.sock
-	return strings.Contains(string(out), "podman")
+	defer f.Close()
+
+	// if it's a script alias, so "docker" is a bash script that calls "podman"
+	c, _ := ioutil.ReadAll(f)
+	return strings.Contains(string(c), "podman")
 }
 
 // Cmd returns a command to run in a new container for the specified image
@@ -64,8 +87,7 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 		"-v", fmt.Sprintf("%s:%s:z", vol.WorkDirHost(), vol.WorkDirContainer()), // mount the working dir
 	}
 
-	if IsPodman() {
-		log.Info("USE PODMAN")
+	if IsPodman {
 		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
 	}
 
@@ -101,7 +123,11 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 	args = append(args, cmdArgs...)
 
 	// run the command inside the container
-	cmd := execabs.Command("docker", args...)
+	c := "docker"
+	if IsPodman {
+		c = "podman"
+	}
+	cmd := exec.Command(c, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -165,7 +191,20 @@ func goBuild(ctx Context) error {
 	if len(ldflags) > 0 {
 		flags := make([]string, len(ldflags))
 		for i, flag := range ldflags {
-			flags[i] = "-ldflags=" + flag
+			if strings.Index(flag, "-X") == 0 {
+				// We must rebuild cases
+				// if the user pass "-ldflags "-X A.B=C" so we need to set it to "-X=A.B=C"
+				// if the user pass "-ldflags "-X=A.B=C" so we should not change it
+				sp := strings.SplitN(flag, " ", 1)
+				if len(sp) == 2 {
+					args = append(args, "-ldflags=-X="+sp[1])
+				} else {
+					args = append(args, "-ldflags="+flag)
+				}
+			} else {
+				// others flags can be set to GOFLAGS
+				flags[i] = "-ldflags=" + flag
+			}
 		}
 
 		// ensure that GOFLAGS is not overwritten as they can be passed
@@ -178,6 +217,7 @@ func goBuild(ctx Context) error {
 			ctx.Env = append(ctx.Env, fmt.Sprintf("GOFLAGS=%s", strings.Join(flags, " ")))
 		}
 	}
+
 	// add tags to command, if any
 	tags := ctx.Tags
 	if len(tags) > 0 {
