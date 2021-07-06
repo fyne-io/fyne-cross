@@ -438,7 +438,7 @@ func pullImage(ctx Context) error {
 	buf := bytes.Buffer{}
 
 	// run the command inside the container
-	cmd := execabs.Command("docker", "pull", ctx.DockerImage)
+	cmd := exec.Command("docker", "pull", "docker.io/"+ctx.DockerImage)
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 
