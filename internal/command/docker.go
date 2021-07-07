@@ -28,9 +28,13 @@ const (
 
 // CheckRequirements checks if the docker binary is in PATH
 func CheckRequirements() error {
-	_, err := execabs.LookPath("docker")
+	_, err := exec.LookPath("docker")
+	if err == nil {
+		return nil
+	}
+	_, err = exec.LookPath("podman")
 	if err != nil {
-		return fmt.Errorf("missed requirement: docker binary not found in PATH")
+		return fmt.Errorf("missed requirement: docker or podman binary not found in PATH")
 	}
 	return nil
 }
