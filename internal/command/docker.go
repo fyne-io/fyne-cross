@@ -199,7 +199,7 @@ func goBuild(ctx Context) error {
 				// We must rebuild cases
 				// if the user pass "-ldflags "-X A.B=C" so we need to set it to "-X=A.B=C"
 				// if the user pass "-ldflags "-X=A.B=C" so we should not change it
-				sp := strings.SplitN(flag, " ", 1)
+				sp := strings.SplitN(flag, " ", 2)
 				if len(sp) == 2 {
 					args = append(args, "-ldflags=-X="+sp[1])
 				} else {
