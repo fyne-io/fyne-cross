@@ -252,7 +252,7 @@ func makeWindowsContext(flags *windowsFlags, args []string) ([]Context, error) {
 		}
 
 		if !flags.Console {
-			ctx.LdFlags = append(ctx.LdFlags, "-H windowsgui")
+			ctx.LdFlags = append(ctx.LdFlags, "-H=windowsgui")
 		}
 
 		if flags.DockerImage == "" {

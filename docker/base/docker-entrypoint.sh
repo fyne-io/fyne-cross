@@ -1,6 +1,10 @@
 #!/bin/sh
 set -e
 
+if [ -n "$use_podman" ]; then
+    exec $@
+fi
+
 if [ -z "$fyne_uid" ] || [ $fyne_uid -eq 0 2>/dev/null ]; then
     eval exec $@    
     exit $?
