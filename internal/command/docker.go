@@ -16,14 +16,20 @@ import (
 	"golang.org/x/sys/execabs"
 )
 
-// IsPodman is set by init() function, and is true if podman is used
-var IsPodman bool
+var (
+	// IsPodman is set by init() function, and is true if podman is used
+	IsPodman bool
+	// Runner is either "docker" or "podman"
+	Runner string
+)
 
 const (
 	// fyneBin is the path of the fyne binary into the docker image
 	fyneBin = "/usr/local/bin/fyne"
 	// gowindresBin is the path of the gowindres binary into the docker image
 	gowindresBin = "/usr/local/bin/gowindres"
+	// registry is the docker registry to use to pull images
+	registry = "docker.io"
 )
 
 // CheckRequirements checks if the docker binary is in PATH
@@ -42,6 +48,11 @@ func CheckRequirements() error {
 func init() {
 	// Initialise podman detection once
 	IsPodman = initIsPodman()
+	if IsPodman {
+		Runner = "podman"
+	} else {
+		Runner = "docker"
+	}
 }
 
 // Options define the options for the docker run command
@@ -121,17 +132,13 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 	}
 
 	// specify the image to use
-	args = append(args, image)
+	args = append(args, registry+"/"+image)
 
 	// add the command to execute
 	args = append(args, cmdArgs...)
 
 	// run the command inside the container
-	c := "docker"
-	if IsPodman {
-		c = "podman"
-	}
-	cmd := exec.Command(c, args...)
+	cmd := exec.Command(Runner, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -442,7 +449,7 @@ func pullImage(ctx Context) error {
 	buf := bytes.Buffer{}
 
 	// run the command inside the container
-	cmd := exec.Command("docker", "pull", "docker.io/"+ctx.DockerImage)
+	cmd := exec.Command(Runner, "pull", registry+"/"+ctx.DockerImage)
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 

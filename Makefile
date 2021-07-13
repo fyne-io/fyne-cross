@@ -1,5 +1,6 @@
 tag := $(shell date +"%y.%m.%d")
 RUNNER := $(shell 2>/dev/null 1>&2 docker version && echo "docker" || echo "podman")
+REGISTRY := docker.io
 FYNE_CROSS_VERSION := "1.1"
 
 
@@ -32,6 +33,9 @@ windows: base
 
 # build all images for release. Note do not build darwin
 build-images: base android freebsd linux windows
+ifeq ($(RUNNER),podman)
+	$(MAKE) podman-tag
+endif
 
 # tag the images with the YY.MM.DD suffix
 tag-images:
@@ -50,6 +54,24 @@ tag-images:
 	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-arm64 fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-arm64-$(tag)
 	# tag windows images
 	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-windows fyneio/fyne-cross:${FYNE_CROSS_VERSION}-windows-$(tag)
+
+podman-tag:
+	# tag base images
+	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base $(REGISTRY)/fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base
+	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-llvm $(REGISTRY)/fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-llvm
+	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-freebsd $(REGISTRY)/fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-freebsd
+	# tag android images
+	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-android $(REGISTRY)/fyneio/fyne-cross:${FYNE_CROSS_VERSION}-android
+	# tag linux images
+	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-linux-386 $(REGISTRY)/fyneio/fyne-cross:${FYNE_CROSS_VERSION}-linux-386
+	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-linux-arm $(REGISTRY)/fyneio/fyne-cross:${FYNE_CROSS_VERSION}-linux-arm
+	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-linux-arm64 $(REGISTRY)/fyneio/fyne-cross:${FYNE_CROSS_VERSION}-linux-arm64
+	# tag freebsd images
+	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-amd64 $(REGISTRY)/fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-amd64
+	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-arm64 $(REGISTRY)/fyneio/fyne-cross:${FYNE_CROSS_VERSION}-freebsd-arm64
+	# tag windows images
+	@$(RUNNER) tag fyneio/fyne-cross:${FYNE_CROSS_VERSION}-windows $(REGISTRY)/fyneio/fyne-cross:${FYNE_CROSS_VERSION}-windows
+
 
 # push the latest images
 push-latest-images:
