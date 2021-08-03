@@ -4,12 +4,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
+	"golang.org/x/sys/execabs"
 )
 
 // Command wraps the methods for a fyne-cross command
@@ -107,13 +107,13 @@ func printUsage(template string, data interface{}) {
 
 // checkFyneBinHost checks if the fyne cli tool is installed on the host
 func checkFyneBinHost(ctx Context) (string, error) {
-	fyne, err := exec.LookPath("fyne")
+	fyne, err := execabs.LookPath("fyne")
 	if err != nil {
 		return "", fmt.Errorf("missed requirement: fyne. To install: `go get fyne.io/fyne/v2/cmd/fyne` and add $GOPATH/bin to $PATH")
 	}
 
 	if ctx.Debug {
-		out, err := exec.Command(fyne, "version").Output()
+		out, err := execabs.Command(fyne, "version").Output()
 		if err != nil {
 			return fyne, fmt.Errorf("could not get fyne cli %s version: %v", fyne, err)
 		}
@@ -153,7 +153,7 @@ func fynePackageHost(ctx Context) error {
 	}
 
 	// run the command from the host
-	fyneCmd := exec.Command(fyne, args...)
+	fyneCmd := execabs.Command(fyne, args...)
 	fyneCmd.Dir = ctx.WorkDirHost()
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
@@ -223,7 +223,7 @@ func fyneReleaseHost(ctx Context) error {
 	}
 
 	// run the command from the host
-	fyneCmd := exec.Command(fyne, args...)
+	fyneCmd := execabs.Command(fyne, args...)
 	fyneCmd.Dir = ctx.WorkDirHost()
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
