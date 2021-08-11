@@ -121,7 +121,7 @@ The docker image for darwin is not provided via docker hub and need to build man
    terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
 
 To build the image:
-1. [Download Command Line Tools for Xcode](https://developer.apple.com/download/more) >= 12.4 (macOS SDK 11.x)
+1. [Download Command Line Tools for Xcode](https://developer.apple.com/download/all/?q=Command%20Line%20Tools) >= 12.4 (macOS SDK 11.x)
 2. Run: `fyne-cross darwin-image --xcode-path /path/to/Command_Line_Tools_for_Xcode_12.5.dmg`
 
 The command above will:
