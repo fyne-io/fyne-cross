@@ -8,9 +8,10 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"os/exec"
 	"path"
 	"text/template"
+
+	"golang.org/x/sys/execabs"
 )
 
 var (
@@ -65,7 +66,7 @@ func main() {
 		target = target386
 	}
 
-	cmd := exec.Command(windresBin, "-F", target, "-o", resource, rc)
+	cmd := execabs.Command(windresBin, "-F", target, "-o", resource, rc)
 	cmd.Dir = workDir
 	out, err := cmd.CombinedOutput()
 	if err != nil {
