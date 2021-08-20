@@ -18,7 +18,11 @@ Supported targets are:
   -  linux/arm64
   -  windows/amd64
   -  windows/386
-  -  android
+  -  android (universal)
+  -  android/386
+  -  android/amd64
+  -  android/arm
+  -  android/arm64
   -  ios
 
 > Note: 

@@ -184,9 +184,14 @@ func fynePackage(ctx Context) error {
 		}
 	}
 
+	target := ctx.OS
+	if ctx.Architecture != ArchUniversal {
+		target += "/" + ctx.Architecture.String()
+	}
+
 	args := []string{
 		fyneBin, "package",
-		"-os", ctx.OS,
+		"-os", target,
 		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
 		"-appBuild", ctx.AppBuild,
