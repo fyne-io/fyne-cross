@@ -37,7 +37,7 @@ Supported targets are:
 ### Installation
 
 ```
-go get github.com/fyne-io/fyne-cross
+go get -u github.com/fyne-io/fyne-cross
 ```
 
 > `fyne-cross` will be installed in GOPATH/bin, unless GOBIN is set.
