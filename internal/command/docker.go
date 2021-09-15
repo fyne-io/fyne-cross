@@ -2,6 +2,7 @@ package command
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -14,13 +15,6 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 	"golang.org/x/sys/execabs"
-)
-
-var (
-	// IsPodman is set by init() function, and is true if podman is used
-	IsPodman bool
-	// Runner is either "docker" or "podman"
-	Runner string
 )
 
 const (
@@ -45,16 +39,6 @@ func CheckRequirements() error {
 	return nil
 }
 
-func init() {
-	// Initialise podman detection once
-	IsPodman = initIsPodman()
-	if IsPodman {
-		Runner = "podman"
-	} else {
-		Runner = "docker"
-	}
-}
-
 // Options define the options for the docker run command
 type Options struct {
 	CacheEnabled bool     // CacheEnabled if true enable go build cache
@@ -63,28 +47,42 @@ type Options struct {
 	Debug        bool     // Debug if true enable log verbosity
 }
 
-// initIsPodman returns true if docker is an alias to podman (e.g. via podman-docker).
-func initIsPodman() bool {
-	// read the "docker" executable to check if it's a podman wrapper
+// engine returns the default engine name, if no engine is found it returns an empty string and the error.
+func engine() (string, error) {
+	if isEngineDocker() {
+		return "docker", nil
+	}
 
-	execPath, err := exec.LookPath("docker")
-	if err != nil {
-		// docker is not installed, is there "podman" ?
-		if _, err = exec.LookPath("podman"); err == nil {
-			return true
+	if isEnginePodman() {
+		return "podman", nil
+	}
+
+	return "", errors.New("No container engine found")
+
+}
+
+// isEnginePodman returns true if the engine is "podman"
+func isEnginePodman() bool {
+	_, err := exec.LookPath("podman")
+	return err == nil
+
+}
+
+// isEngineDocker return true is the engine is "docker". If "docker" is an alias to podman, so it returns false.
+func isEngineDocker() bool {
+	if execPath, err := exec.LookPath("docker"); err == nil {
+		// OK, let's see if "docker" comes from "podman-docker" aliases
+		f, err := os.Open(execPath)
+		if err != nil {
+			return false
 		}
-	}
+		defer f.Close()
 
-	// OK, let's see if "docker" comes from "podman-docker" aliases
-	f, err := os.Open(execPath)
-	if err != nil {
-		return false
+		// if it's a script alias, so "docker" is a bash script that calls "podman"
+		c, _ := ioutil.ReadAll(f)
+		return !strings.Contains(string(c), "podman")
 	}
-	defer f.Close()
-
-	// if it's a script alias, so "docker" is a bash script that calls "podman"
-	c, _ := ioutil.ReadAll(f)
-	return strings.Contains(string(c), "podman")
+	return false
 }
 
 // Cmd returns a command to run in a new container for the specified image
@@ -102,7 +100,7 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 		"-v", fmt.Sprintf("%s:%s:z", vol.WorkDirHost(), vol.WorkDirContainer()), // mount the working dir
 	}
 
-	if IsPodman {
+	if isEnginePodman() {
 		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
 	}
 
@@ -138,7 +136,11 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 	args = append(args, cmdArgs...)
 
 	// run the command inside the container
-	cmd := exec.Command(Runner, args...)
+	runner, err := engine()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	cmd := exec.Command(runner, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -452,7 +454,11 @@ func pullImage(ctx Context) error {
 	buf := bytes.Buffer{}
 
 	// run the command inside the container
-	cmd := exec.Command(Runner, "pull", registry+"/"+ctx.DockerImage)
+	runner, err := engine()
+	if err != err {
+		log.Fatal(err.Error())
+	}
+	cmd := exec.Command(runner, "pull", registry+"/"+ctx.DockerImage)
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 
@@ -460,7 +466,7 @@ func pullImage(ctx Context) error {
 		log.Debug(cmd)
 	}
 
-	err := cmd.Run()
+	err = cmd.Run()
 
 	if ctx.Debug {
 		log.Debug(buf.String())
