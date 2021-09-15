@@ -202,19 +202,22 @@ func goBuild(ctx Context) error {
 	if len(ldflags) > 0 {
 		flags := make([]string, len(ldflags))
 		for i, flag := range ldflags {
-			if strings.HasPrefix(flag, "-X") {
-				// We must rebuild cases
-				// if the user pass "-ldflags "-X A.B=C" so we need to set it to "-X=A.B=C"
-				// if the user pass "-ldflags "-X=A.B=C" so we should not change it
-				sp := strings.SplitN(flag, " ", 2)
-				if len(sp) == 2 {
-					args = append(args, "-ldflags=-X="+sp[1])
+			parts := strings.Split(flag, "-") // because there could be several -X flags
+			for _, p := range parts {
+				if strings.HasPrefix(p, "X") {
+					// We must rebuild cases
+					// if the user pass "-ldflags "-X A.B=C" so we need to set it to "-X=A.B=C"
+					// if the user pass "-ldflags "-X=A.B=C" so we should not change it
+					sp := strings.SplitN(p, " ", 1)
+					if len(sp) == 2 {
+						args = append(args, "-ldflags=-X="+sp[1])
+					} else {
+						args = append(args, "-ldflags=-"+p)
+					}
 				} else {
-					args = append(args, "-ldflags="+flag)
+					// others flags can be set to GOFLAGS
+					flags[i] = "-ldflags=-" + p
 				}
-			} else {
-				// others flags can be set to GOFLAGS
-				flags[i] = "-ldflags=" + flag
 			}
 		}
 
