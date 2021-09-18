@@ -185,7 +185,7 @@ func fynePackage(ctx Context) error {
 	}
 
 	target := ctx.OS
-	if ctx.Architecture != ArchUniversal {
+	if ctx.Architecture != ArchMultiple {
 		target += "/" + ctx.Architecture.String()
 	}
 

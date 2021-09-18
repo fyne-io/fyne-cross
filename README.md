@@ -18,7 +18,7 @@ Supported targets are:
   -  linux/arm64
   -  windows/amd64
   -  windows/386
-  -  android (universal)
+  -  android ([multiple architectures](https://developer.android.com/ndk/guides/abis))
   -  android/386
   -  android/amd64
   -  android/arm

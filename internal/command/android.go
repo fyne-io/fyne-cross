@@ -19,7 +19,7 @@ const (
 
 var (
 	// androidArchSupported defines the supported target architectures for the android OS
-	androidArchSupported = []Architecture{ArchUniversal, ArchAmd64, Arch386, ArchArm, ArchArm64}
+	androidArchSupported = []Architecture{ArchMultiple, ArchAmd64, Arch386, ArchArm, ArchArm64}
 )
 
 // Android build and package the fyne app for the android OS
@@ -46,7 +46,7 @@ func (cmd *Android) Parse(args []string) error {
 
 	flags := &androidFlags{
 		CommonFlags: commonFlags,
-		TargetArch:  &targetArchFlag{string(ArchUniversal)},
+		TargetArch:  &targetArchFlag{string(ArchMultiple)},
 	}
 
 	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s.`, androidArchSupported))
@@ -211,7 +211,7 @@ func makeAndroidContext(flags *androidFlags, args []string) ([]Context, error) {
 		ctx.OS = androidOS
 		ctx.Architecture = arch
 		ctx.ID = androidOS
-		if ctx.Architecture != ArchUniversal {
+		if ctx.Architecture != ArchMultiple {
 			ctx.ID = fmt.Sprintf("%s-%s", ctx.OS, ctx.Architecture)
 		}
 
