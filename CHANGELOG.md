@@ -1,10 +1,15 @@
 # Changelog - Fyne.io fyne-cross
 
-## Unreleased
+## 1.1.1 - 29 Sep 2021
 
 ### Added
 
 -  Support specifying target architectures for Android #52
+
+### Changed
+
+- Switch to x/sys/execabs for windows security fixes #57
+- [base-image] update Go to v1.16.8 and Fyne CLI tool to v2.1.0 #67
 
 ## 1.1.0 - 14 May 2021
 
