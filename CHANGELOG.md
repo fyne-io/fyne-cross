@@ -1,5 +1,11 @@
 # Changelog - Fyne.io fyne-cross
 
+## Unreleased
+
+### Added
+
+-  Support specifying target architectures for Android #52
+
 ## 1.1.0 - 14 May 2021
 
 ### Added
