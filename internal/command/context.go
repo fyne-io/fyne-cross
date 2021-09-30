@@ -22,6 +22,9 @@ const (
 	ArchArm64 Architecture = "arm64"
 	// ArchArm represents the arm architecture
 	ArchArm Architecture = "arm"
+	// ArchMultiple represents the universal architecture used by some OS to
+	// identify a binary that supports multiple architectures (fat binary)
+	ArchMultiple Architecture = "multiple"
 )
 
 // Architecture represents the Architecture type

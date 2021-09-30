@@ -5,12 +5,12 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/resource"
 	"github.com/fyne-io/fyne-cross/internal/volume"
+	"golang.org/x/sys/execabs"
 )
 
 // DarwinImage builds the darwin docker image
@@ -92,7 +92,7 @@ func (cmd *DarwinImage) Run() error {
 	log.Info("[i] macOS SDK: ", ver)
 
 	// run the command from the host
-	dockerCmd := exec.Command("docker", "build", "--pull", "--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")
+	dockerCmd := execabs.Command("docker", "build", "--pull", "--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")
 	dockerCmd.Dir = workDir
 	dockerCmd.Stdout = os.Stdout
 	dockerCmd.Stderr = os.Stderr

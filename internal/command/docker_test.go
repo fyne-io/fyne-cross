@@ -3,19 +3,19 @@ package command
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"os/user"
 	"path/filepath"
 	"runtime"
 	"testing"
 
 	"github.com/fyne-io/fyne-cross/internal/volume"
+	"golang.org/x/sys/execabs"
 )
 
 func TestCmd(t *testing.T) {
 
 	expectedCmd := "docker"
-	if lp, err := exec.LookPath(expectedCmd); err == nil {
+	if lp, err := execabs.LookPath(expectedCmd); err == nil {
 		expectedCmd = lp
 	}
 

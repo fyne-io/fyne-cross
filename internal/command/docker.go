@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"fmt"
 	"os"
-	"os/exec"
 	"os/user"
 	"runtime"
 	"strings"
@@ -12,6 +11,7 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
+	"golang.org/x/sys/execabs"
 )
 
 const (
@@ -23,7 +23,7 @@ const (
 
 // CheckRequirements checks if the docker binary is in PATH
 func CheckRequirements() error {
-	_, err := exec.LookPath("docker")
+	_, err := execabs.LookPath("docker")
 	if err != nil {
 		return fmt.Errorf("missed requirement: docker binary not found in PATH")
 	}
@@ -39,7 +39,7 @@ type Options struct {
 }
 
 // Cmd returns a command to run in a new container for the specified image
-func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *exec.Cmd {
+func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execabs.Cmd {
 
 	// define workdir
 	w := vol.WorkDirContainer()
@@ -85,7 +85,7 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *exec.
 	args = append(args, cmdArgs...)
 
 	// run the command inside the container
-	cmd := exec.Command("docker", args...)
+	cmd := execabs.Command("docker", args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -184,9 +184,14 @@ func fynePackage(ctx Context) error {
 		}
 	}
 
+	target := ctx.OS
+	if ctx.Architecture != ArchMultiple {
+		target += "/" + ctx.Architecture.String()
+	}
+
 	args := []string{
 		fyneBin, "package",
-		"-os", ctx.OS,
+		"-os", target,
 		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
 		"-appBuild", ctx.AppBuild,
@@ -360,7 +365,7 @@ func pullImage(ctx Context) error {
 	buf := bytes.Buffer{}
 
 	// run the command inside the container
-	cmd := exec.Command("docker", "pull", ctx.DockerImage)
+	cmd := execabs.Command("docker", "pull", ctx.DockerImage)
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 

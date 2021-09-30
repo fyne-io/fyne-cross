@@ -23,6 +23,13 @@ above.
 
 Example: `fyneio/fyne-cross:1.1-base-21.03.17`
 
+## Release 21.09.29
+- Update Go to v1.16.8
+- Update fyne CLI to v2.1.0
+
+### Release 21.06.07
+- Update Go to v1.16.5
+
 ### Release 21.05.08
 - Update Go to v1.16.4
 - Update fyne CLI to v2.0.3
