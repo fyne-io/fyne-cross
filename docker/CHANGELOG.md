@@ -23,7 +23,7 @@ above.
 
 Example: `fyneio/fyne-cross:1.1-base-21.03.17`
 
-## Unreleased 
+## Release 21.10.05
 - Add xz-utils package to support unix packaging fyne-io/fyne#1919
 
 ## Release 21.09.29
