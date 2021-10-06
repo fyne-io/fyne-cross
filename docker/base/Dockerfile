@@ -18,6 +18,8 @@ RUN apt-get update -qq \
         gosu \
         zip \
         unzip \
+        # Switch from gz to xz compression for unix packages fyne-io/fyne#1919
+        xz-utils \
         # fyne deps
         libgl1-mesa-dev \
         libegl1-mesa-dev \

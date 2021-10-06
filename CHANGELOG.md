@@ -1,5 +1,11 @@
 # Changelog - Fyne.io fyne-cross
 
+## 1.1.2 - 05 Oct 2021
+
+### Fixed
+
+- Unsupported target operating system "linux/amd64" #74
+
 ## 1.1.1 - 29 Sep 2021
 
 ### Added

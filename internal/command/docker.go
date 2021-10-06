@@ -185,7 +185,7 @@ func fynePackage(ctx Context) error {
 	}
 
 	target := ctx.OS
-	if ctx.Architecture != ArchMultiple {
+	if ctx.OS == androidOS && ctx.Architecture != ArchMultiple {
 		target += "/" + ctx.Architecture.String()
 	}
 
@@ -253,9 +253,14 @@ func fyneRelease(ctx Context) error {
 		}
 	}
 
+	target := ctx.OS
+	if ctx.OS == androidOS && ctx.Architecture != ArchMultiple {
+		target += "/" + ctx.Architecture.String()
+	}
+
 	args := []string{
 		fyneBin, "release",
-		"-os", ctx.OS,
+		"-os", target,
 		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID, icon.Default),
 		"-appBuild", ctx.AppBuild,
