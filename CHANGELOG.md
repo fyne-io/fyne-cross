@@ -1,5 +1,11 @@
 # Changelog - Fyne.io fyne-cross
 
+## Unreleased
+
+### Fixed
+
+-  Building for windows fails to add icon #66
+
 ## 1.1.2 - 05 Oct 2021
 
 ### Fixed
