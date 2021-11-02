@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -330,8 +331,6 @@ func fyneRelease(ctx Context) error {
 // that will be automatically linked by compliler during the build
 func WindowsResource(ctx Context) (string, error) {
 
-	windres := ctx.Name + ".syso"
-
 	args := []string{
 		gowindresBin,
 		"-arch", ctx.Architecture.String(),
@@ -346,17 +345,19 @@ func WindowsResource(ctx Context) (string, error) {
 
 	err := Run(ctx.DockerImage, ctx.Volume, runOpts, args)
 	if err != nil {
-		return windres, fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 
-	// copy the windows resource under the project root
+	// copy the windows resource under the package root
 	// it will be automatically linked by compiler during build
-	err = volume.Copy(volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, windres), volume.JoinPathHost(ctx.WorkDirHost(), windres))
+	windres := ctx.Name + ".syso"
+	out := filepath.Join(ctx.Package, windres)
+	err = volume.Copy(volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, windres), volume.JoinPathHost(ctx.WorkDirHost(), out))
 	if err != nil {
-		return windres, fmt.Errorf("could not copy windows resource under the project root: %v", err)
+		return "", fmt.Errorf("could not copy windows resource under the package root: %v", err)
 	}
 
-	return windres, nil
+	return out, nil
 }
 
 // pullImage attempts to pull a newer version of the docker image
