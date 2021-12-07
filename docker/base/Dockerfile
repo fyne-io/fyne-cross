@@ -1,6 +1,6 @@
 ARG GO_VERSION=1.17.4
 # fyne stable branch
-ARG FYNE_VERSION=v2.1.0
+ARG FYNE_VERSION=v2.1.2
 
 FROM golang:${GO_VERSION}-buster AS tools
 ARG FYNE_VERSION
