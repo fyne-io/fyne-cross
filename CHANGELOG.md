@@ -1,10 +1,11 @@
 # Changelog - Fyne.io fyne-cross
 
-## Unreleased
+## 1.1.3 - 02 Nov 2021
 
 ### Fixed
 
 -  Building for windows fails to add icon #66
+-  Fixes darwin image creation (SDK extraction) #80
 
 ## 1.1.2 - 05 Oct 2021
 

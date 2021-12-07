@@ -23,6 +23,10 @@ above.
 
 Example: `fyneio/fyne-cross:1.1-base-21.03.17`
 
+## 21.12.07
+- Update Go to v1.17.4
+- Update fyne CLI to v2.1.2
+
 ## Release 21.10.05
 - Add xz-utils package to support unix packaging fyne-io/fyne#1919
 
