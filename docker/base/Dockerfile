@@ -1,4 +1,4 @@
-ARG GO_VERSION=1.16.8
+ARG GO_VERSION=1.17.4
 # fyne stable branch
 ARG FYNE_VERSION=v2.1.0
 
@@ -6,7 +6,7 @@ FROM golang:${GO_VERSION}-buster AS tools
 ARG FYNE_VERSION
 
 # Install the fyne CLI tool
-RUN go get -ldflags="-w -s" -v "fyne.io/fyne/v2/cmd/fyne@${FYNE_VERSION}"
+RUN go install -ldflags="-w -s" -v "fyne.io/fyne/v2/cmd/fyne@${FYNE_VERSION}"
 
 # Build the fyne-cross base image
 FROM golang:${GO_VERSION}-buster AS base
