@@ -1,5 +1,11 @@
 # Changelog - Fyne.io fyne-cross
 
+## Unreleased
+
+### Added
+
+-  Add support for FyneApp.toml #78
+
 ## 1.1.3 - 02 Nov 2021
 
 ### Fixed

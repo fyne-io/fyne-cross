@@ -8,6 +8,7 @@ import (
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
+	"github.com/fyne-io/fyne-cross/internal/metadata"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 	"golang.org/x/sys/execabs"
 )
@@ -237,4 +238,15 @@ func fyneReleaseHost(ctx Context) error {
 		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 	return nil
+}
+
+// bumpFyneAppBuild increments the BuildID into the FyneApp.toml, if any,
+// to behave like the fyne CLI tool
+func bumpFyneAppBuild(ctx Context) error {
+	data, err := metadata.LoadStandard(ctx.Volume.WorkDirHost())
+	if err != nil {
+		return nil // no metadata to update
+	}
+	data.Details.Build++
+	return metadata.SaveStandard(data, ctx.Volume.WorkDirHost())
 }
