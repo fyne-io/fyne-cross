@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -70,19 +69,16 @@ func isEnginePodman() bool {
 
 // isEngineDocker return true is the engine is "docker". If "docker" is an alias to podman, so it returns false.
 func isEngineDocker() bool {
-	if execPath, err := execabs.LookPath("docker"); err == nil {
-		// OK, let's see if "docker" comes from "podman-docker" aliases
-		f, err := os.Open(execPath)
-		if err != nil {
-			return false
-		}
-		defer f.Close()
-
-		// if it's a script alias, so "docker" is a bash script that calls "podman"
-		c, _ := ioutil.ReadAll(f)
-		return !strings.Contains(string(c), "podman")
+	execPath, err := execabs.LookPath("docker")
+	if err != nil {
+		return false
 	}
-	return false
+	// if "docker" comes from an alias (i.e. "podman-docker") should not contain the "docker" string
+	out, err := execabs.Command(execPath, "--version").Output()
+	if err != nil {
+		return false
+	}
+	return strings.Contains(string(out), "docker")
 }
 
 // Cmd returns a command to run in a new container for the specified image
