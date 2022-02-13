@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"os/exec"
 	"os/user"
 	"path/filepath"
 	"runtime"
@@ -15,6 +14,7 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
+
 	"golang.org/x/sys/execabs"
 )
 
@@ -29,11 +29,11 @@ const (
 
 // CheckRequirements checks if the docker binary is in PATH
 func CheckRequirements() error {
-	_, err := exec.LookPath("docker")
+	_, err := execabs.LookPath("docker")
 	if err == nil {
 		return nil
 	}
-	_, err = exec.LookPath("podman")
+	_, err = execabs.LookPath("podman")
 	if err != nil {
 		return fmt.Errorf("missed requirement: docker or podman binary not found in PATH")
 	}
@@ -63,14 +63,14 @@ func engine() (string, error) {
 
 // isEnginePodman returns true if the engine is "podman"
 func isEnginePodman() bool {
-	_, err := exec.LookPath("podman")
+	_, err := execabs.LookPath("podman")
 	return err == nil
 
 }
 
 // isEngineDocker return true is the engine is "docker". If "docker" is an alias to podman, so it returns false.
 func isEngineDocker() bool {
-	if execPath, err := exec.LookPath("docker"); err == nil {
+	if execPath, err := execabs.LookPath("docker"); err == nil {
 		// OK, let's see if "docker" comes from "podman-docker" aliases
 		f, err := os.Open(execPath)
 		if err != nil {
@@ -140,7 +140,7 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	cmd := exec.Command(runner, args...)
+	cmd := execabs.Command(runner, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -468,7 +468,7 @@ func pullImage(ctx Context) error {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	cmd := exec.Command(runner, "pull", registry+"/"+ctx.DockerImage)
+	cmd := execabs.Command(runner, "pull", registry+"/"+ctx.DockerImage)
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 
