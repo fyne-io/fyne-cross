@@ -58,8 +58,7 @@ func engine() (string, error) {
 		return "podman", nil
 	}
 
-	return "", errors.New("No container engine found")
-
+	return "", errors.New("no container engine found")
 }
 
 // isEnginePodman returns true if the engine is "podman"
@@ -466,7 +465,7 @@ func pullImage(ctx Context) error {
 
 	// run the command inside the container
 	runner, err := engine()
-	if err != err {
+	if err != nil {
 		log.Fatal(err.Error())
 	}
 	cmd := exec.Command(runner, "pull", registry+"/"+ctx.DockerImage)
