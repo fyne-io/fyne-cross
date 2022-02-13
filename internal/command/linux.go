@@ -69,13 +69,18 @@ func (cmd *Linux) Run() error {
 
 	for _, ctx := range cmd.Context {
 
+		err := bumpFyneAppBuild(ctx)
+		if err != nil {
+			log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
+		}
+
 		log.Infof("[i] Target: %s/%s", ctx.OS, ctx.Architecture)
 		log.Debugf("%#v", ctx)
 
 		//
 		// pull image, if requested
 		//
-		err := pullImage(ctx)
+		err = pullImage(ctx)
 		if err != nil {
 			return err
 		}
