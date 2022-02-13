@@ -50,8 +50,8 @@ func TestCmd(t *testing.T) {
 				opts:    Options{},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s fyneio/fyne-cross command arg", expectedCmd, workDir, uid.Uid),
-			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build fyneio/fyne-cross command arg", expectedCmd, workDir),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s fyneio/fyne-cross command arg", expectedCmd, workDir, uid.Uid),
+			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build fyneio/fyne-cross command arg", expectedCmd, workDir),
 		},
 		{
 			name: "custom work dir",
@@ -63,8 +63,8 @@ func TestCmd(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w %s -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s fyneio/fyne-cross command arg", expectedCmd, customWorkDir, workDir, uid.Uid),
-			wantWindows: fmt.Sprintf("%s run --rm -t -w %s -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build fyneio/fyne-cross command arg", expectedCmd, customWorkDir, workDir),
+			want:        fmt.Sprintf("%s run --rm -t -w %s -v %s:/app:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s fyneio/fyne-cross command arg", expectedCmd, customWorkDir, workDir, uid.Uid),
+			wantWindows: fmt.Sprintf("%s run --rm -t -w %s -v %s:/app:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build fyneio/fyne-cross command arg", expectedCmd, customWorkDir, workDir),
 		},
 		{
 			name: "cache enabled",
@@ -76,8 +76,8 @@ func TestCmd(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -v %s:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s fyneio/fyne-cross command arg", expectedCmd, workDir, cacheDir, uid.Uid),
-			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -v %s:/go -e CGO_ENABLED=1 -e GOCACHE=/go/go-build fyneio/fyne-cross command arg", expectedCmd, workDir, cacheDir),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -v %s:/go:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s fyneio/fyne-cross command arg", expectedCmd, workDir, cacheDir, uid.Uid),
+			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -v %s:/go:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build fyneio/fyne-cross command arg", expectedCmd, workDir, cacheDir),
 		},
 		{
 			name: "custom env variables",
@@ -89,8 +89,8 @@ func TestCmd(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com -e fyne_uid=%s fyneio/fyne-cross command arg", expectedCmd, workDir, uid.Uid),
-			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com fyneio/fyne-cross command arg", expectedCmd, workDir),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com -e fyne_uid=%s fyneio/fyne-cross command arg", expectedCmd, workDir, uid.Uid),
+			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com fyneio/fyne-cross command arg", expectedCmd, workDir),
 		},
 	}
 	for _, tt := range tests {

@@ -2,8 +2,11 @@ package command
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
+	"os/exec"
 	"os/user"
 	"path/filepath"
 	"runtime"
@@ -20,13 +23,19 @@ const (
 	fyneBin = "/usr/local/bin/fyne"
 	// gowindresBin is the path of the gowindres binary into the docker image
 	gowindresBin = "/usr/local/bin/gowindres"
+	// registry is the docker registry to use to pull images
+	registry = "docker.io"
 )
 
 // CheckRequirements checks if the docker binary is in PATH
 func CheckRequirements() error {
-	_, err := execabs.LookPath("docker")
+	_, err := exec.LookPath("docker")
+	if err == nil {
+		return nil
+	}
+	_, err = exec.LookPath("podman")
 	if err != nil {
-		return fmt.Errorf("missed requirement: docker binary not found in PATH")
+		return fmt.Errorf("missed requirement: docker or podman binary not found in PATH")
 	}
 	return nil
 }
@@ -37,6 +46,44 @@ type Options struct {
 	Env          []string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
 	WorkDir      string   // WorkDir set the workdir, default to volume's workdir
 	Debug        bool     // Debug if true enable log verbosity
+}
+
+// engine returns the default engine name, if no engine is found it returns an empty string and the error.
+func engine() (string, error) {
+	if isEngineDocker() {
+		return "docker", nil
+	}
+
+	if isEnginePodman() {
+		return "podman", nil
+	}
+
+	return "", errors.New("No container engine found")
+
+}
+
+// isEnginePodman returns true if the engine is "podman"
+func isEnginePodman() bool {
+	_, err := exec.LookPath("podman")
+	return err == nil
+
+}
+
+// isEngineDocker return true is the engine is "docker". If "docker" is an alias to podman, so it returns false.
+func isEngineDocker() bool {
+	if execPath, err := exec.LookPath("docker"); err == nil {
+		// OK, let's see if "docker" comes from "podman-docker" aliases
+		f, err := os.Open(execPath)
+		if err != nil {
+			return false
+		}
+		defer f.Close()
+
+		// if it's a script alias, so "docker" is a bash script that calls "podman"
+		c, _ := ioutil.ReadAll(f)
+		return !strings.Contains(string(c), "podman")
+	}
+	return false
 }
 
 // Cmd returns a command to run in a new container for the specified image
@@ -51,12 +98,16 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 	args := []string{
 		"run", "--rm", "-t",
 		"-w", w, // set workdir
-		"-v", fmt.Sprintf("%s:%s", vol.WorkDirHost(), vol.WorkDirContainer()), // mount the working dir
+		"-v", fmt.Sprintf("%s:%s:z", vol.WorkDirHost(), vol.WorkDirContainer()), // mount the working dir
+	}
+
+	if isEnginePodman() {
+		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
 	}
 
 	// mount the cache dir if cache is enabled
 	if opts.CacheEnabled {
-		args = append(args, "-v", fmt.Sprintf("%s:%s", vol.CacheDirHost(), vol.CacheDirContainer()))
+		args = append(args, "-v", fmt.Sprintf("%s:%s:z", vol.CacheDirHost(), vol.CacheDirContainer()))
 	}
 
 	// add default env variables
@@ -80,13 +131,17 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 	}
 
 	// specify the image to use
-	args = append(args, image)
+	args = append(args, registry+"/"+image)
 
 	// add the command to execute
 	args = append(args, cmdArgs...)
 
 	// run the command inside the container
-	cmd := execabs.Command("docker", args...)
+	runner, err := engine()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+	cmd := exec.Command(runner, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -124,6 +179,16 @@ func goModInit(ctx Context) error {
 	return nil
 }
 
+// findGoFlags return the index of context where GOFLAGS is set, or -1 if it is not present.
+func findGoFlags(ctx Context) int {
+	for i, env := range ctx.Env {
+		if strings.HasPrefix(env, "GOFLAGS") {
+			return i
+		}
+	}
+	return -1
+}
+
 // goBuild run the go build command in the container
 func goBuild(ctx Context) error {
 	log.Infof("[i] Building binary...")
@@ -138,7 +203,36 @@ func goBuild(ctx Context) error {
 
 	// add ldflags to command, if any
 	if len(ldflags) > 0 {
-		args = append(args, "-ldflags", fmt.Sprintf("'%s'", strings.Join(ldflags, " ")))
+		flags := make([]string, len(ldflags))
+		for i, flag := range ldflags {
+			parts := strings.Split(flag, "-") // because there could be several -X flags
+			for _, p := range parts {
+				if strings.HasPrefix(p, "X") {
+					// We must rebuild cases
+					// if the user pass "-ldflags "-X A.B=C" so we need to set it to "-X=A.B=C"
+					// if the user pass "-ldflags "-X=A.B=C" so we should not change it
+					sp := strings.SplitN(p, " ", 1)
+					if len(sp) == 2 {
+						args = append(args, "-ldflags=-X="+sp[1])
+					} else {
+						args = append(args, "-ldflags=-"+p)
+					}
+				} else {
+					// others flags can be set to GOFLAGS
+					flags[i] = "-ldflags=-" + p
+				}
+			}
+		}
+
+		// ensure that GOFLAGS is not overwritten as they can be passed
+		// by he --env argument
+		if idx := findGoFlags(ctx); idx > -1 {
+			// append the ldflags after the existing GOFLAGS
+			ctx.Env[idx] += " " + strings.Join(flags, " ")
+		} else {
+			// create the GOFLAGS environment variable
+			ctx.Env = append(ctx.Env, fmt.Sprintf("GOFLAGS=%s", strings.Join(flags, " ")))
+		}
 	}
 
 	// add tags to command, if any
@@ -371,7 +465,11 @@ func pullImage(ctx Context) error {
 	buf := bytes.Buffer{}
 
 	// run the command inside the container
-	cmd := execabs.Command("docker", "pull", ctx.DockerImage)
+	runner, err := engine()
+	if err != err {
+		log.Fatal(err.Error())
+	}
+	cmd := exec.Command(runner, "pull", registry+"/"+ctx.DockerImage)
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 
@@ -379,7 +477,7 @@ func pullImage(ctx Context) error {
 		log.Debug(cmd)
 	}
 
-	err := cmd.Run()
+	err = cmd.Run()
 
 	if ctx.Debug {
 		log.Debug(buf.String())
