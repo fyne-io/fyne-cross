@@ -4,7 +4,8 @@
 
 ### Added
 
--  Add support for FyneApp.toml #78
+- Add support for FyneApp.toml #78
+- Add the ability to use podman #41
 
 ## 1.1.3 - 02 Nov 2021
 
