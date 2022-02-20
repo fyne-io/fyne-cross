@@ -9,15 +9,16 @@ import (
 	"testing"
 
 	"github.com/fyne-io/fyne-cross/internal/volume"
+	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/execabs"
 )
 
 func TestCmd(t *testing.T) {
+	engineBinary, err := engine()
+	require.NoError(t, err)
 
-	expectedCmd := "docker"
-	if lp, err := execabs.LookPath(expectedCmd); err == nil {
-		expectedCmd = lp
-	}
+	expectedCmd, err := execabs.LookPath(engineBinary)
+	require.NoError(t, err)
 
 	uid, _ := user.Current()
 
