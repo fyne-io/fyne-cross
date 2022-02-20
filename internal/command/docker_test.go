@@ -15,7 +15,9 @@ import (
 
 func TestCmd(t *testing.T) {
 	engineBinary, err := engine()
-	require.NoError(t, err)
+	if err != nil {
+		t.Skip("engine not found", err)
+	}
 
 	expectedCmd, err := execabs.LookPath(engineBinary)
 	require.NoError(t, err)
