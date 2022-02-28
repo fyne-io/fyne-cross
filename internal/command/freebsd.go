@@ -14,9 +14,9 @@ const (
 	// freebsdOS it the freebsd OS name
 	freebsdOS = "freebsd"
 	// freebsdImageAmd64 is the fyne-cross image for the FreeBSD OS amd64 arch
-	freebsdImageAmd64 = "fyneio/fyne-cross:1.1-freebsd-amd64"
+	freebsdImageAmd64 = "fyneio/fyne-cross:1.2-freebsd-amd64"
 	// freebsdImageArm64 is the fyne-cross image for the FreeBSD OS arm64 arch
-	freebsdImageArm64 = "fyneio/fyne-cross:1.1-freebsd-arm64"
+	freebsdImageArm64 = "fyneio/fyne-cross:1.2-freebsd-arm64"
 )
 
 var (

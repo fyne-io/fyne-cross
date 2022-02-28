@@ -2,6 +2,32 @@
 
 All notable changes to the fyne-cross docker images will be documented in this file.
 
+## fyne 1.2.x compatible
+
+Latest versions available on Docker Hub are:
+
+- fyneio/fyne-cross:1.2-base
+- fyneio/fyne-cross:1.2-base-llvm
+- fyneio/fyne-cross:1.2-base-freebsd
+- fyneio/fyne-cross:1.2-android
+- fyneio/fyne-cross:1.2-freebsd-amd64
+- fyneio/fyne-cross:1.2-freebsd-arm64
+- fyneio/fyne-cross:1.2-linux-386
+- fyneio/fyne-cross:1.2-linux-arm64
+- fyneio/fyne-cross:1.2-linux-arm
+- fyneio/fyne-cross:1.2-windows
+
+Release cycle won't follow the fyne-cross one, so the images will be tagged and
+available on Docker Hub using the label year.month.day along with the tags
+above.
+
+Example: `fyneio/fyne-cross:1.2-base-22.02.28`
+
+## Release 22.02.28
+- Update Go to v1.17.7
+- Update fyne CLI to v2.1.3
+- Add fixuid to handle volume mount permissions
+
 ## fyne 1.1.x compatible
 
 Latest versions available on Docker Hub are:

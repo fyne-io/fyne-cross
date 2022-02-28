@@ -1,7 +1,7 @@
 tag := $(shell date +"%y.%m.%d")
 RUNNER := $(shell 2>/dev/null 1>&2 docker version && echo "docker" || echo "podman")
 REGISTRY := docker.io
-FYNE_CROSS_VERSION := "1.1"
+FYNE_CROSS_VERSION := "1.2"
 
 
 base:
