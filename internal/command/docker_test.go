@@ -60,7 +60,7 @@ func TestCmd(t *testing.T) {
 				opts:    Options{},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z%s-e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s %s command arg", expectedCmd, workDir, podmanFlags, uid.Uid, dockerImage),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z%s-u %s:%s --entrypoint fixuid -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s -q command arg", expectedCmd, workDir, podmanFlags, uid.Uid, uid.Uid, dockerImage),
 			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, workDir, dockerImage),
 		},
 		{
@@ -73,7 +73,7 @@ func TestCmd(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w %s -v %s:/app:z%s-e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s %s command arg", expectedCmd, customWorkDir, workDir, podmanFlags, uid.Uid, dockerImage),
+			want:        fmt.Sprintf("%s run --rm -t -w %s -v %s:/app:z%s-u %s:%s --entrypoint fixuid -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s -q command arg", expectedCmd, customWorkDir, workDir, podmanFlags, uid.Uid, uid.Uid, dockerImage),
 			wantWindows: fmt.Sprintf("%s run --rm -t -w %s -v %s:/app:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, customWorkDir, workDir, dockerImage),
 		},
 		{
@@ -86,7 +86,7 @@ func TestCmd(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z%s-v %s:/go:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e fyne_uid=%s %s command arg", expectedCmd, workDir, podmanFlags, cacheDir, uid.Uid, dockerImage),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z%s-v %s:/go:z -u %s:%s --entrypoint fixuid -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s -q command arg", expectedCmd, workDir, podmanFlags, cacheDir, uid.Uid, uid.Uid, dockerImage),
 			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -v %s:/go:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, workDir, cacheDir, dockerImage),
 		},
 		{
@@ -99,7 +99,7 @@ func TestCmd(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z%s-e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com -e fyne_uid=%s %s command arg", expectedCmd, workDir, podmanFlags, uid.Uid, dockerImage),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z%s-u %s:%s --entrypoint fixuid -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com %s -q command arg", expectedCmd, workDir, podmanFlags, uid.Uid, uid.Uid, dockerImage),
 			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com %s command arg", expectedCmd, workDir, dockerImage),
 		},
 	}

@@ -33,6 +33,11 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*;
 
-COPY ./docker/base/docker-entrypoint.sh /usr/local/bin
-
-ENTRYPOINT [ "/usr/local/bin/docker-entrypoint.sh"]
+# Install fixuid see #41
+RUN addgroup --gid 1000 docker; \
+    adduser --uid 1000 --ingroup docker --home /home/docker --shell /bin/sh --disabled-password --gecos "" docker; \
+    curl -SsL https://github.com/boxboat/fixuid/releases/download/v${FIXUID_VERSION}/fixuid-${FIXUID_VERSION}-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf -; \
+    chown root:root /usr/local/bin/fixuid; \
+    chmod 4755 /usr/local/bin/fixuid; \
+    mkdir -p /etc/fixuid; \
+    printf "user: docker\ngroup: docker\n" > /etc/fixuid/config.yml

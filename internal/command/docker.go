@@ -78,11 +78,17 @@ func isEngineDocker() bool {
 	if err != nil {
 		return false
 	}
-	return strings.Contains(string(out), "docker")
+	return strings.Contains(strings.ToLower(string(out)), "docker")
 }
 
 // Cmd returns a command to run in a new container for the specified image
 func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execabs.Cmd {
+
+	// detect engine binary
+	engineBinary, err := engine()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 	// define workdir
 	w := vol.WorkDirContainer()
@@ -96,13 +102,27 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 		"-v", fmt.Sprintf("%s:%s:z", vol.WorkDirHost(), vol.WorkDirContainer()), // mount the working dir
 	}
 
-	if isEnginePodman() {
-		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
-	}
-
 	// mount the cache dir if cache is enabled
 	if opts.CacheEnabled {
 		args = append(args, "-v", fmt.Sprintf("%s:%s:z", vol.CacheDirHost(), vol.CacheDirContainer()))
+	}
+
+	// handle settings related to engine
+	if isEnginePodman() {
+		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
+	} else {
+		// docker: pass current user id to handle mount permissions on linux and MacOS
+		if runtime.GOOS != "windows" {
+			u, err := user.Current()
+			if err == nil {
+				args = append(args, "-u", fmt.Sprintf("%s:%s", u.Uid, u.Gid))
+				args = append(args, "--entrypoint", "fixuid")
+				if !opts.Debug {
+					// silent fixuid if not debug mode
+					cmdArgs = append([]string{"-q"}, cmdArgs...)
+				}
+			}
+		}
 	}
 
 	// add default env variables
@@ -116,27 +136,13 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 		args = append(args, "-e", e)
 	}
 
-	// attempt to set fyne user id as current user id to handle mount permissions
-	// on linux and MacOS
-	if runtime.GOOS != "windows" {
-		u, err := user.Current()
-		if err == nil {
-			args = append(args, "-e", fmt.Sprintf("fyne_uid=%s", u.Uid))
-		}
-	}
-
 	// specify the image to use
-	args = append(args, registry+"/"+image)
+	args = append(args, image)
 
 	// add the command to execute
 	args = append(args, cmdArgs...)
 
-	// run the command inside the container
-	runner, err := engine()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	cmd := execabs.Command(runner, args...)
+	cmd := execabs.Command(engineBinary, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -184,18 +190,36 @@ func findGoFlags(ctx Context) int {
 	return -1
 }
 
+// findCgoLdFlags return the index of context where CGO_LDFLAGS is set, or -1 if it is not present.
+func findCgoLdFlags(ctx Context) int {
+	for i, env := range ctx.Env {
+		if strings.HasPrefix(env, "CGO_LDFLAGS") {
+			return i
+		}
+	}
+	return -1
+}
+
 // goBuild run the go build command in the container
 func goBuild(ctx Context) error {
 	log.Infof("[i] Building binary...")
 	// add go build command
-	args := []string{"go", "build"}
+	args := []string{"go", "build", "-trimpath"}
 
-	ldflags := ctx.LdFlags
 	// Strip debug information
 	if ctx.StripDebug {
-		ldflags = append(ldflags, "-w", "-s")
+		// ensure that CGO_LDFLAGS is not overwritten as they can be passed
+		// by the --env argument
+		if idx := findCgoLdFlags(ctx); idx > -1 {
+			// append the ldflags after the existing CGO_LDFLAGS
+			ctx.Env[idx] += " -w -s"
+		} else {
+			// create the CGO_LDFLAGS environment variable and add the strip debug flags
+			ctx.Env = append(ctx.Env, "CGO_LDFLAGS=-w -s")
+		}
 	}
 
+	ldflags := ctx.LdFlags
 	// add ldflags to command, if any
 	if len(ldflags) > 0 {
 		flags := make([]string, len(ldflags))
@@ -220,13 +244,10 @@ func goBuild(ctx Context) error {
 		}
 
 		// ensure that GOFLAGS is not overwritten as they can be passed
-		// by he --env argument
+		// by the --env argument
 		if idx := findGoFlags(ctx); idx > -1 {
 			// append the ldflags after the existing GOFLAGS
 			ctx.Env[idx] += " " + strings.Join(flags, " ")
-		} else {
-			// create the GOFLAGS environment variable
-			ctx.Env = append(ctx.Env, fmt.Sprintf("GOFLAGS=%s", strings.Join(flags, " ")))
 		}
 	}
 

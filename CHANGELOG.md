@@ -6,6 +6,7 @@
 
 - Add support for FyneApp.toml #78
 - Add the ability to use podman #41
+- Update to use fixuid to handle mount permissions #42
 
 ## 1.1.3 - 02 Nov 2021
 
