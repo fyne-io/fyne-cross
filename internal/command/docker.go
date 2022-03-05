@@ -22,8 +22,6 @@ const (
 	fyneBin = "/usr/local/bin/fyne"
 	// gowindresBin is the path of the gowindres binary into the docker image
 	gowindresBin = "/usr/local/bin/gowindres"
-	// registry is the docker registry to use to pull images
-	registry = "docker.io"
 )
 
 // CheckRequirements checks if the docker binary is in PATH
@@ -485,7 +483,7 @@ func pullImage(ctx Context) error {
 	if err != nil {
 		log.Fatal(err.Error())
 	}
-	cmd := execabs.Command(runner, "pull", registry+"/"+ctx.DockerImage)
+	cmd := execabs.Command(runner, "pull", ctx.DockerImage)
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 
