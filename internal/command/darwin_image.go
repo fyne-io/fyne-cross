@@ -91,8 +91,14 @@ func (cmd *DarwinImage) Run() error {
 	}
 	log.Info("[i] macOS SDK: ", ver)
 
+	// detect engine binary
+	engineBinary, err := engine()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
+
 	// run the command from the host
-	dockerCmd := execabs.Command("docker", "build", "--pull", "--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")
+	dockerCmd := execabs.Command(engineBinary, "build", "--pull", "--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")
 	dockerCmd.Dir = workDir
 	dockerCmd.Stdout = os.Stdout
 	dockerCmd.Stderr = os.Stderr
