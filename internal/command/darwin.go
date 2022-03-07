@@ -20,7 +20,7 @@ var (
 	// darwinArchSupported defines the supported target architectures on darwin
 	darwinArchSupported = []Architecture{ArchAmd64, ArchArm64}
 	// darwinImage is the fyne-cross image for the Darwin OS
-	darwinImage = "fyneio/fyne-cross:1.1-darwin"
+	darwinImage = "docker.io/fyneio/fyne-cross:1.2-darwin"
 )
 
 // Darwin build and package the fyne app for the darwin OS
@@ -79,13 +79,18 @@ func (cmd *Darwin) Run() error {
 
 	for _, ctx := range cmd.Context {
 
+		err := bumpFyneAppBuild(ctx)
+		if err != nil {
+			log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
+		}
+
 		log.Infof("[i] Target: %s/%s", ctx.OS, ctx.Architecture)
 		log.Debugf("%#v", ctx)
 
 		//
 		// pull image, if requested
 		//
-		err := pullImage(ctx)
+		err = pullImage(ctx)
 		if err != nil {
 			return err
 		}

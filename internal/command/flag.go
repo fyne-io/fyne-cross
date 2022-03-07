@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/fyne-io/fyne-cross/internal/metadata"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
@@ -73,10 +74,33 @@ func newCommonFlags() (*CommonFlags, error) {
 		return nil, err
 	}
 
+	appID := ""
+	appVersion := "1.0"
+	appBuild := 1
+
+	data, _ := metadata.LoadStandard(rootDir)
+	if data != nil {
+		if data.Details.Icon != "" {
+			defaultIcon = data.Details.Icon
+		}
+		if data.Details.Name != "" {
+			name = data.Details.Name
+		}
+		if data.Details.ID != "" {
+			appID = data.Details.ID
+		}
+		if data.Details.Version != "" {
+			appVersion = data.Details.Version
+		}
+		if data.Details.Build != 0 {
+			appBuild = data.Details.Build
+		}
+	}
+
 	flags := &CommonFlags{}
-	flagSet.IntVar(&flags.AppBuild, "app-build", 1, "Build number, should be greater than 0 and incremented for each build")
-	flagSet.StringVar(&flags.AppID, "app-id", "", "Application ID used for distribution")
-	flagSet.StringVar(&flags.AppVersion, "app-version", "1.0", "Version number in the form x, x.y or x.y.z semantic version")
+	flagSet.IntVar(&flags.AppBuild, "app-build", appBuild, "Build number, should be greater than 0 and incremented for each build")
+	flagSet.StringVar(&flags.AppID, "app-id", appID, "Application ID used for distribution")
+	flagSet.StringVar(&flags.AppVersion, "app-version", appVersion, "Version number in the form x, x.y or x.y.z semantic version")
 	flagSet.StringVar(&flags.CacheDir, "cache", cacheDir, "Directory used to share/cache sources and dependencies")
 	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")
 	flagSet.Var(&flags.Env, "env", "List of additional env variables specified as KEY=VALUE")

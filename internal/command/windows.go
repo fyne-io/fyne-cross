@@ -15,7 +15,7 @@ const (
 	// windowsOS it the windows OS name
 	windowsOS = "windows"
 	// windowsImage is the fyne-cross image for the Windows OS
-	windowsImage = "fyneio/fyne-cross:1.1-windows"
+	windowsImage = "docker.io/fyneio/fyne-cross:1.2-windows"
 )
 
 var (
@@ -79,13 +79,18 @@ func (cmd *Windows) Run() error {
 
 	for _, ctx := range cmd.CmdContext {
 
+		err := bumpFyneAppBuild(ctx)
+		if err != nil {
+			log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
+		}
+
 		log.Infof("[i] Target: %s/%s", ctx.OS, ctx.Architecture)
 		log.Debugf("%#v", ctx)
 
 		//
 		// pull image, if requested
 		//
-		err := pullImage(ctx)
+		err = pullImage(ctx)
 		if err != nil {
 			return err
 		}
@@ -252,7 +257,7 @@ func makeWindowsContext(flags *windowsFlags, args []string) ([]Context, error) {
 		}
 
 		if !flags.Console {
-			ctx.LdFlags = append(ctx.LdFlags, "-H windowsgui")
+			ctx.LdFlags = append(ctx.LdFlags, "-H=windowsgui")
 		}
 
 		if flags.DockerImage == "" {
