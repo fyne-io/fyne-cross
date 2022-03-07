@@ -1,6 +1,8 @@
-ARG GO_VERSION=1.17.7
+ARG GO_VERSION=1.17.8
 # fyne stable branch
-ARG FYNE_VERSION=v2.1.2
+ARG FYNE_VERSION=v2.1.3
+
+ARG FIXUID_VERSION=0.5.1
 
 FROM golang:${GO_VERSION}-buster AS tools
 ARG FYNE_VERSION
@@ -10,6 +12,7 @@ RUN go install -ldflags="-w -s" -v "fyne.io/fyne/v2/cmd/fyne@${FYNE_VERSION}"
 
 # Build the fyne-cross base image
 FROM golang:${GO_VERSION}-buster AS base
+ARG FIXUID_VERSION
 
 COPY --from=tools /go/bin/fyne /usr/local/bin
 
@@ -33,6 +36,11 @@ RUN apt-get update -qq \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*;
 
-COPY ./docker/base/docker-entrypoint.sh /usr/local/bin
-
-ENTRYPOINT [ "/usr/local/bin/docker-entrypoint.sh"]
+# Install fixuid see #41
+RUN addgroup --gid 1000 docker; \
+    adduser --uid 1000 --ingroup docker --home /home/docker --shell /bin/sh --disabled-password --gecos "" docker; \
+    curl -SsL https://github.com/boxboat/fixuid/releases/download/v${FIXUID_VERSION}/fixuid-${FIXUID_VERSION}-linux-amd64.tar.gz | tar -C /usr/local/bin -xzf -; \
+    chown root:root /usr/local/bin/fixuid; \
+    chmod 4755 /usr/local/bin/fixuid; \
+    mkdir -p /etc/fixuid; \
+    printf "user: docker\ngroup: docker\n" > /etc/fixuid/config.yml

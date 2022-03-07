@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
-	"io/ioutil"
 	"os"
-	"os/exec"
 	"os/user"
 	"path/filepath"
 	"runtime"
@@ -15,6 +13,7 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
+
 	"golang.org/x/sys/execabs"
 )
 
@@ -23,17 +22,15 @@ const (
 	fyneBin = "/usr/local/bin/fyne"
 	// gowindresBin is the path of the gowindres binary into the docker image
 	gowindresBin = "/usr/local/bin/gowindres"
-	// registry is the docker registry to use to pull images
-	registry = "docker.io"
 )
 
 // CheckRequirements checks if the docker binary is in PATH
 func CheckRequirements() error {
-	_, err := exec.LookPath("docker")
+	_, err := execabs.LookPath("docker")
 	if err == nil {
 		return nil
 	}
-	_, err = exec.LookPath("podman")
+	_, err = execabs.LookPath("podman")
 	if err != nil {
 		return fmt.Errorf("missed requirement: docker or podman binary not found in PATH")
 	}
@@ -58,36 +55,38 @@ func engine() (string, error) {
 		return "podman", nil
 	}
 
-	return "", errors.New("No container engine found")
-
+	return "", errors.New("no container engine found")
 }
 
 // isEnginePodman returns true if the engine is "podman"
 func isEnginePodman() bool {
-	_, err := exec.LookPath("podman")
+	_, err := execabs.LookPath("podman")
 	return err == nil
 
 }
 
 // isEngineDocker return true is the engine is "docker". If "docker" is an alias to podman, so it returns false.
 func isEngineDocker() bool {
-	if execPath, err := exec.LookPath("docker"); err == nil {
-		// OK, let's see if "docker" comes from "podman-docker" aliases
-		f, err := os.Open(execPath)
-		if err != nil {
-			return false
-		}
-		defer f.Close()
-
-		// if it's a script alias, so "docker" is a bash script that calls "podman"
-		c, _ := ioutil.ReadAll(f)
-		return !strings.Contains(string(c), "podman")
+	execPath, err := execabs.LookPath("docker")
+	if err != nil {
+		return false
 	}
-	return false
+	// if "docker" comes from an alias (i.e. "podman-docker") should not contain the "docker" string
+	out, err := execabs.Command(execPath, "--version").Output()
+	if err != nil {
+		return false
+	}
+	return strings.Contains(strings.ToLower(string(out)), "docker")
 }
 
 // Cmd returns a command to run in a new container for the specified image
 func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execabs.Cmd {
+
+	// detect engine binary
+	engineBinary, err := engine()
+	if err != nil {
+		log.Fatal(err.Error())
+	}
 
 	// define workdir
 	w := vol.WorkDirContainer()
@@ -101,13 +100,27 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 		"-v", fmt.Sprintf("%s:%s:z", vol.WorkDirHost(), vol.WorkDirContainer()), // mount the working dir
 	}
 
-	if isEnginePodman() {
-		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
-	}
-
 	// mount the cache dir if cache is enabled
 	if opts.CacheEnabled {
 		args = append(args, "-v", fmt.Sprintf("%s:%s:z", vol.CacheDirHost(), vol.CacheDirContainer()))
+	}
+
+	// handle settings related to engine
+	if isEnginePodman() {
+		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
+	} else {
+		// docker: pass current user id to handle mount permissions on linux and MacOS
+		if runtime.GOOS != "windows" {
+			u, err := user.Current()
+			if err == nil {
+				args = append(args, "-u", fmt.Sprintf("%s:%s", u.Uid, u.Gid))
+				args = append(args, "--entrypoint", "fixuid")
+				if !opts.Debug {
+					// silent fixuid if not debug mode
+					cmdArgs = append([]string{"-q"}, cmdArgs...)
+				}
+			}
+		}
 	}
 
 	// add default env variables
@@ -121,27 +134,13 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 		args = append(args, "-e", e)
 	}
 
-	// attempt to set fyne user id as current user id to handle mount permissions
-	// on linux and MacOS
-	if runtime.GOOS != "windows" {
-		u, err := user.Current()
-		if err == nil {
-			args = append(args, "-e", fmt.Sprintf("fyne_uid=%s", u.Uid))
-		}
-	}
-
 	// specify the image to use
-	args = append(args, registry+"/"+image)
+	args = append(args, image)
 
 	// add the command to execute
 	args = append(args, cmdArgs...)
 
-	// run the command inside the container
-	runner, err := engine()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	cmd := exec.Command(runner, args...)
+	cmd := execabs.Command(engineBinary, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -189,18 +188,36 @@ func findGoFlags(ctx Context) int {
 	return -1
 }
 
+// findCgoLdFlags return the index of context where CGO_LDFLAGS is set, or -1 if it is not present.
+func findCgoLdFlags(ctx Context) int {
+	for i, env := range ctx.Env {
+		if strings.HasPrefix(env, "CGO_LDFLAGS") {
+			return i
+		}
+	}
+	return -1
+}
+
 // goBuild run the go build command in the container
 func goBuild(ctx Context) error {
 	log.Infof("[i] Building binary...")
 	// add go build command
-	args := []string{"go", "build"}
+	args := []string{"go", "build", "-trimpath"}
 
-	ldflags := ctx.LdFlags
 	// Strip debug information
 	if ctx.StripDebug {
-		ldflags = append(ldflags, "-w", "-s")
+		// ensure that CGO_LDFLAGS is not overwritten as they can be passed
+		// by the --env argument
+		if idx := findCgoLdFlags(ctx); idx > -1 {
+			// append the ldflags after the existing CGO_LDFLAGS
+			ctx.Env[idx] += " -w -s"
+		} else {
+			// create the CGO_LDFLAGS environment variable and add the strip debug flags
+			ctx.Env = append(ctx.Env, "CGO_LDFLAGS=-w -s")
+		}
 	}
 
+	ldflags := ctx.LdFlags
 	// add ldflags to command, if any
 	if len(ldflags) > 0 {
 		flags := make([]string, len(ldflags))
@@ -225,13 +242,10 @@ func goBuild(ctx Context) error {
 		}
 
 		// ensure that GOFLAGS is not overwritten as they can be passed
-		// by he --env argument
+		// by the --env argument
 		if idx := findGoFlags(ctx); idx > -1 {
 			// append the ldflags after the existing GOFLAGS
 			ctx.Env[idx] += " " + strings.Join(flags, " ")
-		} else {
-			// create the GOFLAGS environment variable
-			ctx.Env = append(ctx.Env, fmt.Sprintf("GOFLAGS=%s", strings.Join(flags, " ")))
 		}
 	}
 
@@ -466,10 +480,10 @@ func pullImage(ctx Context) error {
 
 	// run the command inside the container
 	runner, err := engine()
-	if err != err {
+	if err != nil {
 		log.Fatal(err.Error())
 	}
-	cmd := exec.Command(runner, "pull", registry+"/"+ctx.DockerImage)
+	cmd := execabs.Command(runner, "pull", ctx.DockerImage)
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 
