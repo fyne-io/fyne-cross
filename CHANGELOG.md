@@ -1,6 +1,6 @@
 # Changelog - Fyne.io fyne-cross
 
-## 1.2.0 - Unreleased
+## 1.2.0 - 07 Mar 2022
 
 ### Added
 
