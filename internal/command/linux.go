@@ -191,22 +191,27 @@ func linuxContext(flags *linuxFlags, args []string) ([]Context, error) {
 		ctx.Architecture = arch
 		ctx.OS = linuxOS
 		ctx.ID = fmt.Sprintf("%s-%s", ctx.OS, ctx.Architecture)
-
+		ctx.Env["GOOS"] = "linux"
 		var defaultDockerImage string
 		switch arch {
 		case ArchAmd64:
 			defaultDockerImage = linuxImageAmd64
-			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=amd64", "CC=gcc")
+			ctx.Env["GOARCH"] = "amd64"
+			ctx.Env["CC"] = "gcc"
 		case Arch386:
 			defaultDockerImage = linuxImage386
-			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=386", "CC=i686-linux-gnu-gcc")
+			ctx.Env["GOARCH"] = "386"
+			ctx.Env["CC"] = "i686-linux-gnu-gcc"
 		case ArchArm:
 			defaultDockerImage = linuxImageArm
-			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=arm", "CC=arm-linux-gnueabihf-gcc", "GOARM=7")
+			ctx.Env["GOARCH"] = "arm"
+			ctx.Env["CC"] = "arm-linux-gnueabihf-gcc"
+			ctx.Env["GOARM"] = "7"
 			ctx.Tags = append(ctx.Tags, "gles")
 		case ArchArm64:
 			defaultDockerImage = linuxImageArm64
-			ctx.Env = append(ctx.Env, "GOOS=linux", "GOARCH=arm64", "CC=aarch64-linux-gnu-gcc")
+			ctx.Env["GOARCH"] = "arm64"
+			ctx.Env["CC"] = "aarch64-linux-gnu-gcc"
 			ctx.Tags = append(ctx.Tags, "gles")
 		}
 

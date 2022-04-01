@@ -150,7 +150,7 @@ func fynePackageHost(ctx Context) error {
 	// add tags to command, if any
 	tags := ctx.Tags
 	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
 	}
 
 	// run the command from the host
@@ -196,7 +196,7 @@ func fyneReleaseHost(ctx Context) error {
 	// add tags to command, if any
 	tags := ctx.Tags
 	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
 	}
 
 	switch ctx.OS {

@@ -190,15 +190,18 @@ func freebsdContext(flags *freebsdFlags, args []string) ([]Context, error) {
 		ctx.Architecture = arch
 		ctx.OS = freebsdOS
 		ctx.ID = fmt.Sprintf("%s-%s", ctx.OS, ctx.Architecture)
-
+		ctx.Env["GOOS"] = "freebsd"
 		var defaultDockerImage string
 		switch arch {
 		case ArchAmd64:
 			defaultDockerImage = freebsdImageAmd64
-			ctx.Env = append(ctx.Env, "GOOS=freebsd", "GOARCH=amd64", "CC=x86_64-unknown-freebsd12-clang")
+			ctx.Env["GOARCH"] = "amd64"
+			ctx.Env["CC"] = "x86_64-unknown-freebsd12-clang"
 		case ArchArm64:
 			defaultDockerImage = freebsdImageArm64
-			ctx.Env = append(ctx.Env, "CGO_LDFLAGS=-fuse-ld=lld", "GOOS=freebsd", "GOARCH=arm64", "CC=aarch64-unknown-freebsd12-clang")
+			ctx.Env["GOARCH"] = "arm64"
+			ctx.Env["CGO_LDFLAGS"] += " -fuse-ld=lld"
+			ctx.Env["CC"] = "aarch64-unknown-freebsd12-clang"
 		}
 
 		// set context based on command-line flags

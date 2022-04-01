@@ -11,6 +11,8 @@ func Test_makeAndroidContext(t *testing.T) {
 	vol, err := mockDefaultVolume()
 	require.Nil(t, err)
 
+	engine, _ := MakeEngine(autodetectEngine)
+
 	type args struct {
 		flags *androidFlags
 		args  []string
@@ -76,6 +78,8 @@ func Test_makeAndroidContext(t *testing.T) {
 					StripDebug:   true,
 					Package:      ".",
 					Keystore:     "/app/testdata/my.keystore",
+					Engine:       engine,
+					Env:          map[string]string{},
 				},
 			},
 			wantErr: false,
@@ -105,6 +109,8 @@ func Test_makeAndroidContext(t *testing.T) {
 					StripDebug:   true,
 					Package:      ".",
 					Keystore:     "/app/testdata/my.keystore",
+					Engine:       engine,
+					Env:          map[string]string{},
 				},
 			},
 			wantErr: false,

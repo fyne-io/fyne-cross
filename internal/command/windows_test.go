@@ -11,6 +11,8 @@ func Test_makeWindowsContext(t *testing.T) {
 	vol, err := mockDefaultVolume()
 	require.Nil(t, err)
 
+	engine, _ := MakeEngine(autodetectEngine)
+
 	type args struct {
 		flags *windowsFlags
 		args  []string
@@ -41,7 +43,8 @@ func Test_makeWindowsContext(t *testing.T) {
 					ID:           "windows-amd64",
 					OS:           "windows",
 					Architecture: "amd64",
-					Env:          []string{"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
+					Engine:       engine,
+					Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
 					LdFlags:      []string{"-H=windowsgui"},
 					DockerImage:  windowsImage,
 				},
@@ -68,7 +71,8 @@ func Test_makeWindowsContext(t *testing.T) {
 					ID:           "windows-386",
 					OS:           "windows",
 					Architecture: "386",
-					Env:          []string{"GOOS=windows", "GOARCH=386", "CC=i686-w64-mingw32-gcc"},
+					Engine:       engine,
+					Env:          map[string]string{"GOOS": "windows", "GOARCH": "386", "CC": "i686-w64-mingw32-gcc"},
 					DockerImage:  windowsImage,
 				},
 			},
@@ -94,7 +98,8 @@ func Test_makeWindowsContext(t *testing.T) {
 					ID:           "windows-amd64",
 					OS:           "windows",
 					Architecture: "amd64",
-					Env:          []string{"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
+					Engine:       engine,
+					Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
 					LdFlags:      []string{"-X main.version=1.2.3", "-H=windowsgui"},
 					DockerImage:  windowsImage,
 				},
@@ -121,7 +126,8 @@ func Test_makeWindowsContext(t *testing.T) {
 					ID:           "windows-amd64",
 					OS:           "windows",
 					Architecture: "amd64",
-					Env:          []string{"GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc"},
+					Engine:       engine,
+					Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
 					LdFlags:      []string{"-H=windowsgui"},
 					DockerImage:  "test",
 				},

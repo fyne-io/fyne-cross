@@ -2,7 +2,6 @@ package command
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"os"
 	"os/user"
@@ -24,69 +23,17 @@ const (
 	gowindresBin = "/usr/local/bin/gowindres"
 )
 
-// CheckRequirements checks if the docker binary is in PATH
-func CheckRequirements() error {
-	_, err := execabs.LookPath("docker")
-	if err == nil {
-		return nil
-	}
-	_, err = execabs.LookPath("podman")
-	if err != nil {
-		return fmt.Errorf("missed requirement: docker or podman binary not found in PATH")
-	}
-	return nil
-}
-
 // Options define the options for the docker run command
 type Options struct {
-	CacheEnabled bool     // CacheEnabled if true enable go build cache
-	Env          []string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
-	WorkDir      string   // WorkDir set the workdir, default to volume's workdir
-	Debug        bool     // Debug if true enable log verbosity
-}
-
-// engine returns the default engine name, if no engine is found it returns an empty string and the error.
-func engine() (string, error) {
-	if isEngineDocker() {
-		return "docker", nil
-	}
-
-	if isEnginePodman() {
-		return "podman", nil
-	}
-
-	return "", errors.New("no container engine found")
-}
-
-// isEnginePodman returns true if the engine is "podman"
-func isEnginePodman() bool {
-	_, err := execabs.LookPath("podman")
-	return err == nil
-
-}
-
-// isEngineDocker return true is the engine is "docker". If "docker" is an alias to podman, so it returns false.
-func isEngineDocker() bool {
-	execPath, err := execabs.LookPath("docker")
-	if err != nil {
-		return false
-	}
-	// if "docker" comes from an alias (i.e. "podman-docker") should not contain the "docker" string
-	out, err := execabs.Command(execPath, "--version").Output()
-	if err != nil {
-		return false
-	}
-	return strings.Contains(strings.ToLower(string(out)), "docker")
+	CacheEnabled bool              // CacheEnabled if true enable go build cache
+	Engine       Engine            // Engine is the container engine to use
+	Env          map[string]string // Env is the list of custom env variable to set
+	WorkDir      string            // WorkDir set the workdir, default to volume's workdir
+	Debug        bool              // Debug if true enable log verbosity
 }
 
 // Cmd returns a command to run in a new container for the specified image
 func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execabs.Cmd {
-
-	// detect engine binary
-	engineBinary, err := engine()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
 
 	// define workdir
 	w := vol.WorkDirContainer()
@@ -106,7 +53,7 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 	}
 
 	// handle settings related to engine
-	if isEnginePodman() {
+	if opts.Engine.IsPodman() {
 		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
 	} else {
 		// docker: pass current user id to handle mount permissions on linux and MacOS
@@ -130,8 +77,8 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 	)
 
 	// add custom env variables
-	for _, e := range opts.Env {
-		args = append(args, "-e", e)
+	for k, v := range opts.Env {
+		args = append(args, "-e", k+"="+v)
 	}
 
 	// specify the image to use
@@ -140,7 +87,7 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 	// add the command to execute
 	args = append(args, cmdArgs...)
 
-	cmd := execabs.Command(engineBinary, args...)
+	cmd := execabs.Command(opts.Engine.Binary, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -168,7 +115,7 @@ func goModInit(ctx Context) error {
 	}
 
 	log.Info("[i] go.mod not found, creating a temporary one...")
-	runOpts := Options{Debug: ctx.Debug}
+	runOpts := Options{Debug: ctx.Debug, Engine: ctx.Engine}
 	err = Run(ctx.DockerImage, ctx.Volume, runOpts, []string{"go", "mod", "init", ctx.Name})
 	if err != nil {
 		return fmt.Errorf("could not generate the temporary go module: %v", err)
@@ -176,26 +123,6 @@ func goModInit(ctx Context) error {
 
 	log.Info("[✓] go.mod created")
 	return nil
-}
-
-// findGoFlags return the index of context where GOFLAGS is set, or -1 if it is not present.
-func findGoFlags(ctx Context) int {
-	for i, env := range ctx.Env {
-		if strings.HasPrefix(env, "GOFLAGS") {
-			return i
-		}
-	}
-	return -1
-}
-
-// findCgoLdFlags return the index of context where CGO_LDFLAGS is set, or -1 if it is not present.
-func findCgoLdFlags(ctx Context) int {
-	for i, env := range ctx.Env {
-		if strings.HasPrefix(env, "CGO_LDFLAGS") {
-			return i
-		}
-	}
-	return -1
 }
 
 // goBuild run the go build command in the container
@@ -208,51 +135,29 @@ func goBuild(ctx Context) error {
 	if ctx.StripDebug {
 		// ensure that CGO_LDFLAGS is not overwritten as they can be passed
 		// by the --env argument
-		if idx := findCgoLdFlags(ctx); idx > -1 {
+		if v, ok := ctx.Env["CGO_LDFLAGS"]; ok {
 			// append the ldflags after the existing CGO_LDFLAGS
-			ctx.Env[idx] += " -w -s"
+			ctx.Env["CGO_LDFLAGS"] = strings.Trim(v, "\"") + " -w -s"
 		} else {
 			// create the CGO_LDFLAGS environment variable and add the strip debug flags
-			ctx.Env = append(ctx.Env, "CGO_LDFLAGS=-w -s")
+			ctx.Env["CGO_LDFLAGS"] = "-w -s"
 		}
 	}
 
 	ldflags := ctx.LdFlags
-	// add ldflags to command, if any
-	if len(ldflags) > 0 {
-		flags := make([]string, len(ldflags))
-		for i, flag := range ldflags {
-			parts := strings.Split(flag, "-") // because there could be several -X flags
-			for _, p := range parts {
-				if strings.HasPrefix(p, "X") {
-					// We must rebuild cases
-					// if the user pass "-ldflags "-X A.B=C" so we need to set it to "-X=A.B=C"
-					// if the user pass "-ldflags "-X=A.B=C" so we should not change it
-					sp := strings.SplitN(p, " ", 1)
-					if len(sp) == 2 {
-						args = append(args, "-ldflags=-X="+sp[1])
-					} else {
-						args = append(args, "-ldflags=-"+p)
-					}
-				} else {
-					// others flags can be set to GOFLAGS
-					flags[i] = "-ldflags=-" + p
-				}
-			}
-		}
+	// honour the GOFLAGS env variable adding to existing ones
+	if v, ok := ctx.Env["GOFLAGS"]; ok {
+		ldflags = append(ldflags, v)
+	}
 
-		// ensure that GOFLAGS is not overwritten as they can be passed
-		// by the --env argument
-		if idx := findGoFlags(ctx); idx > -1 {
-			// append the ldflags after the existing GOFLAGS
-			ctx.Env[idx] += " " + strings.Join(flags, " ")
-		}
+	if len(ldflags) > 0 {
+		args = append(args, "-ldflags", strings.Join(ldflags, " "))
 	}
 
 	// add tags to command, if any
 	tags := ctx.Tags
 	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+		args = append(args, "-tags", strings.Join(tags, ","))
 	}
 
 	// set output folder to fyne-cross/bin/<target>
@@ -269,6 +174,7 @@ func goBuild(ctx Context) error {
 	args = append(args, ctx.Package)
 	runOpts := Options{
 		CacheEnabled: ctx.CacheEnabled,
+		Engine:       ctx.Engine,
 		Env:          ctx.Env,
 		Debug:        ctx.Debug,
 	}
@@ -287,7 +193,7 @@ func goBuild(ctx Context) error {
 func fynePackage(ctx Context) error {
 
 	if ctx.Debug {
-		err := Run(ctx.DockerImage, ctx.Volume, Options{Debug: ctx.Debug}, []string{fyneBin, "version"})
+		err := Run(ctx.DockerImage, ctx.Volume, Options{Debug: ctx.Debug, Engine: ctx.Engine}, []string{fyneBin, "version"})
 		if err != nil {
 			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
 		}
@@ -315,7 +221,7 @@ func fynePackage(ctx Context) error {
 	// add tags to command, if any
 	tags := ctx.Tags
 	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
 	}
 
 	// Enable release mode, if specified
@@ -341,6 +247,7 @@ func fynePackage(ctx Context) error {
 		CacheEnabled: ctx.CacheEnabled,
 		WorkDir:      workDir,
 		Debug:        ctx.Debug,
+		Engine:       ctx.Engine,
 		Env:          ctx.Env,
 	}
 
@@ -356,7 +263,7 @@ func fynePackage(ctx Context) error {
 func fyneRelease(ctx Context) error {
 
 	if ctx.Debug {
-		err := Run(ctx.DockerImage, ctx.Volume, Options{Debug: ctx.Debug}, []string{fyneBin, "version"})
+		err := Run(ctx.DockerImage, ctx.Volume, Options{Debug: ctx.Debug, Engine: ctx.Engine}, []string{fyneBin, "version"})
 		if err != nil {
 			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
 		}
@@ -384,7 +291,7 @@ func fyneRelease(ctx Context) error {
 	// add tags to command, if any
 	tags := ctx.Tags
 	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("'%s'", strings.Join(tags, ",")))
+		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
 	}
 
 	// workDir default value
@@ -425,6 +332,7 @@ func fyneRelease(ctx Context) error {
 		CacheEnabled: ctx.CacheEnabled,
 		WorkDir:      workDir,
 		Debug:        ctx.Debug,
+		Engine:       ctx.Engine,
 		Env:          ctx.Env,
 	}
 
@@ -448,6 +356,7 @@ func WindowsResource(ctx Context) (string, error) {
 
 	runOpts := Options{
 		Debug:   ctx.Debug,
+		Engine:  ctx.Engine,
 		WorkDir: volume.JoinPathContainer(ctx.TmpDirContainer(), ctx.ID),
 	}
 
@@ -479,11 +388,7 @@ func pullImage(ctx Context) error {
 	buf := bytes.Buffer{}
 
 	// run the command inside the container
-	runner, err := engine()
-	if err != nil {
-		log.Fatal(err.Error())
-	}
-	cmd := execabs.Command(runner, "pull", ctx.DockerImage)
+	cmd := execabs.Command(ctx.Engine.Binary, "pull", ctx.DockerImage)
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 
@@ -491,7 +396,7 @@ func pullImage(ctx Context) error {
 		log.Debug(cmd)
 	}
 
-	err = cmd.Run()
+	err := cmd.Run()
 
 	if ctx.Debug {
 		log.Debug(buf.String())

@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"log"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -14,17 +15,19 @@ import (
 )
 
 func TestCmdEngineDocker(t *testing.T) {
-	engineBinary, err := engine()
+	engine, err := MakeEngine("")
 	if err != nil {
 		t.Skip("engine not found", err)
 	}
 
-	if isEnginePodman() {
+	if engine.IsPodman() {
 		t.Skip("engine found: podman")
 	}
 
-	expectedCmd, err := execabs.LookPath(engineBinary)
+	log.Println(engine.String())
+	expectedCmd, err := execabs.LookPath(engine.String())
 	require.NoError(t, err)
+	log.Println(expectedCmd)
 
 	uid, _ := user.Current()
 
@@ -54,9 +57,11 @@ func TestCmdEngineDocker(t *testing.T) {
 		{
 			name: "default",
 			args: args{
-				image:   "docker.io/fyneio/fyne-cross",
-				vol:     vol,
-				opts:    Options{},
+				image: "docker.io/fyneio/fyne-cross",
+				vol:   vol,
+				opts: Options{
+					Engine: engine,
+				},
 				cmdArgs: []string{"command", "arg"},
 			},
 			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -u %s:%s --entrypoint fixuid -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s -q command arg", expectedCmd, workDir, uid.Uid, uid.Uid, dockerImage),
@@ -68,6 +73,7 @@ func TestCmdEngineDocker(t *testing.T) {
 				image: "docker.io/fyneio/fyne-cross",
 				vol:   vol,
 				opts: Options{
+					Engine:  engine,
 					WorkDir: customWorkDir,
 				},
 				cmdArgs: []string{"command", "arg"},
@@ -81,6 +87,7 @@ func TestCmdEngineDocker(t *testing.T) {
 				image: "docker.io/fyneio/fyne-cross",
 				vol:   vol,
 				opts: Options{
+					Engine:       engine,
 					CacheEnabled: true,
 				},
 				cmdArgs: []string{"command", "arg"},
@@ -94,7 +101,11 @@ func TestCmdEngineDocker(t *testing.T) {
 				image: "docker.io/fyneio/fyne-cross",
 				vol:   vol,
 				opts: Options{
-					Env: []string{"GOPROXY=proxy.example.com", "GOSUMDB=sum.example.com"},
+					Engine: engine,
+					Env: map[string]string{
+						"GOPROXY": "proxy.example.com",
+						"GOSUMDB": "sum.example.com",
+					},
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
@@ -110,23 +121,23 @@ func TestCmdEngineDocker(t *testing.T) {
 				want = tt.wantWindows
 			}
 			if cmd != want {
-				t.Errorf("Cmd() command = %v, want %v", cmd, want)
+				t.Errorf("Cmd()\ngot :%v\nwant:%v", cmd, want)
 			}
 		})
 	}
 }
 
 func TestCmdEnginePodman(t *testing.T) {
-	engineBinary, err := engine()
+	engine, err := MakeEngine("")
 	if err != nil {
 		t.Skip("engine not found", err)
 	}
 
-	if isEngineDocker() {
+	if engine.IsDocker() {
 		t.Skip("engine found: docker")
 	}
 
-	expectedCmd, err := execabs.LookPath(engineBinary)
+	expectedCmd, err := execabs.LookPath(engine.String())
 	require.NoError(t, err)
 
 	workDir := filepath.Join(os.TempDir(), "fyne-cross-test", "app")
@@ -155,9 +166,11 @@ func TestCmdEnginePodman(t *testing.T) {
 		{
 			name: "default",
 			args: args{
-				image:   "docker.io/fyneio/fyne-cross",
-				vol:     vol,
-				opts:    Options{},
+				image: "docker.io/fyneio/fyne-cross",
+				vol:   vol,
+				opts: Options{
+					Engine: engine,
+				},
 				cmdArgs: []string{"command", "arg"},
 			},
 			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s -q command arg", expectedCmd, workDir, podmanFlags, dockerImage),
@@ -168,6 +181,7 @@ func TestCmdEnginePodman(t *testing.T) {
 				image: "docker.io/fyneio/fyne-cross",
 				vol:   vol,
 				opts: Options{
+					Engine:  engine,
 					WorkDir: customWorkDir,
 				},
 				cmdArgs: []string{"command", "arg"},
@@ -180,6 +194,7 @@ func TestCmdEnginePodman(t *testing.T) {
 				image: "docker.io/fyneio/fyne-cross",
 				vol:   vol,
 				opts: Options{
+					Engine:       engine,
 					CacheEnabled: true,
 				},
 				cmdArgs: []string{"command", "arg"},
@@ -192,7 +207,26 @@ func TestCmdEnginePodman(t *testing.T) {
 				image: "docker.io/fyneio/fyne-cross",
 				vol:   vol,
 				opts: Options{
-					Env: []string{"GOPROXY=proxy.example.com", "GOSUMDB=sum.example.com"},
+					Env: map[string]string{
+						"GOPROXY": "proxy.example.com",
+						"GOSUMDB": "sum.example.com",
+					},
+				},
+				cmdArgs: []string{"command", "arg"},
+			},
+			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com %s -q command arg", expectedCmd, workDir, podmanFlags, dockerImage),
+		},
+		{
+			name: "strip",
+			args: args{
+				image: "docker.io/fyneio/fyne-cross",
+				vol:   vol,
+				opts: Options{
+					Engine: engine,
+					Env: map[string]string{
+						"GOPROXY": "proxy.example.com",
+						"GOSUMDB": "sum.example.com",
+					},
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
@@ -204,7 +238,7 @@ func TestCmdEnginePodman(t *testing.T) {
 			cmd := Cmd(tt.args.image, tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()
 			want := tt.want
 			if cmd != want {
-				t.Errorf("Cmd() command = %v, want %v", cmd, want)
+				t.Errorf("Cmd()\ngot :%v\nwant:%v", cmd, want)
 			}
 		})
 	}
