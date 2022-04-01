@@ -15,13 +15,9 @@ import (
 )
 
 func TestCmdEngineDocker(t *testing.T) {
-	engine, err := MakeEngine("")
+	engine, err := MakeEngine(dockerEngine)
 	if err != nil {
-		t.Skip("engine not found", err)
-	}
-
-	if engine.IsPodman() {
-		t.Skip("engine found: podman")
+		t.Skip("docker engine not found", err)
 	}
 
 	log.Println(engine.String())
@@ -128,13 +124,9 @@ func TestCmdEngineDocker(t *testing.T) {
 }
 
 func TestCmdEnginePodman(t *testing.T) {
-	engine, err := MakeEngine("")
+	engine, err := MakeEngine(podmanEngine)
 	if err != nil {
-		t.Skip("engine not found", err)
-	}
-
-	if engine.IsDocker() {
-		t.Skip("engine found: docker")
+		t.Skip("podman engine not found", err)
 	}
 
 	expectedCmd, err := execabs.LookPath(engine.String())
@@ -173,7 +165,7 @@ func TestCmdEnginePodman(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s -q command arg", expectedCmd, workDir, podmanFlags, dockerImage),
+			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, workDir, podmanFlags, dockerImage),
 		},
 		{
 			name: "custom work dir",
@@ -186,7 +178,7 @@ func TestCmdEnginePodman(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: fmt.Sprintf("%s run --rm -t -w %s -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s -q command arg", expectedCmd, customWorkDir, workDir, podmanFlags, dockerImage),
+			want: fmt.Sprintf("%s run --rm -t -w %s -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, customWorkDir, workDir, podmanFlags, dockerImage),
 		},
 		{
 			name: "cache enabled",
@@ -199,7 +191,7 @@ func TestCmdEnginePodman(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -v %s:/go:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s -q command arg", expectedCmd, workDir, podmanFlags, cacheDir, dockerImage),
+			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -v %s:/go:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, workDir, cacheDir, podmanFlags, dockerImage),
 		},
 		{
 			name: "custom env variables",
@@ -207,6 +199,7 @@ func TestCmdEnginePodman(t *testing.T) {
 				image: "docker.io/fyneio/fyne-cross",
 				vol:   vol,
 				opts: Options{
+					Engine: engine,
 					Env: map[string]string{
 						"GOPROXY": "proxy.example.com",
 						"GOSUMDB": "sum.example.com",
@@ -214,7 +207,7 @@ func TestCmdEnginePodman(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com %s -q command arg", expectedCmd, workDir, podmanFlags, dockerImage),
+			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com %s command arg", expectedCmd, workDir, podmanFlags, dockerImage),
 		},
 		{
 			name: "strip",
@@ -230,7 +223,7 @@ func TestCmdEnginePodman(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com %s -q command arg", expectedCmd, workDir, podmanFlags, dockerImage),
+			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com %s command arg", expectedCmd, workDir, podmanFlags, dockerImage),
 		},
 	}
 	for _, tt := range tests {
