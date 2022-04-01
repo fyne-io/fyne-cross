@@ -14,8 +14,10 @@ func Test_makeDefaultContext(t *testing.T) {
 	vol, err := mockDefaultVolume()
 	require.Nil(t, err)
 
-	// mock the engine
-	engine := Engine{Name: "docker", Binary: "/usr/bin/docker"}
+	engine, err := MakeEngine(autodetectEngine)
+	if err != nil {
+		t.Skip("engine not found", err)
+	}
 
 	type args struct {
 		flags *CommonFlags
