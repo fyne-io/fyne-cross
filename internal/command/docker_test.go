@@ -100,13 +100,12 @@ func TestCmdEngineDocker(t *testing.T) {
 					Engine: engine,
 					Env: map[string]string{
 						"GOPROXY": "proxy.example.com",
-						"GOSUMDB": "sum.example.com",
 					},
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -u %s:%s --entrypoint fixuid -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com %s -q command arg", expectedCmd, workDir, uid.Uid, uid.Gid, dockerImage),
-			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com %s command arg", expectedCmd, workDir, dockerImage),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -u %s:%s --entrypoint fixuid -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com %s -q command arg", expectedCmd, workDir, uid.Uid, uid.Gid, dockerImage),
+			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com %s command arg", expectedCmd, workDir, dockerImage),
 		},
 	}
 	for _, tt := range tests {
@@ -202,12 +201,11 @@ func TestCmdEnginePodman(t *testing.T) {
 					Engine: engine,
 					Env: map[string]string{
 						"GOPROXY": "proxy.example.com",
-						"GOSUMDB": "sum.example.com",
 					},
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com %s command arg", expectedCmd, workDir, podmanFlags, dockerImage),
+			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com %s command arg", expectedCmd, workDir, podmanFlags, dockerImage),
 		},
 		{
 			name: "strip",
@@ -218,12 +216,11 @@ func TestCmdEnginePodman(t *testing.T) {
 					Engine: engine,
 					Env: map[string]string{
 						"GOPROXY": "proxy.example.com",
-						"GOSUMDB": "sum.example.com",
 					},
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com -e GOSUMDB=sum.example.com %s command arg", expectedCmd, workDir, podmanFlags, dockerImage),
+			want: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z %s -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com %s command arg", expectedCmd, workDir, podmanFlags, dockerImage),
 		},
 	}
 	for _, tt := range tests {
