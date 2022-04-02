@@ -78,11 +78,13 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 
 	// add custom env variables
 	for k, v := range opts.Env {
+		env := k + "=" + v
 		if strings.Contains(v, "=") {
-			args = append(args, "-e", fmt.Sprintf("%q", k+"="+v))
-		} else {
-			args = append(args, "-e", k+"="+v)
+			// engine requires to double quote the env var when value contains
+			// the `=` char
+			env = fmt.Sprintf("%q", env)
 		}
+		args = append(args, "-e", env)
 	}
 
 	// specify the image to use
