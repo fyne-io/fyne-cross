@@ -63,6 +63,16 @@ func (cmd *DarwinImage) Parse(args []string) error {
 // Run runs the command
 func (cmd *DarwinImage) Run() error {
 
+	engine := cmd.Engine
+	if (engine == Engine{}) {
+		// attempt to autodetect
+		var err error
+		engine, err = MakeEngine(autodetectEngine)
+		if err != nil {
+			return err
+		}
+	}
+
 	workDir, err := ioutil.TempDir(os.TempDir(), "fyne-cross-darwin-build")
 	if err != nil {
 		return fmt.Errorf("could not create temporary dir: %s", err)
@@ -94,7 +104,7 @@ func (cmd *DarwinImage) Run() error {
 	log.Info("[i] macOS SDK: ", ver)
 
 	// run the command from the host
-	dockerCmd := execabs.Command(cmd.Engine.Binary, "build", "--pull", "--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")
+	dockerCmd := execabs.Command(engine.Binary, "build", "--pull", "--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")
 	dockerCmd.Dir = workDir
 	dockerCmd.Stdout = os.Stdout
 	dockerCmd.Stderr = os.Stderr
