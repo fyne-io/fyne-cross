@@ -81,7 +81,7 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 		if strings.Contains(v, "=") {
 			args = append(args, "-e", fmt.Sprintf("%q", k+"="+v))
 		} else {
-			args = append(args, "-e", fmt.Sprintf("%s", k+"="+v))
+			args = append(args, "-e", k+"="+v)
 		}
 	}
 
