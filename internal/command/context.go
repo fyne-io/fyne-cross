@@ -39,12 +39,13 @@ type Context struct {
 	// Volume holds the mounted volumes between host and containers
 	volume.Volume
 
-	Architecture          // Arch defines the target architecture
-	Env          []string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
-	ID           string   // ID is the context ID
-	LdFlags      []string // LdFlags defines the ldflags to use
-	OS           string   // OS defines the target OS
-	Tags         []string // Tags defines the tags to use
+	Architecture                   // Arch defines the target architecture
+	Engine       Engine            // Engine is the container engine to use
+	Env          map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
+	ID           string            // ID is the context ID
+	LdFlags      []string          // LdFlags defines the ldflags to use
+	OS           string            // OS defines the target OS
+	Tags         []string          // Tags defines the tags to use
 
 	AppBuild     string // Build number
 	AppID        string // AppID is the appID to use for distribution
@@ -91,13 +92,23 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		return Context{}, err
 	}
 
+	engine := flags.Engine.Engine
+	if (engine == Engine{}) {
+		// attempt to autodetect
+		engine, err = MakeEngine(autodetectEngine)
+		if err != nil {
+			return Context{}, err
+		}
+	}
+
 	// set context based on command-line flags
 	ctx := Context{
 		AppID:        flags.AppID,
 		AppVersion:   flags.AppVersion,
 		CacheEnabled: !flags.NoCache,
 		DockerImage:  flags.DockerImage,
-		Env:          flags.Env,
+		Engine:       engine,
+		Env:          make(map[string]string),
 		Tags:         flags.Tags,
 		Icon:         flags.Icon,
 		Name:         flags.Name,
@@ -118,6 +129,11 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 	// TODO: update the error message once the output flag is removed
 	if strings.ContainsAny(flags.Name, "\\/") {
 		return ctx, errors.New("output and app name should not be used as path")
+	}
+
+	for _, v := range flags.Env {
+		parts := strings.SplitN(v, "=", 2)
+		ctx.Env[parts[0]] = parts[1]
 	}
 
 	ctx.AppBuild = strconv.Itoa(flags.AppBuild)

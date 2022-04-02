@@ -1,6 +1,19 @@
 # Changelog - Fyne.io fyne-cross
 
-## 1.2.0 - Unreleased
+## Unreleased
+
+### Added
+
+- Added the `--engine` flags that allows to specify the container engine to use
+  between docker and podman. The default behavior is not changed, if the flag is
+  not specified fyne-cross will auto detect the engine.
+
+### Fixed 
+
+- Windows builds no longer pass "-H windowsgui" #97
+- Multiple tags cannot be specified using the `-tags` flag #96  
+
+## 1.2.0 - 07 Mar 2022
 
 ### Added
 

@@ -248,12 +248,14 @@ func makeWindowsContext(flags *windowsFlags, args []string) ([]Context, error) {
 		ctx.Certificate = flags.Certificate
 		ctx.Developer = flags.Developer
 		ctx.Password = flags.Password
-
+		ctx.Env["GOOS"] = "windows"
 		switch arch {
 		case ArchAmd64:
-			ctx.Env = append(ctx.Env, "GOOS=windows", "GOARCH=amd64", "CC=x86_64-w64-mingw32-gcc")
+			ctx.Env["GOARCH"] = "amd64"
+			ctx.Env["CC"] = "x86_64-w64-mingw32-gcc"
 		case Arch386:
-			ctx.Env = append(ctx.Env, "GOOS=windows", "GOARCH=386", "CC=i686-w64-mingw32-gcc")
+			ctx.Env["GOARCH"] = "386"
+			ctx.Env["CC"] = "i686-w64-mingw32-gcc"
 		}
 
 		if !flags.Console {

@@ -42,16 +42,10 @@ func main() {
 		os.Exit(1)
 	}
 
-	// check requirements
-	err := command.CheckRequirements()
-	if err != nil {
-		log.Fatalf("[✗] %s", err)
-	}
-
 	// Parse the arguments for the command
 	// It will display the command usage if -help is specified
 	// and will exit in case of error
-	err = cmd.Parse(os.Args[2:])
+	err := cmd.Parse(os.Args[2:])
 	if err != nil {
 		log.Fatalf("[✗] %s", err)
 	}

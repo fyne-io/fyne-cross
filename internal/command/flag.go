@@ -28,6 +28,8 @@ type CommonFlags struct {
 	CacheDir string
 	// DockerImage represents a custom docker image to use for build
 	DockerImage string
+	// Engine is the container engine to use
+	Engine engineFlag
 	// Env is the list of custom env variable to set. Specified as "KEY=VALUE"
 	Env envFlag
 	// Icon represents the application icon used for distribution
@@ -103,6 +105,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.StringVar(&flags.AppVersion, "app-version", appVersion, "Version number in the form x, x.y or x.y.z semantic version")
 	flagSet.StringVar(&flags.CacheDir, "cache", cacheDir, "Directory used to share/cache sources and dependencies")
 	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")
+	flagSet.Var(&flags.Engine, "engine", "The container engine to use. Supported engines: [docker, podman]. Default to autodetect.")
 	flagSet.Var(&flags.Env, "env", "List of additional env variables specified as KEY=VALUE")
 	flagSet.StringVar(&flags.Icon, "icon", defaultIcon, "Application icon used for distribution")
 	flagSet.StringVar(&flags.DockerImage, "image", "", "Custom docker image to use for build")
@@ -126,6 +129,25 @@ func defaultName() (string, error) {
 	}
 	_, output := filepath.Split(wd)
 	return output, nil
+}
+
+// engineFlag is a custom flag used to define custom engine variables
+type engineFlag struct {
+	Engine
+}
+
+// String is the method to format the flag's value, part of the flag.Value interface.
+// The String method's output will be used in diagnostics.
+func (ef *engineFlag) String() string {
+	return fmt.Sprint(*ef)
+}
+
+// Set is the method to set the flag value, part of the flag.Value interface.
+// Set's argument is a string to be parsed to set the flag.
+func (ef *engineFlag) Set(value string) error {
+	var err error
+	ef.Engine, err = MakeEngine(value)
+	return err
 }
 
 // envFlag is a custom flag used to define custom env variables
