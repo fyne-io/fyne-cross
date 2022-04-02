@@ -200,7 +200,11 @@ func freebsdContext(flags *freebsdFlags, args []string) ([]Context, error) {
 		case ArchArm64:
 			defaultDockerImage = freebsdImageArm64
 			ctx.Env["GOARCH"] = "arm64"
-			ctx.Env["CGO_LDFLAGS"] += " -fuse-ld=lld"
+			if v, ok := ctx.Env["CGO_LDFLAGS"]; ok {
+				ctx.Env["CGO_LDFLAGS"] = v + " -fuse-ld=lld"
+			} else {
+				ctx.Env["CGO_LDFLAGS"] = "-fuse-ld=lld"
+			}
 			ctx.Env["CC"] = "aarch64-unknown-freebsd12-clang"
 		}
 

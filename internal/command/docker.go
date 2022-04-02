@@ -79,7 +79,7 @@ func Cmd(image string, vol volume.Volume, opts Options, cmdArgs []string) *execa
 	// add custom env variables
 	for k, v := range opts.Env {
 		env := k + "=" + v
-		if strings.Contains(v, "=") {
+		if opts.Env["GOOS"] != freebsdOS && strings.Contains(v, "=") {
 			// engine requires to double quote the env var when value contains
 			// the `=` char
 			env = fmt.Sprintf("%q", env)
