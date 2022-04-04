@@ -21,10 +21,11 @@ func Test_makeWindowsContext(t *testing.T) {
 		args  []string
 	}
 	tests := []struct {
-		name    string
-		args    args
-		want    []Context
-		wantErr bool
+		name        string
+		args        args
+		wantContext Context
+		wantImages  []ContainerImage
+		wantErr     bool
 	}{
 		{
 			name: "default",
@@ -36,20 +37,29 @@ func Test_makeWindowsContext(t *testing.T) {
 					TargetArch: &targetArchFlag{"amd64"},
 				},
 			},
-			want: []Context{
-				{
-					AppBuild:     "1",
-					Volume:       vol,
-					CacheEnabled: true,
-					StripDebug:   true,
-					Package:      ".",
-					ID:           "windows-amd64",
-					OS:           "windows",
-					Architecture: "amd64",
-					Engine:       engine,
-					Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
-					LdFlags:      []string{"-H=windowsgui"},
-					DockerImage:  windowsImage,
+			wantContext: Context{
+				AppBuild:     "1",
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Engine:       engine,
+				Env:          map[string]string{},
+				LdFlags:      []string{"-H=windowsgui"},
+			},
+			wantImages: []ContainerImage{
+				&LocalContainerImage{
+					AllContainerImage: AllContainerImage{
+						Architecture: "amd64",
+						OS:           "windows",
+						ID:           "windows-amd64",
+						Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
+						Mount: map[string]string{
+							vol.WorkDirHost():  vol.WorkDirContainer(),
+							vol.CacheDirHost(): vol.CacheDirContainer(),
+						},
+						DockerImage: windowsImage,
+					},
 				},
 			},
 		},
@@ -64,19 +74,28 @@ func Test_makeWindowsContext(t *testing.T) {
 					Console:    true,
 				},
 			},
-			want: []Context{
-				{
-					AppBuild:     "1",
-					Volume:       vol,
-					CacheEnabled: true,
-					StripDebug:   true,
-					Package:      ".",
-					ID:           "windows-386",
-					OS:           "windows",
-					Architecture: "386",
-					Engine:       engine,
-					Env:          map[string]string{"GOOS": "windows", "GOARCH": "386", "CC": "i686-w64-mingw32-gcc"},
-					DockerImage:  windowsImage,
+			wantContext: Context{
+				AppBuild:     "1",
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Engine:       engine,
+				Env:          map[string]string{},
+			},
+			wantImages: []ContainerImage{
+				&LocalContainerImage{
+					AllContainerImage: AllContainerImage{
+						Architecture: "386",
+						OS:           "windows",
+						ID:           "windows-386",
+						Env:          map[string]string{"GOOS": "windows", "GOARCH": "386", "CC": "i686-w64-mingw32-gcc"},
+						Mount: map[string]string{
+							vol.WorkDirHost():  vol.WorkDirContainer(),
+							vol.CacheDirHost(): vol.CacheDirContainer(),
+						},
+						DockerImage: windowsImage,
+					},
 				},
 			},
 		},
@@ -91,20 +110,29 @@ func Test_makeWindowsContext(t *testing.T) {
 					TargetArch: &targetArchFlag{"amd64"},
 				},
 			},
-			want: []Context{
-				{
-					AppBuild:     "1",
-					Volume:       vol,
-					CacheEnabled: true,
-					StripDebug:   true,
-					Package:      ".",
-					ID:           "windows-amd64",
-					OS:           "windows",
-					Architecture: "amd64",
-					Engine:       engine,
-					Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
-					LdFlags:      []string{"-X main.version=1.2.3", "-H=windowsgui"},
-					DockerImage:  windowsImage,
+			wantContext: Context{
+				AppBuild:     "1",
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Engine:       engine,
+				Env:          map[string]string{},
+				LdFlags:      []string{"-X main.version=1.2.3", "-H=windowsgui"},
+			},
+			wantImages: []ContainerImage{
+				&LocalContainerImage{
+					AllContainerImage: AllContainerImage{
+						Architecture: "amd64",
+						OS:           "windows",
+						ID:           "windows-amd64",
+						Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
+						Mount: map[string]string{
+							vol.WorkDirHost():  vol.WorkDirContainer(),
+							vol.CacheDirHost(): vol.CacheDirContainer(),
+						},
+						DockerImage: windowsImage,
+					},
 				},
 			},
 		},
@@ -119,20 +147,29 @@ func Test_makeWindowsContext(t *testing.T) {
 					TargetArch: &targetArchFlag{"amd64"},
 				},
 			},
-			want: []Context{
-				{
-					AppBuild:     "1",
-					Volume:       vol,
-					CacheEnabled: true,
-					StripDebug:   true,
-					Package:      ".",
-					ID:           "windows-amd64",
-					OS:           "windows",
-					Architecture: "amd64",
-					Engine:       engine,
-					Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
-					LdFlags:      []string{"-H=windowsgui"},
-					DockerImage:  "test",
+			wantContext: Context{
+				AppBuild:     "1",
+				Volume:       vol,
+				CacheEnabled: true,
+				StripDebug:   true,
+				Package:      ".",
+				Engine:       engine,
+				Env:          map[string]string{},
+				LdFlags:      []string{"-H=windowsgui"},
+			},
+			wantImages: []ContainerImage{
+				&LocalContainerImage{
+					AllContainerImage: AllContainerImage{
+						Architecture: "amd64",
+						OS:           "windows",
+						ID:           "windows-amd64",
+						Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
+						Mount: map[string]string{
+							vol.WorkDirHost():  vol.WorkDirContainer(),
+							vol.CacheDirHost(): vol.CacheDirContainer(),
+						},
+						DockerImage: "test",
+					},
 				},
 			},
 		},
@@ -140,13 +177,21 @@ func Test_makeWindowsContext(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
-				ctx, err := makeWindowsContext(tt.args.flags, tt.args.args)
+				windows := NewWindowsCommand()
+
+				err := windows.makeWindowsContainerImages(tt.args.flags, tt.args.args)
 				if tt.wantErr {
 					require.NotNil(t, err)
 					return
 				}
 				require.Nil(t, err)
-				assert.Equal(t, tt.want, ctx)
+				assert.Equal(t, tt.wantContext, windows.defaultContext)
+
+				for index, _ := range windows.Images {
+					windows.Images[index].(*LocalContainerImage).Runner = nil
+				}
+
+				assert.Equal(t, tt.wantImages, windows.Images)
 			})
 		})
 	}

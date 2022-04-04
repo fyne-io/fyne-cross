@@ -22,6 +22,65 @@ type Command interface {
 	Run() error                // Run runs the command
 }
 
+type CrossBuilderCommand interface {
+	RunEach(image ContainerImage) error // Called to build each possible architecture/OS combination
+}
+
+type CrossBuilder struct {
+	Images []ContainerImage
+
+	defaultContext Context
+	name           string
+	description    string
+}
+
+// RunInternal runs generic code for each image to be build
+func (cb *CrossBuilder) RunInternal(cmd CrossBuilderCommand) error {
+	err := bumpFyneAppBuild(cb.defaultContext)
+	if err != nil {
+		log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
+	}
+
+	for _, image := range cb.Images {
+		log.Infof("[i] Target: %s/%s", image.GetOS(), image.GetArchitecture())
+		log.Debugf("%#v", image)
+
+		//
+		// prepare build
+		//
+		err = image.Prepare()
+		if err != nil {
+			return err
+		}
+
+		err = cleanTargetDirs(cb.defaultContext, image)
+		if err != nil {
+			return err
+		}
+
+		err = goModInit(cb.defaultContext, image)
+		if err != nil {
+			return err
+		}
+
+		err = cmd.RunEach(image)
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (cb *CrossBuilder) Name() string {
+	return cb.name
+}
+
+// Description returns the command description
+func (cb *CrossBuilder) Description() string {
+	return cb.description
+}
+
 // Usage prints the fyne-cross command usage
 func Usage(commands []Command) {
 	template := `fyne-cross is a simple tool to cross compile Fyne applications
@@ -38,12 +97,12 @@ Use "fyne-cross <command> -help" for more information about a command.
 }
 
 // cleanTargetDirs cleans the temp dir for the target context
-func cleanTargetDirs(ctx Context) error {
+func cleanTargetDirs(ctx Context, image ContainerImage) error {
 
 	dirs := map[string]string{
-		"bin":  volume.JoinPathHost(ctx.BinDirHost(), ctx.ID),
-		"dist": volume.JoinPathHost(ctx.DistDirHost(), ctx.ID),
-		"temp": volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID),
+		"bin":  volume.JoinPathHost(ctx.BinDirHost(), image.GetID()),
+		"dist": volume.JoinPathHost(ctx.DistDirHost(), image.GetID()),
+		"temp": volume.JoinPathHost(ctx.TmpDirHost(), image.GetID()),
 	}
 
 	log.Infof("[i] Cleaning target directories...")
@@ -65,7 +124,7 @@ func cleanTargetDirs(ctx Context) error {
 }
 
 // prepareIcon prepares the icon for packaging
-func prepareIcon(ctx Context) error {
+func prepareIcon(ctx Context, image ContainerImage) error {
 
 	if _, err := os.Stat(ctx.Icon); os.IsNotExist(err) {
 		defaultIcon, err := volume.DefaultIconHost()
@@ -85,9 +144,9 @@ func prepareIcon(ctx Context) error {
 		log.Infof("[✓] Created a placeholder icon using Fyne logo for testing purpose")
 	}
 
-	if ctx.OS == "windows" {
+	if image.GetOS() == "windows" {
 		// convert the png icon to ico format and store under the temp directory
-		icoIcon := volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, ctx.Name+".ico")
+		icoIcon := volume.JoinPathHost(ctx.TmpDirHost(), image.GetID(), ctx.Name+".ico")
 		err := icon.ConvertPngToIco(ctx.Icon, icoIcon)
 		if err != nil {
 			return fmt.Errorf("could not create the windows ico: %v", err)
@@ -95,7 +154,7 @@ func prepareIcon(ctx Context) error {
 		return nil
 	}
 
-	err := volume.Copy(ctx.Icon, volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, icon.Default))
+	err := volume.Copy(ctx.Icon, volume.JoinPathHost(ctx.TmpDirHost(), image.GetID(), icon.Default))
 	if err != nil {
 		return fmt.Errorf("could not copy the icon to temp folder: %v", err)
 	}
@@ -126,7 +185,7 @@ func checkFyneBinHost(ctx Context) (string, error) {
 
 // fynePackageHost package the application using the fyne cli tool from the host
 // Note: at the moment this is used only for the ios builds
-func fynePackageHost(ctx Context) error {
+func fynePackageHost(ctx Context, image ContainerImage) error {
 
 	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {
@@ -135,9 +194,9 @@ func fynePackageHost(ctx Context) error {
 
 	args := []string{
 		"package",
-		"-os", ctx.OS,
+		"-os", image.GetOS(),
 		"-name", ctx.Name,
-		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
+		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), image.GetID(), icon.Default),
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
 	}
@@ -172,7 +231,7 @@ func fynePackageHost(ctx Context) error {
 
 // fyneReleaseHost package and release the application using the fyne cli tool from the host
 // Note: at the moment this is used only for the ios and windows builds
-func fyneReleaseHost(ctx Context) error {
+func fyneReleaseHost(ctx Context, image ContainerImage) error {
 
 	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {
@@ -181,9 +240,9 @@ func fyneReleaseHost(ctx Context) error {
 
 	args := []string{
 		"release",
-		"-os", ctx.OS,
+		"-os", image.GetOS(),
 		"-name", ctx.Name,
-		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), ctx.ID, icon.Default),
+		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), image.GetID(), icon.Default),
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
 	}
@@ -199,7 +258,7 @@ func fyneReleaseHost(ctx Context) error {
 		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
 	}
 
-	switch ctx.OS {
+	switch image.GetOS() {
 	case darwinOS:
 		if ctx.Category != "" {
 			args = append(args, "-category", ctx.Category)

@@ -27,17 +27,12 @@ var (
 
 // Linux build and package the fyne app for the linux OS
 type Linux struct {
-	Context []Context
+	CrossBuilderCommand
+	CrossBuilder
 }
 
-// Name returns the one word command name
-func (cmd *Linux) Name() string {
-	return "linux"
-}
-
-// Description returns the command description
-func (cmd *Linux) Description() string {
-	return "Build and package a fyne application for the linux OS"
+func NewLinuxCommand() *Linux {
+	return &Linux{CrossBuilder: CrossBuilder{name: "linux", description: "Build and package a fyne application for the linux OS"}}
 }
 
 // Parse parses the arguments and set the usage for the command
@@ -56,88 +51,56 @@ func (cmd *Linux) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	ctx, err := linuxContext(flags, flagSet.Args())
-	if err != nil {
-		return err
-	}
-	cmd.Context = ctx
-	return nil
+	err = cmd.makeLinuxContainerImages(flags, flagSet.Args())
+	return err
+}
+
+// Run runs the command using helper code
+func (cmd *Linux) Run() error {
+	return cmd.RunInternal(cmd)
 }
 
 // Run runs the command
-func (cmd *Linux) Run() error {
-
-	for _, ctx := range cmd.Context {
-
-		err := bumpFyneAppBuild(ctx)
-		if err != nil {
-			log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
-		}
-
-		log.Infof("[i] Target: %s/%s", ctx.OS, ctx.Architecture)
-		log.Debugf("%#v", ctx)
-
-		//
-		// pull image, if requested
-		//
-		err = pullImage(ctx)
-		if err != nil {
-			return err
-		}
-
-		//
-		// prepare build
-		//
-		err = cleanTargetDirs(ctx)
-		if err != nil {
-			return err
-		}
-
-		err = goModInit(ctx)
-		if err != nil {
-			return err
-		}
-
-		//
-		// build
-		//
-		err = goBuild(ctx)
-		if err != nil {
-			return err
-		}
-
-		//
-		// package
-		//
-		log.Info("[i] Packaging app...")
-
-		packageName := fmt.Sprintf("%s.tar.xz", ctx.Name)
-
-		err = prepareIcon(ctx)
-		if err != nil {
-			return err
-		}
-
-		err = fynePackage(ctx)
-		if err != nil {
-			return fmt.Errorf("could not package the Fyne app: %v", err)
-		}
-
-		// move the dist package into the "dist" folder
-		srcFile := volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, packageName)
-		distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
-		err = os.MkdirAll(filepath.Dir(distFile), 0755)
-		if err != nil {
-			return fmt.Errorf("could not create the dist package dir: %v", err)
-		}
-
-		err = os.Rename(srcFile, distFile)
-		if err != nil {
-			return err
-		}
-
-		log.Infof("[✓] Package: %s", distFile)
+func (cmd *Linux) RunEach(image ContainerImage) error {
+	//
+	// build
+	//
+	err := goBuild(cmd.defaultContext, image)
+	if err != nil {
+		return err
 	}
+
+	//
+	// package
+	//
+	log.Info("[i] Packaging app...")
+
+	packageName := fmt.Sprintf("%s.tar.xz", cmd.defaultContext.Name)
+
+	err = prepareIcon(cmd.defaultContext, image)
+	if err != nil {
+		return err
+	}
+
+	err = fynePackage(cmd.defaultContext, image)
+	if err != nil {
+		return fmt.Errorf("could not package the Fyne app: %v", err)
+	}
+
+	// move the dist package into the "dist" folder
+	srcFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.GetID(), packageName)
+	distFile := volume.JoinPathHost(cmd.defaultContext.DistDirHost(), image.GetID(), packageName)
+	err = os.MkdirAll(filepath.Dir(distFile), 0755)
+	if err != nil {
+		return fmt.Errorf("could not create the dist package dir: %v", err)
+	}
+
+	err = os.Rename(srcFile, distFile)
+	if err != nil {
+		return err
+	}
+
+	log.Infof("[✓] Package: %s", distFile)
 
 	return nil
 }
@@ -172,56 +135,50 @@ type linuxFlags struct {
 	TargetArch *targetArchFlag
 }
 
-// linuxContext returns the command context for a linux target
-func linuxContext(flags *linuxFlags, args []string) ([]Context, error) {
-
+// linuxContext returns the command ContainerImages for a linux target
+func (cmd *Linux) makeLinuxContainerImages(flags *linuxFlags, args []string) error {
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, linuxArchSupported)
 	if err != nil {
-		return []Context{}, fmt.Errorf("could not make build context for %s OS: %s", linuxOS, err)
+		return fmt.Errorf("could not make build context for %s OS: %s", linuxOS, err)
 	}
 
-	ctxs := []Context{}
+	ctx, err := makeDefaultContext(flags.CommonFlags, args)
+	if err != nil {
+		return err
+	}
+
+	cmd.defaultContext = ctx
+	runner := NewContainerRunner(ctx)
+
 	for _, arch := range targetArch {
+		var image ContainerImage
 
-		ctx, err := makeDefaultContext(flags.CommonFlags, args)
-		if err != nil {
-			return ctxs, err
-		}
-
-		ctx.Architecture = arch
-		ctx.OS = linuxOS
-		ctx.ID = fmt.Sprintf("%s-%s", ctx.OS, ctx.Architecture)
-		ctx.Env["GOOS"] = "linux"
-		var defaultDockerImage string
 		switch arch {
 		case ArchAmd64:
-			defaultDockerImage = linuxImageAmd64
-			ctx.Env["GOARCH"] = "amd64"
-			ctx.Env["CC"] = "gcc"
+			image = runner.NewImageContainer(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageAmd64))
+			image.SetEnv("GOARCH", "amd64")
+			image.SetEnv("CC", "gcc")
 		case Arch386:
-			defaultDockerImage = linuxImage386
-			ctx.Env["GOARCH"] = "386"
-			ctx.Env["CC"] = "i686-linux-gnu-gcc"
+			image = runner.NewImageContainer(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImage386))
+			image.SetEnv("GOARCH", "386")
+			image.SetEnv("CC", "i686-linux-gnu-gcc")
 		case ArchArm:
-			defaultDockerImage = linuxImageArm
-			ctx.Env["GOARCH"] = "arm"
-			ctx.Env["CC"] = "arm-linux-gnueabihf-gcc"
-			ctx.Env["GOARM"] = "7"
-			ctx.Tags = append(ctx.Tags, "gles")
+			image = runner.NewImageContainer(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm))
+			image.SetEnv("GOARCH", "arm")
+			image.SetEnv("CC", "arm-linux-gnueabihf-gcc")
+			image.SetEnv("GOARM", "7")
+			image.AppendTag("gles")
 		case ArchArm64:
-			defaultDockerImage = linuxImageArm64
-			ctx.Env["GOARCH"] = "arm64"
-			ctx.Env["CC"] = "aarch64-linux-gnu-gcc"
-			ctx.Tags = append(ctx.Tags, "gles")
+			image = runner.NewImageContainer(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm64))
+			image.SetEnv("GOARCH", "arm64")
+			image.SetEnv("CC", "aarch64-linux-gnu-gcc")
+			image.AppendTag("gles")
 		}
 
-		// set context based on command-line flags
-		if flags.DockerImage == "" {
-			ctx.DockerImage = defaultDockerImage
-		}
+		image.SetEnv("GOOS", "linux")
 
-		ctxs = append(ctxs, ctx)
+		cmd.Images = append(cmd.Images, image)
 	}
 
-	return ctxs, nil
+	return nil
 }

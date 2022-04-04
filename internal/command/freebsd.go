@@ -26,17 +26,12 @@ var (
 
 // FreeBSD build and package the fyne app for the freebsd OS
 type FreeBSD struct {
-	Context []Context
+	CrossBuilderCommand
+	CrossBuilder
 }
 
-// Name returns the one word command name
-func (cmd *FreeBSD) Name() string {
-	return "freebsd"
-}
-
-// Description returns the command description
-func (cmd *FreeBSD) Description() string {
-	return "Build and package a fyne application for the freebsd OS"
+func NewFreeBSD() *FreeBSD {
+	return &FreeBSD{CrossBuilder: CrossBuilder{name: "freebsd", description: "Build and package a fyne application for the freebsd OS"}}
 }
 
 // Parse parses the arguments and set the usage for the command
@@ -55,88 +50,56 @@ func (cmd *FreeBSD) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	ctx, err := freebsdContext(flags, flagSet.Args())
-	if err != nil {
-		return err
-	}
-	cmd.Context = ctx
-	return nil
+	err = cmd.makeFreebsdContainerImages(flags, flagSet.Args())
+	return err
+}
+
+// Run runs the command using helper code
+func (cmd *FreeBSD) Run() error {
+	return cmd.RunInternal(cmd)
 }
 
 // Run runs the command
-func (cmd *FreeBSD) Run() error {
-
-	for _, ctx := range cmd.Context {
-
-		err := bumpFyneAppBuild(ctx)
-		if err != nil {
-			log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
-		}
-
-		log.Infof("[i] Target: %s/%s", ctx.OS, ctx.Architecture)
-		log.Debugf("%#v", ctx)
-
-		//
-		// pull image, if requested
-		//
-		err = pullImage(ctx)
-		if err != nil {
-			return err
-		}
-
-		//
-		// prepare build
-		//
-		err = cleanTargetDirs(ctx)
-		if err != nil {
-			return err
-		}
-
-		err = goModInit(ctx)
-		if err != nil {
-			return err
-		}
-
-		//
-		// build
-		//
-		err = goBuild(ctx)
-		if err != nil {
-			return err
-		}
-
-		//
-		// package
-		//
-		log.Info("[i] Packaging app...")
-
-		packageName := fmt.Sprintf("%s.tar.xz", ctx.Name)
-
-		err = prepareIcon(ctx)
-		if err != nil {
-			return err
-		}
-
-		err = fynePackage(ctx)
-		if err != nil {
-			return fmt.Errorf("could not package the Fyne app: %v", err)
-		}
-
-		// move the dist package into the "dist" folder
-		srcFile := volume.JoinPathHost(ctx.TmpDirHost(), ctx.ID, packageName)
-		distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
-		err = os.MkdirAll(filepath.Dir(distFile), 0755)
-		if err != nil {
-			return fmt.Errorf("could not create the dist package dir: %v", err)
-		}
-
-		err = os.Rename(srcFile, distFile)
-		if err != nil {
-			return err
-		}
-
-		log.Infof("[✓] Package: %s", distFile)
+func (cmd *FreeBSD) RunEach(image ContainerImage) error {
+	//
+	// build
+	//
+	err := goBuild(cmd.defaultContext, image)
+	if err != nil {
+		return err
 	}
+
+	//
+	// package
+	//
+	log.Info("[i] Packaging app...")
+
+	packageName := fmt.Sprintf("%s.tar.xz", cmd.defaultContext.Name)
+
+	err = prepareIcon(cmd.defaultContext, image)
+	if err != nil {
+		return err
+	}
+
+	err = fynePackage(cmd.defaultContext, image)
+	if err != nil {
+		return fmt.Errorf("could not package the Fyne app: %v", err)
+	}
+
+	// move the dist package into the "dist" folder
+	srcFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.GetID(), packageName)
+	distFile := volume.JoinPathHost(cmd.defaultContext.DistDirHost(), image.GetID(), packageName)
+	err = os.MkdirAll(filepath.Dir(distFile), 0755)
+	if err != nil {
+		return fmt.Errorf("could not create the dist package dir: %v", err)
+	}
+
+	err = os.Rename(srcFile, distFile)
+	if err != nil {
+		return err
+	}
+
+	log.Infof("[✓] Package: %s", distFile)
 
 	return nil
 }
@@ -172,49 +135,42 @@ type freebsdFlags struct {
 }
 
 // freebsdContext returns the command context for a freebsd target
-func freebsdContext(flags *freebsdFlags, args []string) ([]Context, error) {
-
+func (cmd *FreeBSD) makeFreebsdContainerImages(flags *freebsdFlags, args []string) error {
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, freebsdArchSupported)
 	if err != nil {
-		return []Context{}, fmt.Errorf("could not make build context for %s OS: %s", freebsdOS, err)
+		return fmt.Errorf("could not make build context for %s OS: %s", freebsdOS, err)
 	}
 
-	ctxs := []Context{}
+	ctx, err := makeDefaultContext(flags.CommonFlags, args)
+	if err != nil {
+		return err
+	}
+
+	cmd.defaultContext = ctx
+	runner := NewContainerRunner(ctx)
+
 	for _, arch := range targetArch {
+		var image ContainerImage
 
-		ctx, err := makeDefaultContext(flags.CommonFlags, args)
-		if err != nil {
-			return ctxs, err
-		}
-
-		ctx.Architecture = arch
-		ctx.OS = freebsdOS
-		ctx.ID = fmt.Sprintf("%s-%s", ctx.OS, ctx.Architecture)
-		ctx.Env["GOOS"] = "freebsd"
-		var defaultDockerImage string
 		switch arch {
 		case ArchAmd64:
-			defaultDockerImage = freebsdImageAmd64
-			ctx.Env["GOARCH"] = "amd64"
-			ctx.Env["CC"] = "x86_64-unknown-freebsd12-clang"
+			image = runner.NewImageContainer(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageAmd64))
+			image.SetEnv("GOARCH", "amd64")
+			image.SetEnv("CC", "x86_64-unknown-freebsd12-clang")
 		case ArchArm64:
-			defaultDockerImage = freebsdImageArm64
-			ctx.Env["GOARCH"] = "arm64"
+			image = runner.NewImageContainer(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageArm64))
+			image.SetEnv("GOARCH", "arm64")
 			if v, ok := ctx.Env["CGO_LDFLAGS"]; ok {
-				ctx.Env["CGO_LDFLAGS"] = v + " -fuse-ld=lld"
+				image.SetEnv("CGO_LDFLAGS", v+" -fuse-ld=lld")
 			} else {
-				ctx.Env["CGO_LDFLAGS"] = "-fuse-ld=lld"
+				image.SetEnv("CGO_LDFLAGS", "-fuse-ld=lld")
 			}
-			ctx.Env["CC"] = "aarch64-unknown-freebsd12-clang"
+			image.SetEnv("CC", "aarch64-unknown-freebsd12-clang")
 		}
+		image.SetEnv("GOOS", "freebsd")
 
-		// set context based on command-line flags
-		if flags.DockerImage == "" {
-			ctx.DockerImage = defaultDockerImage
-		}
-
-		ctxs = append(ctxs, ctx)
+		cmd.Images = append(cmd.Images, image)
 	}
 
-	return ctxs, nil
+	return nil
 }

@@ -39,19 +39,15 @@ type Context struct {
 	// Volume holds the mounted volumes between host and containers
 	volume.Volume
 
-	Architecture                   // Arch defines the target architecture
-	Engine       Engine            // Engine is the container engine to use
-	Env          map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
-	ID           string            // ID is the context ID
-	LdFlags      []string          // LdFlags defines the ldflags to use
-	OS           string            // OS defines the target OS
-	Tags         []string          // Tags defines the tags to use
+	Engine  Engine            // Engine is the container engine to use
+	Env     map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
+	LdFlags []string          // LdFlags defines the ldflags to use
+	Tags    []string          // Tags defines the tags to use
 
 	AppBuild     string // Build number
 	AppID        string // AppID is the appID to use for distribution
 	AppVersion   string // AppVersion is the version number in the form x, x.y or x.y.z semantic version
 	CacheEnabled bool   // CacheEnabled if true enable go build cache
-	DockerImage  string // DockerImage defines the docker image used to build
 	Icon         string // Icon is the optional icon in png format to use for distribution
 	Name         string // Name is the application name
 	Package      string // Package is the package to build named by the import path as per 'go build'
@@ -85,6 +81,13 @@ Name: {{ .Name }}
 	return buf.String()
 }
 
+func overrideDockerImage(flags *CommonFlags, image string) string {
+	if flags.DockerImage != "" {
+		return flags.DockerImage
+	}
+	return image
+}
+
 func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 	// mount the fyne-cross volume
 	vol, err := volume.Mount(flags.RootDir, flags.CacheDir)
@@ -106,7 +109,6 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		AppID:        flags.AppID,
 		AppVersion:   flags.AppVersion,
 		CacheEnabled: !flags.NoCache,
-		DockerImage:  flags.DockerImage,
 		Engine:       engine,
 		Env:          make(map[string]string),
 		Tags:         flags.Tags,
