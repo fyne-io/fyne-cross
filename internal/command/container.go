@@ -41,6 +41,7 @@ type ContainerImage interface {
 	Cmd(vol volume.Volume, opts Options, cmdArgs []string) *execabs.Cmd
 	Run(vol volume.Volume, opts Options, cmdArgs []string) error
 	Prepare() error
+	Finalize(srcFile string, packageName string) error
 
 	GetArchitecture() Architecture
 	GetOS() string

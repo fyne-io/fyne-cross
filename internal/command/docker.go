@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -183,5 +184,22 @@ func (i *LocalContainerImage) Prepare() error {
 	}
 
 	log.Infof("[✓] Image is up to date")
+	return nil
+}
+
+func (i *LocalContainerImage) Finalize(srcFile string, packageName string) error {
+	distFile := volume.JoinPathHost(i.Runner.vol.DistDirHost(), i.GetID(), packageName)
+	err := os.MkdirAll(filepath.Dir(distFile), 0755)
+	if err != nil {
+		return fmt.Errorf("could not create the dist package dir: %v", err)
+	}
+
+	err = os.Rename(srcFile, distFile)
+	if err != nil {
+		return err
+	}
+
+	log.Infof("[✓] Package: %s", distFile)
+
 	return nil
 }

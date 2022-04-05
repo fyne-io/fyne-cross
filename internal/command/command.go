@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
@@ -69,19 +68,7 @@ func (cb *CrossBuilder) RunInternal(cmd CrossBuilderCommand) error {
 			return err
 		}
 
-		distFile := volume.JoinPathHost(cb.defaultContext.DistDirHost(), image.GetID(), packageName)
-		err = os.MkdirAll(filepath.Dir(distFile), 0755)
-		if err != nil {
-			return fmt.Errorf("could not create the dist package dir: %v", err)
-		}
-
-		err = os.Rename(srcFile, distFile)
-		if err != nil {
-			return err
-		}
-
-		log.Infof("[✓] Package: %s", distFile)
-
+		image.Finalize(srcFile, packageName)
 	}
 
 	return nil
