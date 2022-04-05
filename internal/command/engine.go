@@ -33,6 +33,10 @@ func (e Engine) IsPodman() bool {
 	return e.Name == podmanEngine
 }
 
+func (e Engine) IsKubernetes() bool {
+	return e.Name == kubernetesEngine
+}
+
 // MakeEngine returns a new container engine. Pass empty string to autodetect
 func MakeEngine(e string) (Engine, error) {
 	switch e {

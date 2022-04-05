@@ -75,6 +75,9 @@ func NewContainerRunner(context Context) (ContainerRunner, error) {
 	if context.Engine.IsDocker() || context.Engine.IsPodman() {
 		return NewLocalContainerRunner(context)
 	}
+	if context.Engine.IsKubernetes() {
+		return NewKubernetesContainerRunner(context)
+	}
 	return nil, fmt.Errorf("unknown engine: '%s'", context.Engine)
 }
 
