@@ -48,6 +48,8 @@ type CommonFlags struct {
 	NoCache bool
 	// NoProjectUpload if true, the build will be done with the artifact already stored on S3
 	NoProjectUpload bool
+	// NoResultDownload if true, it will leave the result of the build on S3 and won't download it locally (engine: kubernetes)
+	NoResultDownload bool
 	// NoStripDebug if true will not strip debug information from binaries
 	NoStripDebug bool
 	// Name represents the application name
@@ -114,6 +116,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.StringVar(&flags.CacheDir, "cache", cacheDir, "Directory used to share/cache sources and dependencies")
 	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")
 	flagSet.BoolVar(&flags.NoProjectUpload, "no-project-upload", false, "Will reuse the project data available in S3")
+	flagSet.BoolVar(&flags.NoResultDownload, "no-result-download", false, "Will not download the result of the compilation from S3 automatically")
 	flagSet.Var(&flags.Engine, "engine", "The container engine to use. Supported engines: [docker, podman, kubernetes]. Default to autodetect.")
 	flagSet.StringVar(&flags.Namespace, "namespace", "default", "The namespace the kubernetes engine will use to run the pods in. Imply the engine to be kubernetes.")
 	flagSet.StringVar(&flags.S3Path, "S3-path", "/", "The path to push and pull data for the Kubernetes backend")

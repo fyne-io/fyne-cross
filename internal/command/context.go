@@ -47,18 +47,19 @@ type Context struct {
 	LdFlags   []string          // LdFlags defines the ldflags to use
 	Tags      []string          // Tags defines the tags to use
 
-	AppBuild        string // Build number
-	AppID           string // AppID is the appID to use for distribution
-	AppVersion      string // AppVersion is the version number in the form x, x.y or x.y.z semantic version
-	CacheEnabled    bool   // CacheEnabled if true enable go build cache
-	Icon            string // Icon is the optional icon in png format to use for distribution
-	Name            string // Name is the application name
-	Package         string // Package is the package to build named by the import path as per 'go build'
-	Release         bool   // Enable release mode. If true, prepares an application for public distribution
-	StripDebug      bool   // StripDebug if true, strips binary output
-	Debug           bool   // Debug if true enable debug log
-	Pull            bool   // Pull if true attempts to pull a newer version of the docker image
-	NoProjectUpload bool   // NoProjectUpload if true, the build will be done with the artifact already stored on S3
+	AppBuild         string // Build number
+	AppID            string // AppID is the appID to use for distribution
+	AppVersion       string // AppVersion is the version number in the form x, x.y or x.y.z semantic version
+	CacheEnabled     bool   // CacheEnabled if true enable go build cache
+	Icon             string // Icon is the optional icon in png format to use for distribution
+	Name             string // Name is the application name
+	Package          string // Package is the package to build named by the import path as per 'go build'
+	Release          bool   // Enable release mode. If true, prepares an application for public distribution
+	StripDebug       bool   // StripDebug if true, strips binary output
+	Debug            bool   // Debug if true enable debug log
+	Pull             bool   // Pull if true attempts to pull a newer version of the docker image
+	NoProjectUpload  bool   // NoProjectUpload if true, the build will be done with the artifact already stored on S3
+	NoResultDownload bool   // NoResultDownload if true, the result of the build will be left on S3 and not downloaded locally
 
 	// Release context
 	Category     string //Category represents the category of the app for store listing [macOS]
@@ -117,23 +118,24 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 
 	// set context based on command-line flags
 	ctx := Context{
-		AppID:           flags.AppID,
-		AppVersion:      flags.AppVersion,
-		CacheEnabled:    !flags.NoCache,
-		NoProjectUpload: flags.NoProjectUpload,
-		Engine:          engine,
-		Namespace:       flags.Namespace,
-		S3Path:          flags.S3Path,
-		SizeLimit:       flags.SizeLimit,
-		Env:             make(map[string]string),
-		Tags:            flags.Tags,
-		Icon:            flags.Icon,
-		Name:            flags.Name,
-		StripDebug:      !flags.NoStripDebug,
-		Debug:           flags.Debug,
-		Volume:          vol,
-		Pull:            flags.Pull,
-		Release:         flags.Release,
+		AppID:            flags.AppID,
+		AppVersion:       flags.AppVersion,
+		CacheEnabled:     !flags.NoCache,
+		NoProjectUpload:  flags.NoProjectUpload,
+		NoResultDownload: flags.NoResultDownload,
+		Engine:           engine,
+		Namespace:        flags.Namespace,
+		S3Path:           flags.S3Path,
+		SizeLimit:        flags.SizeLimit,
+		Env:              make(map[string]string),
+		Tags:             flags.Tags,
+		Icon:             flags.Icon,
+		Name:             flags.Name,
+		StripDebug:       !flags.NoStripDebug,
+		Debug:            flags.Debug,
+		Volume:           vol,
+		Pull:             flags.Pull,
+		Release:          flags.Release,
 	}
 
 	if flags.AppBuild <= 0 {
