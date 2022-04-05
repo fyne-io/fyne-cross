@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"strings"
 
+	"github.com/fyne-io/fyne-cross/internal/cloud"
 	"golang.org/x/sys/execabs"
 )
 
@@ -12,6 +13,7 @@ const (
 	autodetectEngine = ""
 	dockerEngine     = "docker"
 	podmanEngine     = "podman"
+	kubernetesEngine = "kubernetes"
 )
 
 type Engine struct {
@@ -71,6 +73,14 @@ func MakeEngine(e string) (Engine, error) {
 		default:
 			return Engine{}, fmt.Errorf("could not detect engine version: %s", out)
 		}
+	case kubernetesEngine:
+		// Try establishing a connection to Kubernetes cluster
+		_, _, err := cloud.GetKubernetesClient()
+		if err != nil {
+			return Engine{}, err
+		}
+
+		return Engine{Name: kubernetesEngine, Binary: ""}, nil
 	default:
 		return Engine{}, errors.New("unsupported container engine")
 	}
