@@ -3,7 +3,6 @@ package command
 import (
 	"fmt"
 	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -71,21 +70,21 @@ func (cmd *Windows) Run() error {
 }
 
 // Run runs the command
-func (cmd *Windows) RunEach(image ContainerImage) error {
+func (cmd *Windows) RunEach(image ContainerImage) (string, string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	// Release mode
 	if cmd.defaultContext.Release {
 		if runtime.GOOS != windowsOS {
-			return fmt.Errorf("windows release build is supported only on windows hosts")
+			return "", "", fmt.Errorf("windows release build is supported only on windows hosts")
 		}
 
 		err = fyneReleaseHost(cmd.defaultContext, image)
 		if err != nil {
-			return fmt.Errorf("could not package the Fyne app: %v", err)
+			return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 
 		packageName := cmd.defaultContext.Name + ".appx"
@@ -95,23 +94,13 @@ func (cmd *Windows) RunEach(image ContainerImage) error {
 
 		// move the dist package into the "dist" folder
 		srcFile := volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), packageName)
-		distFile := volume.JoinPathHost(cmd.defaultContext.DistDirHost(), image.GetID(), packageName)
-		err = os.MkdirAll(filepath.Dir(distFile), 0755)
-		if err != nil {
-			return fmt.Errorf("could not create the dist package dir: %v", err)
-		}
-
-		err = os.Rename(srcFile, distFile)
-		if err != nil {
-			return err
-		}
-		return nil
+		return srcFile, packageName, nil
 	}
 
 	// Build mode
 	windres, err := WindowsResource(cmd.defaultContext, image)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	//
@@ -119,7 +108,7 @@ func (cmd *Windows) RunEach(image ContainerImage) error {
 	//
 	err = goBuild(cmd.defaultContext, image)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	//
@@ -139,22 +128,10 @@ func (cmd *Windows) RunEach(image ContainerImage) error {
 	tmpFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.GetID(), packageName)
 	err = volume.Zip(srcFile, tmpFile)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
-	distFile := volume.JoinPathHost(cmd.defaultContext.DistDirHost(), image.GetID(), packageName)
-	err = os.MkdirAll(filepath.Dir(distFile), 0755)
-	if err != nil {
-		return fmt.Errorf("could not create the dist package dir: %v", err)
-	}
-
-	err = os.Rename(srcFile, distFile)
-	if err != nil {
-		return err
-	}
-
-	log.Infof("[✓] Package: %s", distFile)
-	return nil
+	return tmpFile, packageName, nil
 }
 
 // Usage displays the command usage

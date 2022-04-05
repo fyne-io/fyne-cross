@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
@@ -23,7 +24,7 @@ type Command interface {
 }
 
 type CrossBuilderCommand interface {
-	RunEach(image ContainerImage) error // Called to build each possible architecture/OS combination
+	RunEach(image ContainerImage) (string, string, error) // Called to build each possible architecture/OS combination
 }
 
 type CrossBuilder struct {
@@ -63,10 +64,24 @@ func (cb *CrossBuilder) RunInternal(cmd CrossBuilderCommand) error {
 			return err
 		}
 
-		err = cmd.RunEach(image)
+		srcFile, packageName, err := cmd.RunEach(image)
 		if err != nil {
 			return err
 		}
+
+		distFile := volume.JoinPathHost(cb.defaultContext.DistDirHost(), image.GetID(), packageName)
+		err = os.MkdirAll(filepath.Dir(distFile), 0755)
+		if err != nil {
+			return fmt.Errorf("could not create the dist package dir: %v", err)
+		}
+
+		err = os.Rename(srcFile, distFile)
+		if err != nil {
+			return err
+		}
+
+		log.Infof("[✓] Package: %s", distFile)
+
 	}
 
 	return nil

@@ -3,8 +3,6 @@ package command
 import (
 	"errors"
 	"fmt"
-	"os"
-	"path/filepath"
 	"runtime"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -78,10 +76,10 @@ func (cmd *Darwin) Run() error {
 }
 
 // Run runs the command
-func (cmd *Darwin) RunEach(image ContainerImage) error {
+func (cmd *Darwin) RunEach(image ContainerImage) (string, string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	//
@@ -93,7 +91,7 @@ func (cmd *Darwin) RunEach(image ContainerImage) error {
 	var srcFile string
 	if cmd.defaultContext.Release {
 		if runtime.GOOS != darwinOS {
-			return fmt.Errorf("darwin release build is supported only on darwin hosts")
+			return "", "", fmt.Errorf("darwin release build is supported only on darwin hosts")
 		}
 
 		packageName = fmt.Sprintf("%s.pkg", cmd.defaultContext.Name)
@@ -101,7 +99,7 @@ func (cmd *Darwin) RunEach(image ContainerImage) error {
 
 		err = fyneReleaseHost(cmd.defaultContext, image)
 		if err != nil {
-			return fmt.Errorf("could not package the Fyne app: %v", err)
+			return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 	} else if cmd.localBuild {
 		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
@@ -109,12 +107,12 @@ func (cmd *Darwin) RunEach(image ContainerImage) error {
 
 		err = fynePackageHost(cmd.defaultContext, image)
 		if err != nil {
-			return fmt.Errorf("could not package the Fyne app: %v", err)
+			return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 	} else {
 		err = goBuild(cmd.defaultContext, image)
 		if err != nil {
-			return err
+			return "", "", err
 		}
 
 		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
@@ -122,25 +120,11 @@ func (cmd *Darwin) RunEach(image ContainerImage) error {
 
 		err = fynePackage(cmd.defaultContext, image)
 		if err != nil {
-			return fmt.Errorf("could not package the Fyne app: %v", err)
+			return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 	}
 
-	// move the package into the "dist" folder
-	distFile := volume.JoinPathHost(cmd.defaultContext.DistDirHost(), image.GetID(), packageName)
-	err = os.MkdirAll(filepath.Dir(distFile), 0755)
-	if err != nil {
-		return fmt.Errorf("could not create the dist package dir: %v", err)
-	}
-
-	err = os.Rename(srcFile, distFile)
-	if err != nil {
-		return err
-	}
-
-	log.Infof("[✓] Package: %s", distFile)
-
-	return nil
+	return srcFile, packageName, nil
 }
 
 // Usage displays the command usage

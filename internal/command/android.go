@@ -62,7 +62,7 @@ func (cmd *Android) Run() error {
 }
 
 // Run runs the command
-func (cmd *Android) RunEach(image ContainerImage) error {
+func (cmd *Android) RunEach(image ContainerImage) (string, string, error) {
 	//
 	// package
 	//
@@ -72,7 +72,7 @@ func (cmd *Android) RunEach(image ContainerImage) error {
 
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	if cmd.defaultContext.Release {
@@ -81,7 +81,7 @@ func (cmd *Android) RunEach(image ContainerImage) error {
 		err = fynePackage(cmd.defaultContext, image)
 	}
 	if err != nil {
-		return fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 
 	// move the dist package into the "dist" folder
@@ -93,28 +93,17 @@ func (cmd *Android) RunEach(image ContainerImage) error {
 	apkFilePattern := volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), cmd.defaultContext.Package, "*.apk")
 	apks, err := filepath.Glob(apkFilePattern)
 	if err != nil {
-		return fmt.Errorf("could not find any apk file matching %q: %v", apkFilePattern, err)
+		return "", "", fmt.Errorf("could not find any apk file matching %q: %v", apkFilePattern, err)
 	}
 	if apks == nil {
-		return fmt.Errorf("could not find any apk file matching %q", apkFilePattern)
+		return "", "", fmt.Errorf("could not find any apk file matching %q", apkFilePattern)
 	}
 	if len(apks) > 1 {
-		return fmt.Errorf("multiple apk files matching %q: %v. Please remove and build again", apkFilePattern, apks)
+		return "", "", fmt.Errorf("multiple apk files matching %q: %v. Please remove and build again", apkFilePattern, apks)
 	}
 	srcFile := apks[0]
-	distFile := volume.JoinPathHost(cmd.defaultContext.DistDirHost(), image.GetID(), packageName)
-	err = os.MkdirAll(filepath.Dir(distFile), 0755)
-	if err != nil {
-		return fmt.Errorf("could not create the dist package dir: %v", err)
-	}
 
-	err = os.Rename(srcFile, distFile)
-	if err != nil {
-		return err
-	}
-
-	log.Infof("[✓] Package: %s", distFile)
-	return nil
+	return srcFile, packageName, nil
 }
 
 // Usage displays the command usage
