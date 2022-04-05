@@ -131,15 +131,24 @@ func (cmd *Windows) RunEach(image ContainerImage) error {
 	// remove the windres file under the project root
 	os.Remove(volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), windres))
 
+	packageName := cmd.defaultContext.Name + ".zip"
+
 	// create a zip archive from the compiled binary under the "bin" folder
 	// and place it under the "dist" folder
 	srcFile := volume.JoinPathHost(cmd.defaultContext.BinDirHost(), image.GetID(), cmd.defaultContext.Name)
-	distFile := volume.JoinPathHost(cmd.defaultContext.DistDirHost(), image.GetID(), cmd.defaultContext.Name+".zip")
+	tmpFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.GetID(), packageName)
+	err = volume.Zip(srcFile, tmpFile)
+	if err != nil {
+		return err
+	}
+
+	distFile := volume.JoinPathHost(cmd.defaultContext.DistDirHost(), image.GetID(), packageName)
 	err = os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
 		return fmt.Errorf("could not create the dist package dir: %v", err)
 	}
-	err = volume.Zip(srcFile, distFile)
+
+	err = os.Rename(srcFile, distFile)
 	if err != nil {
 		return err
 	}
