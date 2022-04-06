@@ -187,7 +187,7 @@ func Test_makeWindowsContext(t *testing.T) {
 				require.Nil(t, err)
 				assert.Equal(t, tt.wantContext, windows.defaultContext)
 
-				for index, _ := range windows.Images {
+				for index := range windows.Images {
 					windows.Images[index].(*LocalContainerImage).Runner = nil
 				}
 

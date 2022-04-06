@@ -170,7 +170,7 @@ func Test_makeAndroidContext(t *testing.T) {
 			require.Nil(t, err)
 			assert.Equal(t, tt.wantContext, android.defaultContext)
 
-			for index, _ := range android.Images {
+			for index := range android.Images {
 				android.Images[index].(*LocalContainerImage).Runner = nil
 			}
 
