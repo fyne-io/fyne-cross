@@ -54,9 +54,9 @@ func Test_makeWindowsContext(t *testing.T) {
 						OS:           "windows",
 						ID:           "windows-amd64",
 						Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
-						Mount: map[string]string{
-							vol.WorkDirHost():  vol.WorkDirContainer(),
-							vol.CacheDirHost(): vol.CacheDirContainer(),
+						Mount: []ContainerMountPoint{
+							{vol.WorkDirHost(), vol.WorkDirContainer()},
+							{vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: windowsImage,
 					},
@@ -90,9 +90,9 @@ func Test_makeWindowsContext(t *testing.T) {
 						OS:           "windows",
 						ID:           "windows-386",
 						Env:          map[string]string{"GOOS": "windows", "GOARCH": "386", "CC": "i686-w64-mingw32-gcc"},
-						Mount: map[string]string{
-							vol.WorkDirHost():  vol.WorkDirContainer(),
-							vol.CacheDirHost(): vol.CacheDirContainer(),
+						Mount: []ContainerMountPoint{
+							{vol.WorkDirHost(), vol.WorkDirContainer()},
+							{vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: windowsImage,
 					},
@@ -127,9 +127,9 @@ func Test_makeWindowsContext(t *testing.T) {
 						OS:           "windows",
 						ID:           "windows-amd64",
 						Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
-						Mount: map[string]string{
-							vol.WorkDirHost():  vol.WorkDirContainer(),
-							vol.CacheDirHost(): vol.CacheDirContainer(),
+						Mount: []ContainerMountPoint{
+							{vol.WorkDirHost(), vol.WorkDirContainer()},
+							{vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: windowsImage,
 					},
@@ -164,9 +164,9 @@ func Test_makeWindowsContext(t *testing.T) {
 						OS:           "windows",
 						ID:           "windows-amd64",
 						Env:          map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
-						Mount: map[string]string{
-							vol.WorkDirHost():  vol.WorkDirContainer(),
-							vol.CacheDirHost(): vol.CacheDirContainer(),
+						Mount: []ContainerMountPoint{
+							{vol.WorkDirHost(), vol.WorkDirContainer()},
+							{vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: "test",
 					},

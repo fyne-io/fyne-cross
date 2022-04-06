@@ -55,14 +55,19 @@ type ContainerImage interface {
 	GetRunner() ContainerRunner
 }
 
+type ContainerMountPoint struct {
+	LocalHost   string
+	InContainer string
+}
+
 type AllContainerImage struct {
 	Architecture        // Arch defines the target architecture
 	OS           string // OS defines the target OS
 	ID           string // ID is the context ID
 
-	Env   map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
-	Tags  []string          // Tags defines the tags to use
-	Mount map[string]string // Mount point between local host [key] and in container point [target]
+	Env   map[string]string     // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
+	Tags  []string              // Tags defines the tags to use
+	Mount []ContainerMountPoint // Mount point between local host [key] and in container point [target]
 
 	DockerImage string // DockerImage defines the docker image used to build
 }
@@ -132,7 +137,7 @@ func (a *AllContainerImage) SetEnv(key string, value string) {
 }
 
 func (a *AllContainerImage) SetMount(local string, inContainer string) {
-	a.Mount[local] = inContainer
+	a.Mount = append(a.Mount, ContainerMountPoint{LocalHost: local, InContainer: inContainer})
 }
 
 func (a *AllContainerImage) AppendTag(tag string) {

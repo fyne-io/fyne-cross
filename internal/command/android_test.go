@@ -89,9 +89,9 @@ func Test_makeAndroidContext(t *testing.T) {
 						OS:           androidOS,
 						ID:           androidOS,
 						Env:          map[string]string{},
-						Mount: map[string]string{
-							vol.WorkDirHost():  vol.WorkDirContainer(),
-							vol.CacheDirHost(): vol.CacheDirContainer(),
+						Mount: []ContainerMountPoint{
+							{vol.WorkDirHost(), vol.WorkDirContainer()},
+							{vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: androidImage,
 					},
@@ -130,9 +130,9 @@ func Test_makeAndroidContext(t *testing.T) {
 						OS:           androidOS,
 						ID:           androidOS,
 						Env:          map[string]string{},
-						Mount: map[string]string{
-							vol.WorkDirHost():  vol.WorkDirContainer(),
-							vol.CacheDirHost(): vol.CacheDirContainer(),
+						Mount: []ContainerMountPoint{
+							{vol.WorkDirHost(), vol.WorkDirContainer()},
+							{vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: androidImage,
 					},

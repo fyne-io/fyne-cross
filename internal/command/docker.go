@@ -60,7 +60,6 @@ func (r *LocalContainerRunner) NewImageContainer(arch Architecture, OS string, i
 				ID:           ID,
 				DockerImage:  image,
 				Env:          make(map[string]string),
-				Mount:        make(map[string]string),
 			},
 			Pull:   r.pull,
 			Runner: r,
@@ -106,8 +105,8 @@ func (i *LocalContainerImage) Cmd(vol volume.Volume, opts Options, cmdArgs []str
 		"-w", w, // set workdir
 	}
 
-	for local, container := range i.Mount {
-		args = append(args, "-v", fmt.Sprintf("%s:%s:z", local, container))
+	for _, mountPoint := range i.Mount {
+		args = append(args, "-v", fmt.Sprintf("%s:%s:z", mountPoint.LocalHost, mountPoint.InContainer))
 	}
 
 	// handle settings related to engine
