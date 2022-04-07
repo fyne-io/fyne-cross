@@ -6,6 +6,7 @@ RUN dpkg --add-architecture i386 \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \     
         gccgo-i686-linux-gnu \
+        libasound2-dev:i386 \
         libgl1-mesa-dev:i386 \
         libegl1-mesa-dev:i386 \
         libgles2-mesa-dev:i386 \
@@ -47,3 +48,5 @@ RUN dpkg --add-architecture i386 \
         libxkbcommon-dev:i386 \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*;
+
+ENV PGK_CONFIG_PATH=/usr/lib/i386-linux-gnu/pkgconfig

@@ -6,6 +6,7 @@ RUN dpkg --add-architecture arm64 \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \
         gccgo-aarch64-linux-gnu \
+        libasound2-dev:arm64 \
         libgl1-mesa-dev:arm64 \
         libegl1-mesa-dev:arm64 \
         libgles2-mesa-dev:arm64 \
@@ -47,3 +48,5 @@ RUN dpkg --add-architecture arm64 \
         libxkbcommon-dev:arm64 \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*;
+
+ENV PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig

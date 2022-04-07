@@ -6,6 +6,7 @@ RUN dpkg --add-architecture armhf \
     && apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \     
         gccgo-arm-linux-gnueabihf \
+        libasound2-dev:armhf \
         libgl1-mesa-dev:armhf \
         libegl1-mesa-dev:armhf \
         libgles2-mesa-dev:armhf \
@@ -47,3 +48,5 @@ RUN dpkg --add-architecture armhf \
         libxkbcommon-dev:armhf \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*;
+
+ENV PKG_CONFIG_PATH=/usr/lib/arm-linux-gnueabihf/pkgconfig
