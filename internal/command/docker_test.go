@@ -128,7 +128,7 @@ func TestCmdEngineDocker(t *testing.T) {
 			assert.Nil(t, err)
 			image := runner.NewImageContainer("", "", tt.args.image)
 
-			cmd := image.Cmd(tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()
+			cmd := image.(*LocalContainerImage).Cmd(tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()
 			want := tt.want
 			if runtime.GOOS == "windows" {
 				want = tt.wantWindows
@@ -259,7 +259,7 @@ func TestCmdEnginePodman(t *testing.T) {
 			assert.Nil(t, err)
 			image := runner.NewImageContainer("", "", tt.args.image)
 
-			cmd := image.Cmd(tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()
+			cmd := image.(*LocalContainerImage).Cmd(tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()
 			want := tt.want
 			if cmd != want {
 				t.Errorf("Cmd()\ngot :%v\nwant:%v", cmd, want)

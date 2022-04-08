@@ -9,7 +9,6 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
-	"golang.org/x/sys/execabs"
 )
 
 const (
@@ -38,7 +37,6 @@ type AllContainerRunner struct {
 }
 
 type ContainerImage interface {
-	Cmd(vol volume.Volume, opts Options, cmdArgs []string) *execabs.Cmd
 	Run(vol volume.Volume, opts Options, cmdArgs []string) error
 	Prepare() error
 	Finalize(srcFile string, packageName string) error
