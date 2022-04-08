@@ -49,13 +49,14 @@ type ContainerImage interface {
 	GetTarget() string
 	GetEnv(string) (string, bool)
 	SetEnv(string, string)
-	SetMount(string, string)
+	SetMount(string, string, string)
 	AppendTag(string)
 
 	GetRunner() ContainerRunner
 }
 
 type ContainerMountPoint struct {
+	Name        string
 	LocalHost   string
 	InContainer string
 }
@@ -101,7 +102,7 @@ func (a *AllContainerRunner) newImageContainerInternal(arch Architecture, OS str
 	ret := fn(arch, OS, ID, image)
 
 	// mount the working dir
-	ret.SetMount(a.vol.WorkDirHost(), a.vol.WorkDirContainer())
+	ret.SetMount("project", a.vol.WorkDirHost(), a.vol.WorkDirContainer())
 
 	return ret
 }
@@ -136,8 +137,8 @@ func (a *AllContainerImage) SetEnv(key string, value string) {
 	a.Env[key] = value
 }
 
-func (a *AllContainerImage) SetMount(local string, inContainer string) {
-	a.Mount = append(a.Mount, ContainerMountPoint{LocalHost: local, InContainer: inContainer})
+func (a *AllContainerImage) SetMount(name string, local string, inContainer string) {
+	a.Mount = append(a.Mount, ContainerMountPoint{Name: name, LocalHost: local, InContainer: inContainer})
 }
 
 func (a *AllContainerImage) AppendTag(tag string) {

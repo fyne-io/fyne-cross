@@ -68,7 +68,7 @@ func (r *LocalContainerRunner) NewImageContainer(arch Architecture, OS string, i
 
 	// mount the cache dir if cache is enabled
 	if r.cacheEnabled {
-		ret.SetMount(r.vol.CacheDirHost(), r.vol.CacheDirContainer())
+		ret.SetMount("cache", r.vol.CacheDirHost(), r.vol.CacheDirContainer())
 	}
 
 	return ret
