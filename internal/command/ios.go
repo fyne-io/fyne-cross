@@ -137,7 +137,10 @@ func (cmd *IOS) makeIOSContainerImages(flags *iosFlags, args []string) error {
 	}
 
 	cmd.defaultContext = ctx
-	runner := NewContainerRunner(ctx)
+	runner, err := NewContainerRunner(ctx)
+	if err != nil {
+		return err
+	}
 
 	cmd.Images = append(cmd.Images, runner.NewImageContainer("", iosOS, overrideDockerImage(flags.CommonFlags, iosImage)))
 

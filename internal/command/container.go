@@ -72,11 +72,11 @@ type AllContainerImage struct {
 	DockerImage string // DockerImage defines the docker image used to build
 }
 
-func NewContainerRunner(context Context) ContainerRunner {
+func NewContainerRunner(context Context) (ContainerRunner, error) {
 	if context.Engine.IsDocker() || context.Engine.IsPodman() {
 		return NewLocalContainerRunner(context)
 	}
-	return nil
+	return nil, fmt.Errorf("unknown engine: '%s'", context.Engine)
 }
 
 func (a *AllContainerRunner) Debug(v ...interface{}) {

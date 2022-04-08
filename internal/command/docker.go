@@ -29,7 +29,7 @@ type LocalContainerRunner struct {
 	cacheEnabled bool
 }
 
-func NewLocalContainerRunner(context Context) ContainerRunner {
+func NewLocalContainerRunner(context Context) (ContainerRunner, error) {
 	return &LocalContainerRunner{
 		AllContainerRunner: AllContainerRunner{
 			Env:   context.Env,
@@ -40,7 +40,7 @@ func NewLocalContainerRunner(context Context) ContainerRunner {
 		Engine:       &context.Engine,
 		pull:         context.Pull,
 		cacheEnabled: context.CacheEnabled,
-	}
+	}, nil
 }
 
 type LocalContainerImage struct {

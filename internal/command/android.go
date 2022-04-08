@@ -159,7 +159,10 @@ func (cmd *Android) makeAndroidContainerImages(flags *androidFlags, args []strin
 	}
 
 	cmd.defaultContext = ctx
-	runner := NewContainerRunner(ctx)
+	runner, err := NewContainerRunner(ctx)
+	if err != nil {
+		return err
+	}
 
 	for _, arch := range targetArch {
 		// By default, the fyne cli tool builds a fat APK for all supported
