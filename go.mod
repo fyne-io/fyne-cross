@@ -10,4 +10,5 @@ require (
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.4.0
 	golang.org/x/sys v0.0.0-20220227234510-4e6760a101f9
+	k8s.io/client-go v0.23.5
 )
