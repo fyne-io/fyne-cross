@@ -10,11 +10,20 @@ ARG FYNE_VERSION
 # Install the fyne CLI tool
 RUN go install -ldflags="-w -s" -v "fyne.io/fyne/v2/cmd/fyne@${FYNE_VERSION}"
 
+FROM golang:${GO_VERSION}-buster AS fyne-cross-tools
+
+WORKDIR /src
+
+COPY / .
+WORKDIR /src/internal/cmd/fyne-cross-s3
+RUN go build && go install
+
 # Build the fyne-cross base image
 FROM golang:${GO_VERSION}-buster AS base
 ARG FIXUID_VERSION
 
 COPY --from=tools /go/bin/fyne /usr/local/bin
+COPY --from=fyne-cross-tools /go/bin/fyne-cross-s3 /usr/local/bin
 
 RUN apt-get update -qq \
     && apt-get install -y -q --no-install-recommends \

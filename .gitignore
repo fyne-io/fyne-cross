@@ -1,3 +1,4 @@
 /fyne-cross
 /*.dmg
 /*.xip
+/internal/cmd/fyne-cross-s3/fyne-cross-s3
