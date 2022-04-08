@@ -44,7 +44,7 @@ type containerImage interface {
 	Target() string
 	Env(string) (string, bool)
 	SetEnv(string, string)
-	SetMount(string, string)
+	SetMount(string, string, string)
 	AppendTag(string)
 	Tags() []string
 
@@ -52,6 +52,7 @@ type containerImage interface {
 }
 
 type containerMountPoint struct {
+	name        string
 	localHost   string
 	inContainer string
 }
@@ -93,7 +94,7 @@ func (a *baseEngine) createContainerImageInternal(arch Architecture, OS string, 
 	ret := fn(baseContainerImage{arch: arch, os: OS, id: ID, DockerImage: image, env: make(map[string]string), tags: a.tags})
 
 	// mount the working dir
-	ret.SetMount(a.vol.WorkDirHost(), a.vol.WorkDirContainer())
+	ret.SetMount("project", a.vol.WorkDirHost(), a.vol.WorkDirContainer())
 
 	return ret
 }
@@ -128,8 +129,8 @@ func (a *baseContainerImage) SetEnv(key string, value string) {
 	a.env[key] = value
 }
 
-func (a *baseContainerImage) SetMount(local string, inContainer string) {
-	a.mount = append(a.mount, containerMountPoint{localHost: local, inContainer: inContainer})
+func (a *baseContainerImage) SetMount(name string, local string, inContainer string) {
+	a.mount = append(a.mount, containerMountPoint{name: name, localHost: local, inContainer: inContainer})
 }
 
 func (a *baseContainerImage) AppendTag(tag string) {
