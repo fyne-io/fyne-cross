@@ -3,17 +3,18 @@ on: [push, pull_request]
 
 jobs:
   lint:
+    name: Lint
     runs-on: "ubuntu-latest"
     steps:
     - name: Setup Go environment
-      uses: actions/setup-go@v2
+      uses: actions/setup-go@v3
       with:
-        go-version: "1.15.x"
+        go-version: "1.18.x"
 
-    - name: Install staticcheck
-      run: go get -v honnef.co/go/tools/cmd/staticcheck
-    - name: Install goimports
-      run: go get -v golang.org/x/tools/cmd/goimports
+    - name: Install linters
+      run: |
+        go install golang.org/x/tools/cmd/goimports@latest
+        go install honnef.co/go/tools/cmd/staticcheck@latest
 
     # Checks-out the repository under $GITHUB_WORKSPACE
     - uses: actions/checkout@v2
@@ -24,18 +25,21 @@ jobs:
     - name: Run goimports
       run: test -z $(find . -name '*.go' -type f | xargs goimports -e -d | tee /dev/stderr)
     - name: Run staticcheck
-      run: staticcheck github.com/fyne-io/fyne-cross/...
+      run: staticcheck ./...
 
   test:
+    name: "Test"
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest, windows-latest]
-        go-version: ["1.17.x", "1.14.x"]
+        # use max/min supported Go versions
+        go-version: ["1.18.x", "1.13.x"]
 
     steps:
     - name: Setup Go environment
-      uses: actions/setup-go@v2
+      id: setup-go
+      uses: actions/setup-go@v3
       with:
         go-version: ${{ matrix.go-version }}
 
@@ -43,4 +47,75 @@ jobs:
     - uses: actions/checkout@v2
 
     # Run tests
-    - run: go test -race ./...
+    - run: go test -v -cover -race ./...
+
+  build:
+    name: "Build Calculator (${{ matrix.target.os }}, ${{ matrix.go-version }})"
+    runs-on: ${{ matrix.target.host || 'ubuntu-latest' }}
+    strategy:
+      fail-fast: false
+      matrix:
+        # use max/min supported Go versions
+        go-version: ["1.18.x", "1.13.x"]
+        target:
+          - os: linux
+          - os: windows
+            ext: .exe
+          - os: freebsd
+          - os: android
+            args: -app-id calc.${GITHUB_SHA}
+          - os: darwin
+            args: -app-id calc.${GITHUB_SHA}
+            host: macos-latest
+            requires-darwin-image: true
+          - os: ios
+            args: -app-id calc.${GITHUB_SHA}
+            host: macos-latest
+            requires-darwin-image: true
+
+    steps:
+      - name: Setup Go environment
+        id: setup-go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          path: fyne-cross
+
+      - name: Checkout fyne-io/calculator
+        uses: actions/checkout@v2
+        with:
+          repository: fyne-io/calculator
+          path: calculator
+
+      - name: Cache build artifacts
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/.cache/fyne-cross
+          key: ${{ runner.os }}-build-cache-${{ hashFiles('**/go.sum') }}
+
+      - name: Install Fyne-cross
+        working-directory: fyne-cross
+        run: go install
+
+      - name: Build Darwin image
+        if: ${{ matrix.target.requires-darwin-image }}
+        run: |
+          fyne-cross \
+            darwin-image \
+            -xcode-path $(xcode-select -p)
+            
+      - name: Build
+        working-directory: calculator
+        run: |
+          fyne-cross \
+            ${{ matrix.target.os }} \
+            ${{ matrix.target.args }} \
+            -debug -no-cache \
+            -name calculator${{ matrix.target.ext }}
