@@ -52,6 +52,8 @@ jobs:
   build:
     name: "Build Calculator (${{ matrix.target.os }}, ${{ matrix.go-version }})"
     runs-on: ${{ matrix.target.host || 'ubuntu-latest' }}
+    env:
+      GO111MODULE: on
     strategy:
       fail-fast: false
       matrix:
@@ -67,11 +69,9 @@ jobs:
           - os: darwin
             args: -app-id calc.${GITHUB_SHA}
             host: macos-latest
-            requires-darwin-image: true
           - os: ios
             args: -app-id calc.${GITHUB_SHA}
             host: macos-latest
-            requires-darwin-image: true
 
     steps:
       - name: Setup Go environment
@@ -104,12 +104,17 @@ jobs:
         working-directory: fyne-cross
         run: go install
 
-      - name: Build Darwin image
-        if: ${{ matrix.target.requires-darwin-image }}
+      - name: Install Fyne
         run: |
-          fyne-cross \
-            darwin-image \
-            -xcode-path $(xcode-select -p)
+          go install fyne.io/fyne/v2/cmd/fyne@latest ||
+          go get fyne.io/fyne/v2/cmd/fyne@latest
+
+      - name: Install Podman
+        if: ${{ runner.os == 'macos' }}
+        run: |
+          brew install podman
+          podman machine init
+          podman machine start
             
       - name: Build
         working-directory: calculator
