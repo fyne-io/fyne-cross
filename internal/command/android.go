@@ -187,9 +187,10 @@ func (cmd *android) setupContainerImages(flags *androidFlags, args []string) err
 			return fmt.Errorf("keystore location must be relative to the project root: %s", ctx.Volume.WorkDirHost())
 		}
 
-		_, err = os.Stat(volume.JoinPathHost(ctx.Volume.WorkDirHost(), flags.Keystore))
-		if err != nil {
-			return fmt.Errorf("keystore location must be under the project root: %s", ctx.Volume.WorkDirHost())
+		if !ctx.NoProjectUpload {
+			if _, err := os.Stat(volume.JoinPathHost(ctx.Volume.WorkDirHost(), flags.Keystore)); err != nil {
+				return fmt.Errorf("keystore location must be under the project root: %s", ctx.Volume.WorkDirHost())
+			}
 		}
 
 		cmd.defaultContext.Keystore = volume.JoinPathContainer(cmd.defaultContext.Volume.WorkDirContainer(), flags.Keystore)
