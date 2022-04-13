@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -32,7 +31,7 @@ type AWSSession struct {
 func Exists(path string) bool {
 	_, err := os.Stat(path)
 	if err != nil {
-		return !errors.Is(err, fs.ErrNotExist)
+		return !errors.Is(err, os.ErrNotExist)
 	}
 	return true
 }
