@@ -139,7 +139,7 @@ func prepareIcon(ctx Context, image containerImage) error {
 		return nil
 	}
 
-	err := volume.Copy(ctx.Icon, volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), icon.Default))
+	err := image.Run(ctx.Volume, options{}, []string{"cp", ctx.Icon, volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default)})
 	if err != nil {
 		return fmt.Errorf("could not copy the icon to temp folder: %v", err)
 	}
