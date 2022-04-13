@@ -139,10 +139,12 @@ func (cmd *windows) Build(image containerImage) (string, error) {
 	packageName := cmd.defaultContext.Name + ".zip"
 
 	// create a zip archive from the compiled binary under the "bin" folder
-	// and place it under the "dist" folder
-	srcFile := volume.JoinPathHost(cmd.defaultContext.BinDirHost(), image.ID(), cmd.defaultContext.Name)
-	tmpFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.ID(), packageName)
-	err = volume.Zip(srcFile, tmpFile)
+	// and place it under the tmp folder
+	err = image.Run(cmd.defaultContext.Volume, options{}, []string{
+		"zip", "-r",
+		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+		volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID(), cmd.defaultContext.Name),
+	})
 	if err != nil {
 		return "", err
 	}
