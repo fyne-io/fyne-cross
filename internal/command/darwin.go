@@ -76,10 +76,10 @@ func (cmd *Darwin) Run() error {
 }
 
 // Run runs the command
-func (cmd *Darwin) RunEach(image ContainerImage) (string, string, error) {
+func (cmd *Darwin) RunEach(image ContainerImage) (string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	//
@@ -88,43 +88,53 @@ func (cmd *Darwin) RunEach(image ContainerImage) (string, string, error) {
 	log.Info("[i] Packaging app...")
 
 	var packageName string
-	var srcFile string
 	if cmd.defaultContext.Release {
 		if runtime.GOOS != darwinOS {
-			return "", "", fmt.Errorf("darwin release build is supported only on darwin hosts")
+			return "", fmt.Errorf("darwin release build is supported only on darwin hosts")
 		}
 
 		packageName = fmt.Sprintf("%s.pkg", cmd.defaultContext.Name)
-		srcFile = volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), packageName)
 
 		err = fyneReleaseHost(cmd.defaultContext, image)
 		if err != nil {
-			return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
+
+		// move the dist package into the expected tmp/$ID/packageName location in the container
+		image.Run(cmd.defaultContext.Volume, Options{}, []string{
+			"mv",
+			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.GetID(), packageName),
+		})
 	} else if cmd.localBuild {
 		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
-		srcFile = volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), packageName)
 
 		err = fynePackageHost(cmd.defaultContext, image)
 		if err != nil {
-			return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
+
+		// move the dist package into the expected tmp/$ID/packageName location in the container
+		image.Run(cmd.defaultContext.Volume, Options{}, []string{
+			"mv",
+			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.GetID(), packageName),
+		})
 	} else {
 		err = goBuild(cmd.defaultContext, image)
 		if err != nil {
-			return "", "", err
+			return "", err
 		}
 
 		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
-		srcFile = volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.GetID(), packageName)
 
 		err = fynePackage(cmd.defaultContext, image)
 		if err != nil {
-			return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 	}
 
-	return srcFile, packageName, nil
+	return packageName, nil
 }
 
 // Usage displays the command usage

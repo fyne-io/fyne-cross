@@ -39,7 +39,7 @@ type AllContainerRunner struct {
 type ContainerImage interface {
 	Run(vol volume.Volume, opts Options, cmdArgs []string) error
 	Prepare() error
-	Finalize(srcFile string, packageName string) error
+	Finalize(packageName string) error
 
 	GetArchitecture() Architecture
 	GetOS() string

@@ -24,7 +24,7 @@ type Command interface {
 }
 
 type CrossBuilderCommand interface {
-	RunEach(image ContainerImage) (string, string, error) // Called to build each possible architecture/OS combination
+	RunEach(image ContainerImage) (string, error) // Called to build each possible architecture/OS combination
 }
 
 type CrossBuilder struct {
@@ -67,12 +67,12 @@ func (cb *CrossBuilder) RunInternal(cmd CrossBuilderCommand) error {
 			//
 			// Build specific step
 			//
-			srcFile, packageName, err := cmd.RunEach(image)
+			packageName, err := cmd.RunEach(image)
 			if err != nil {
 				return err
 			}
 
-			image.Finalize(srcFile, packageName)
+			image.Finalize(packageName)
 
 			return nil
 		}()

@@ -5,7 +5,6 @@ import (
 	"runtime"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
-	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
 const (
@@ -58,13 +57,13 @@ func (cmd *FreeBSD) Run() error {
 }
 
 // Run runs the command
-func (cmd *FreeBSD) RunEach(image ContainerImage) (string, string, error) {
+func (cmd *FreeBSD) RunEach(image ContainerImage) (string, error) {
 	//
 	// build
 	//
 	err := goBuild(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	//
@@ -76,18 +75,15 @@ func (cmd *FreeBSD) RunEach(image ContainerImage) (string, string, error) {
 
 	err = prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	err = fynePackage(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 
-	// move the dist package into the "dist" folder
-	srcFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.GetID(), packageName)
-
-	return srcFile, packageName, nil
+	return packageName, nil
 }
 
 // Usage displays the command usage

@@ -193,14 +193,16 @@ func (i *LocalContainerImage) Prepare() error {
 	return nil
 }
 
-func (i *LocalContainerImage) Finalize(srcFile string, packageName string) error {
+func (i *LocalContainerImage) Finalize(packageName string) error {
+	// move the dist package into the "dist" folder
+	srcPath := volume.JoinPathHost(i.Runner.vol.TmpDirHost(), i.GetID(), packageName)
 	distFile := volume.JoinPathHost(i.Runner.vol.DistDirHost(), i.GetID(), packageName)
 	err := os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
 		return fmt.Errorf("could not create the dist package dir: %v", err)
 	}
 
-	err = os.Rename(srcFile, distFile)
+	err = os.Rename(srcPath, distFile)
 	if err != nil {
 		return err
 	}

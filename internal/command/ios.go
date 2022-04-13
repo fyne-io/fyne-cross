@@ -56,10 +56,10 @@ func (cmd *IOS) Run() error {
 }
 
 // Run runs the command
-func (cmd *IOS) RunEach(image ContainerImage) (string, string, error) {
+func (cmd *IOS) RunEach(image ContainerImage) (string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	log.Info("[i] Packaging app...")
@@ -76,13 +76,17 @@ func (cmd *IOS) RunEach(image ContainerImage) (string, string, error) {
 	}
 
 	if err != nil {
-		return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 
-	// move the dist package into the "dist" folder
-	srcFile := volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), packageName)
+	// move the dist package into the expected tmp/$ID/packageName location in the container
+	image.Run(cmd.defaultContext.Volume, Options{}, []string{
+		"mv",
+		volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
+		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.GetID(), packageName),
+	})
 
-	return srcFile, packageName, nil
+	return packageName, nil
 }
 
 // Usage displays the command usage
