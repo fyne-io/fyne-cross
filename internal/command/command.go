@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"os"
 	"strings"
@@ -45,30 +46,40 @@ func (cb *CrossBuilder) RunInternal(cmd CrossBuilderCommand) error {
 		log.Infof("[i] Target: %s/%s", image.GetOS(), image.GetArchitecture())
 		log.Debugf("%#v", image)
 
-		//
-		// prepare build
-		//
-		err = image.Prepare()
+		err = func() error {
+			defer image.(io.Closer).Close()
+
+			//
+			// prepare build
+			//
+			if err := image.Prepare(); err != nil {
+				return err
+			}
+
+			if err := cleanTargetDirs(cb.defaultContext, image); err != nil {
+				return err
+			}
+
+			if err := goModInit(cb.defaultContext, image); err != nil {
+				return err
+			}
+
+			//
+			// Build specific step
+			//
+			srcFile, packageName, err := cmd.RunEach(image)
+			if err != nil {
+				return err
+			}
+
+			image.Finalize(srcFile, packageName)
+
+			return nil
+		}()
+
 		if err != nil {
 			return err
 		}
-
-		err = cleanTargetDirs(cb.defaultContext, image)
-		if err != nil {
-			return err
-		}
-
-		err = goModInit(cb.defaultContext, image)
-		if err != nil {
-			return err
-		}
-
-		srcFile, packageName, err := cmd.RunEach(image)
-		if err != nil {
-			return err
-		}
-
-		image.Finalize(srcFile, packageName)
 	}
 
 	return nil

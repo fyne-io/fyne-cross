@@ -3,6 +3,7 @@ package command
 import (
 	"bytes"
 	"fmt"
+	"io"
 	"os"
 	"os/user"
 	"path/filepath"
@@ -51,6 +52,8 @@ type LocalContainerImage struct {
 	Runner *LocalContainerRunner
 }
 
+var _ io.Closer = (*LocalContainerImage)(nil)
+
 func (r *LocalContainerRunner) NewImageContainer(arch Architecture, OS string, image string) ContainerImage {
 	ret := r.newImageContainerInternal(arch, OS, image, func(arch Architecture, OS, ID, image string) ContainerImage {
 		return &LocalContainerImage{
@@ -72,6 +75,10 @@ func (r *LocalContainerRunner) NewImageContainer(arch Architecture, OS string, i
 	}
 
 	return ret
+}
+
+func (*LocalContainerImage) Close() error {
+	return nil
 }
 
 func AppendEnv(args []string, environs map[string]string, quoteNeeded bool) []string {
