@@ -148,6 +148,9 @@ func (a *AllContainerImage) AppendTag(tag string) {
 
 // goModInit ensure a go.mod exists. If not try to generates a temporary one
 func goModInit(ctx Context, image ContainerImage) error {
+	if ctx.NoProjectUpload {
+		return nil
+	}
 
 	goModPath := volume.JoinPathHost(ctx.WorkDirHost(), "go.mod")
 	log.Infof("[i] Checking for go.mod: %s", goModPath)

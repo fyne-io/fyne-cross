@@ -139,22 +139,24 @@ func cleanTargetDirs(ctx Context, image ContainerImage) error {
 // prepareIcon prepares the icon for packaging
 func prepareIcon(ctx Context, image ContainerImage) error {
 
-	if _, err := os.Stat(ctx.Icon); os.IsNotExist(err) {
-		defaultIcon, err := volume.DefaultIconHost()
-		if err != nil {
-			return err
-		}
+	if !ctx.NoProjectUpload {
+		if _, err := os.Stat(ctx.Icon); os.IsNotExist(err) {
+			defaultIcon, err := volume.DefaultIconHost()
+			if err != nil {
+				return err
+			}
 
-		if ctx.Icon != defaultIcon {
-			return fmt.Errorf("icon not found at %q", ctx.Icon)
-		}
+			if ctx.Icon != defaultIcon {
+				return fmt.Errorf("icon not found at %q", ctx.Icon)
+			}
 
-		log.Infof("[!] Default icon not found at %q", ctx.Icon)
-		err = ioutil.WriteFile(ctx.Icon, icon.FyneLogo, 0644)
-		if err != nil {
-			return fmt.Errorf("could not create the temporary icon: %s", err)
+			log.Infof("[!] Default icon not found at %q", ctx.Icon)
+			err = ioutil.WriteFile(ctx.Icon, icon.FyneLogo, 0644)
+			if err != nil {
+				return fmt.Errorf("could not create the temporary icon: %s", err)
+			}
+			log.Infof("[✓] Created a placeholder icon using Fyne logo for testing purpose")
 		}
-		log.Infof("[✓] Created a placeholder icon using Fyne logo for testing purpose")
 	}
 
 	if image.GetOS() == "windows" {
