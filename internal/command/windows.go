@@ -123,10 +123,12 @@ func (cmd *Windows) RunEach(image ContainerImage) (string, string, error) {
 	packageName := cmd.defaultContext.Name + ".zip"
 
 	// create a zip archive from the compiled binary under the "bin" folder
-	// and place it under the "dist" folder
-	srcFile := volume.JoinPathHost(cmd.defaultContext.BinDirHost(), image.GetID(), cmd.defaultContext.Name)
-	tmpFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.GetID(), packageName)
-	err = volume.Zip(srcFile, tmpFile)
+	// and place it under the tmp folder
+	err = image.Run(cmd.defaultContext.Volume, Options{}, []string{
+		"zip", "-r",
+		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.GetID(), packageName),
+		volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.GetID(), cmd.defaultContext.Name),
+	})
 	if err != nil {
 		return "", "", err
 	}
