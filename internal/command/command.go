@@ -23,7 +23,7 @@ type Command interface {
 }
 
 type platformBuilder interface {
-	Build(image containerImage) (string, string, error) // Called to build each possible architecture/OS combination
+	Build(image containerImage) (string, error) // Called to build each possible architecture/OS combination
 }
 
 func commonRun(defaultContext Context, images []containerImage, builder platformBuilder) error {
@@ -54,12 +54,12 @@ func commonRun(defaultContext Context, images []containerImage, builder platform
 			return err
 		}
 
-		srcFile, packageName, err := builder.Build(image)
+		packageName, err := builder.Build(image)
 		if err != nil {
 			return err
 		}
 
-		image.Finalize(srcFile, packageName)
+		image.Finalize(packageName)
 	}
 
 	return nil

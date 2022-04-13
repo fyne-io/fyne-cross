@@ -36,7 +36,7 @@ type containerImage interface {
 	Cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd
 	Run(vol volume.Volume, opts options, cmdArgs []string) error
 	Prepare() error
-	Finalize(srcFile string, packageName string) error
+	Finalize(packageName string) error
 
 	Architecture() Architecture
 	OS() string
