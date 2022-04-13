@@ -26,6 +26,10 @@ type platformBuilder interface {
 	Build(image containerImage) (string, error) // Called to build each possible architecture/OS combination
 }
 
+type closer interface {
+	close() error
+}
+
 func commonRun(defaultContext Context, images []containerImage, builder platformBuilder) error {
 	err := bumpFyneAppBuild(defaultContext)
 	if err != nil {
@@ -36,30 +40,39 @@ func commonRun(defaultContext Context, images []containerImage, builder platform
 		log.Infof("[i] Target: %s/%s", image.OS(), image.Architecture())
 		log.Debugf("%#v", image)
 
-		//
-		// prepare build
-		//
-		err = image.Prepare()
+		err = func() error {
+			defer image.(closer).close()
+
+			//
+			// prepare build
+			//
+			if err := image.Prepare(); err != nil {
+				return err
+			}
+
+			err = cleanTargetDirs(defaultContext, image)
+			if err != nil {
+				return err
+			}
+
+			err = goModInit(defaultContext, image)
+			if err != nil {
+				return err
+			}
+
+			packageName, err := builder.Build(image)
+			if err != nil {
+				return err
+			}
+
+			image.Finalize(packageName)
+
+			return nil
+		}()
+
 		if err != nil {
 			return err
 		}
-
-		err = cleanTargetDirs(defaultContext, image)
-		if err != nil {
-			return err
-		}
-
-		err = goModInit(defaultContext, image)
-		if err != nil {
-			return err
-		}
-
-		packageName, err := builder.Build(image)
-		if err != nil {
-			return err
-		}
-
-		image.Finalize(packageName)
 	}
 
 	return nil

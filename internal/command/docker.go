@@ -49,6 +49,7 @@ type localContainerImage struct {
 }
 
 var _ containerEngine = (*localContainerEngine)(nil)
+var _ closer = (*localContainerImage)(nil)
 
 func (r *localContainerEngine) createContainerImage(arch Architecture, OS string, image string) containerImage {
 	ret := r.createContainerImageInternal(arch, OS, image, func(base baseContainerImage) containerImage {
@@ -64,6 +65,10 @@ func (r *localContainerEngine) createContainerImage(arch Architecture, OS string
 	}
 
 	return ret
+}
+
+func (*localContainerImage) close() error {
+	return nil
 }
 
 func AppendEnv(args []string, environs map[string]string, quoteNeeded bool) []string {
