@@ -1,5 +1,11 @@
 # Changelog - Fyne.io fyne-cross
 
+## Unreleased
+
+### Changed
+
+- Bump min Go version to 1.14 to align with Fyne requirements
+
 ## 1.2.1 - 09 Apr 2022
 
 ### Added
