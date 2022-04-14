@@ -15,7 +15,7 @@ func main() {
 		command.NewDarwinCommand(),
 		command.NewLinuxCommand(),
 		command.NewWindowsCommand(),
-		&command.Android{},
+		command.NewAndroidCommand(),
 		command.NewIOSCommand(),
 		command.NewFreeBSD(),
 		&command.Version{},
