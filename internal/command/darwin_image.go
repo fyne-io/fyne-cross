@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -32,7 +33,7 @@ func (cmd *DarwinImage) Description() string {
 
 // Parse parses the arguments and set the usage for the command
 func (cmd *DarwinImage) Parse(args []string) error {
-	flagSet.StringVar(&cmd.sdkPath, "xcode-path", "", "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.5.dmg)")
+	flagSet.StringVar(&cmd.sdkPath, "xcode-path", "", "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_13.3.1.xip)")
 	flagSet.StringVar(&cmd.sdkVersion, "sdk-version", "", "SDK version to use. Default to automatic detection")
 	flagSet.Var(&cmd.engineFlag, "engine", "The container engine to use. Supported engines: [docker, podman]. Default to autodetect.")
 
@@ -53,8 +54,8 @@ func (cmd *DarwinImage) Parse(args []string) error {
 	if i.IsDir() {
 		return fmt.Errorf("Command Line Tools for Xcode file %q is a directory", cmd.sdkPath)
 	}
-	if !strings.HasSuffix(cmd.sdkPath, ".dmg") {
-		return fmt.Errorf("Command Line Tools for Xcode file must be in dmg format")
+	if !(strings.HasSuffix(cmd.sdkPath, ".dmg") || strings.HasSuffix(cmd.sdkPath, ".xip")) {
+		return fmt.Errorf("Command Line Tools for Xcode file must be in dmg or xip format")
 	}
 
 	return nil
@@ -82,7 +83,8 @@ func (cmd *DarwinImage) Run() error {
 	log.Info("[i] Building docker darwin image...")
 	log.Infof("[i] Work dir: %s", workDir)
 
-	xcodeFile := volume.JoinPathHost(workDir, "command_line_tools_for_xcode.dmg")
+	ext := filepath.Ext(cmd.sdkPath)
+	xcodeFile := volume.JoinPathHost(workDir, "command_line_tools_for_xcode"+ext)
 	log.Infof("[i] Copying the Command Line Tools for Xcode from %s to %s...", cmd.sdkPath, xcodeFile)
 	err = volume.Copy(cmd.sdkPath, xcodeFile)
 	if err != nil {
@@ -90,7 +92,8 @@ func (cmd *DarwinImage) Run() error {
 	}
 	log.Infof("[✓] Command Line Tools for Xcode copied")
 
-	err = ioutil.WriteFile(volume.JoinPathHost(workDir, "Dockerfile"), []byte(resource.DockerfileDarwin), 0644)
+	content := strings.ReplaceAll(resource.DockerfileDarwin, "{{.Ext}}", ext)
+	err = ioutil.WriteFile(volume.JoinPathHost(workDir, "Dockerfile"), []byte(content), 0644)
 	if err != nil {
 		return fmt.Errorf("could not create the Dockerfile into the work dir: %s", err)
 	}

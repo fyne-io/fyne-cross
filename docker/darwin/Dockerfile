@@ -21,13 +21,13 @@ RUN apt-get update -qq && apt-get install -y -q --no-install-recommends \
     uuid-dev \
  && rm -rf /var/lib/apt/lists/*
 
-COPY *.dmg /tmp/command_line_tools_for_xcode.dmg
+COPY *{{.Ext}} /tmp/command_line_tools_for_xcode{{.Ext}}
 
 WORKDIR "/osxcross"
 
 RUN curl -L https://github.com/tpoechtrager/osxcross/archive/${OSX_CROSS_COMMIT}.tar.gz | tar -zx --strip-components=1
 
-RUN ./tools/gen_sdk_package_tools_dmg.sh /tmp/command_line_tools_for_xcode.dmg
+RUN ./tools/gen_sdk_package_tools_dmg.sh /tmp/command_line_tools_for_xcode{{.Ext}}
 
 ARG SDK_VERSION
 RUN echo "Available SDKs:" && ls -1 MacOSX*.tar.* && \
