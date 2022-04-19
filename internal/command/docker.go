@@ -51,8 +51,8 @@ type LocalContainerImage struct {
 	Runner *LocalContainerEngine
 }
 
-func (r *LocalContainerEngine) NewImageContainer(arch Architecture, OS string, image string) ContainerImage {
-	ret := r.newImageContainerInternal(arch, OS, image, func(arch Architecture, OS, ID, image string) ContainerImage {
+func (r *LocalContainerEngine) NewContainerImage(arch Architecture, OS string, image string) ContainerImage {
+	ret := r.newContainerImageInternal(arch, OS, image, func(arch Architecture, OS, ID, image string) ContainerImage {
 		return &LocalContainerImage{
 			baseContainerImage: baseContainerImage{
 				Architecture: arch,

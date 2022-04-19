@@ -186,13 +186,13 @@ func (cmd *Darwin) makeDarwinContainerImages(flags *darwinFlags, args []string) 
 
 		switch arch {
 		case ArchAmd64:
-			image = runner.NewImageContainer(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
+			image = runner.NewContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
 			image.SetEnv("GOARCH", "amd64")
 			image.SetEnv("CC", "o64-clang")
 			image.SetEnv("CGO_CFLAGS", "-mmacosx-version-min=10.12")
 			image.SetEnv("CGO_LDFLAGS", "-mmacosx-version-min=10.12")
 		case ArchArm64:
-			image = runner.NewImageContainer(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
+			image = runner.NewContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
 			image.SetEnv("GOARCH", "arm64")
 			image.SetEnv("CC", "oa64-clang")
 			image.SetEnv("CGO_CFLAGS", "-mmacosx-version-min=11.1")

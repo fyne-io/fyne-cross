@@ -140,11 +140,11 @@ func (cmd *FreeBSD) makeFreebsdContainerImages(flags *freebsdFlags, args []strin
 
 		switch arch {
 		case ArchAmd64:
-			image = runner.NewImageContainer(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageAmd64))
+			image = runner.NewContainerImage(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageAmd64))
 			image.SetEnv("GOARCH", "amd64")
 			image.SetEnv("CC", "x86_64-unknown-freebsd12-clang")
 		case ArchArm64:
-			image = runner.NewImageContainer(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageArm64))
+			image = runner.NewContainerImage(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageArm64))
 			image.SetEnv("GOARCH", "arm64")
 			if v, ok := ctx.Env["CGO_LDFLAGS"]; ok {
 				image.SetEnv("CGO_LDFLAGS", v+" -fuse-ld=lld")

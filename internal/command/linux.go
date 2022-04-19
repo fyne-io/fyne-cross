@@ -141,21 +141,21 @@ func (cmd *Linux) makeLinuxContainerImages(flags *linuxFlags, args []string) err
 
 		switch arch {
 		case ArchAmd64:
-			image = runner.NewImageContainer(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageAmd64))
+			image = runner.NewContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageAmd64))
 			image.SetEnv("GOARCH", "amd64")
 			image.SetEnv("CC", "gcc")
 		case Arch386:
-			image = runner.NewImageContainer(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImage386))
+			image = runner.NewContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImage386))
 			image.SetEnv("GOARCH", "386")
 			image.SetEnv("CC", "i686-linux-gnu-gcc")
 		case ArchArm:
-			image = runner.NewImageContainer(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm))
+			image = runner.NewContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm))
 			image.SetEnv("GOARCH", "arm")
 			image.SetEnv("CC", "arm-linux-gnueabihf-gcc")
 			image.SetEnv("GOARM", "7")
 			image.AppendTag("gles")
 		case ArchArm64:
-			image = runner.NewImageContainer(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm64))
+			image = runner.NewContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm64))
 			image.SetEnv("GOARCH", "arm64")
 			image.SetEnv("CC", "aarch64-linux-gnu-gcc")
 			image.AppendTag("gles")

@@ -139,7 +139,7 @@ func (cmd *IOS) makeIOSContainerImages(flags *iosFlags, args []string) error {
 	cmd.defaultContext = ctx
 	runner := NewContainerEngine(ctx)
 
-	cmd.Images = append(cmd.Images, runner.NewImageContainer("", iosOS, overrideDockerImage(flags.CommonFlags, iosImage)))
+	cmd.Images = append(cmd.Images, runner.NewContainerImage("", iosOS, overrideDockerImage(flags.CommonFlags, iosImage)))
 
 	ctx.Certificate = flags.Certificate
 	ctx.Profile = flags.Profile

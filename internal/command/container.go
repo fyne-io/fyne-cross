@@ -25,7 +25,7 @@ type Debugger interface {
 }
 
 type ContainerEngine interface {
-	NewImageContainer(arch Architecture, OS string, image string) ContainerImage
+	NewContainerImage(arch Architecture, OS string, image string) ContainerImage
 	Debugger
 }
 
@@ -94,7 +94,7 @@ func (a *baseEngine) Debugging() bool {
 	return a.debug
 }
 
-func (a *baseEngine) newImageContainerInternal(arch Architecture, OS string, image string, fn func(arch Architecture, OS string, ID string, image string) ContainerImage) ContainerImage {
+func (a *baseEngine) newContainerImageInternal(arch Architecture, OS string, image string, fn func(arch Architecture, OS string, ID string, image string) ContainerImage) ContainerImage {
 	var ID string
 
 	if arch == "" || arch == ArchMultiple {
