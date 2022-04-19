@@ -24,12 +24,16 @@ var (
 
 // Android build and package the fyne app for the android OS
 type Android struct {
-	CrossBuilderCommand
 	CrossBuilder
 }
 
+var _ PlatformSpecific = (*Android)(nil)
+var _ Command = (*Android)(nil)
+
 func NewAndroidCommand() *Android {
-	return &Android{CrossBuilder: CrossBuilder{name: "android", description: "Build and package a fyne application for the android OS"}}
+	r := &Android{CrossBuilder: CrossBuilder{name: "android", description: "Build and package a fyne application for the android OS"}}
+	r.PlatformSpecific = r
+	return r
 }
 
 // Parse parses the arguments and set the usage for the command
@@ -56,13 +60,8 @@ func (cmd *Android) Parse(args []string) error {
 	return err
 }
 
-// Run runs the command using helper code
-func (cmd *Android) Run() error {
-	return cmd.RunInternal(cmd)
-}
-
 // Run runs the command
-func (cmd *Android) RunEach(image ContainerImage) (string, string, error) {
+func (cmd *Android) Step(image ContainerImage) (string, string, error) {
 	//
 	// package
 	//

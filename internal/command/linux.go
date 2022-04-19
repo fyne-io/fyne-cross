@@ -25,12 +25,16 @@ var (
 
 // Linux build and package the fyne app for the linux OS
 type Linux struct {
-	CrossBuilderCommand
 	CrossBuilder
 }
 
+var _ PlatformSpecific = (*Linux)(nil)
+var _ Command = (*Linux)(nil)
+
 func NewLinuxCommand() *Linux {
-	return &Linux{CrossBuilder: CrossBuilder{name: "linux", description: "Build and package a fyne application for the linux OS"}}
+	r := &Linux{CrossBuilder: CrossBuilder{name: "linux", description: "Build and package a fyne application for the linux OS"}}
+	r.PlatformSpecific = r
+	return r
 }
 
 // Parse parses the arguments and set the usage for the command
@@ -53,13 +57,8 @@ func (cmd *Linux) Parse(args []string) error {
 	return err
 }
 
-// Run runs the command using helper code
-func (cmd *Linux) Run() error {
-	return cmd.RunInternal(cmd)
-}
-
 // Run runs the command
-func (cmd *Linux) RunEach(image ContainerImage) (string, string, error) {
+func (cmd *Linux) Step(image ContainerImage) (string, string, error) {
 	//
 	// build
 	//

@@ -17,12 +17,16 @@ const (
 
 // IOS build and package the fyne app for the ios OS
 type IOS struct {
-	CrossBuilderCommand
 	CrossBuilder
 }
 
+var _ PlatformSpecific = (*IOS)(nil)
+var _ Command = (*IOS)(nil)
+
 func NewIOSCommand() *IOS {
-	return &IOS{CrossBuilder: CrossBuilder{name: "ios", description: "Build and package a fyne application for the iOS OS"}}
+	r := &IOS{CrossBuilder: CrossBuilder{name: "ios", description: "Build and package a fyne application for the iOS OS"}}
+	r.PlatformSpecific = r
+	return r
 }
 
 // Parse parses the arguments and set the usage for the command
@@ -50,13 +54,8 @@ func (cmd *IOS) Parse(args []string) error {
 	return err
 }
 
-// Run runs the command using helper code
-func (cmd *IOS) Run() error {
-	return cmd.RunInternal(cmd)
-}
-
 // Run runs the command
-func (cmd *IOS) RunEach(image ContainerImage) (string, string, error) {
+func (cmd *IOS) Step(image ContainerImage) (string, string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
 		return "", "", err

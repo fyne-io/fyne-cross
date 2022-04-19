@@ -23,20 +23,24 @@ var (
 
 // Darwin build and package the fyne app for the darwin OS
 type Darwin struct {
-	CrossBuilderCommand
 	CrossBuilder
 
 	localBuild bool
 }
 
+var _ PlatformSpecific = (*Darwin)(nil)
+var _ Command = (*Darwin)(nil)
+
 func NewDarwinCommand() *Darwin {
-	return &Darwin{
+	r := &Darwin{
 		CrossBuilder: CrossBuilder{
 			name:        "darwin",
 			description: "Build and package a fyne application for the darwin OS",
 		},
 		localBuild: false,
 	}
+	r.PlatformSpecific = r
+	return r
 }
 
 // Parse parses the arguments and set the usage for the command
@@ -70,13 +74,8 @@ func (cmd *Darwin) Parse(args []string) error {
 	return err
 }
 
-// Run runs the command using helper code
-func (cmd *Darwin) Run() error {
-	return cmd.RunInternal(cmd)
-}
-
 // Run runs the command
-func (cmd *Darwin) RunEach(image ContainerImage) (string, string, error) {
+func (cmd *Darwin) Step(image ContainerImage) (string, string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
 		return "", "", err

@@ -24,12 +24,16 @@ var (
 
 // FreeBSD build and package the fyne app for the freebsd OS
 type FreeBSD struct {
-	CrossBuilderCommand
 	CrossBuilder
 }
 
+var _ PlatformSpecific = (*FreeBSD)(nil)
+var _ Command = (*FreeBSD)(nil)
+
 func NewFreeBSD() *FreeBSD {
-	return &FreeBSD{CrossBuilder: CrossBuilder{name: "freebsd", description: "Build and package a fyne application for the freebsd OS"}}
+	r := &FreeBSD{CrossBuilder: CrossBuilder{name: "freebsd", description: "Build and package a fyne application for the freebsd OS"}}
+	r.PlatformSpecific = r
+	return r
 }
 
 // Parse parses the arguments and set the usage for the command
@@ -52,13 +56,8 @@ func (cmd *FreeBSD) Parse(args []string) error {
 	return err
 }
 
-// Run runs the command using helper code
-func (cmd *FreeBSD) Run() error {
-	return cmd.RunInternal(cmd)
-}
-
 // Run runs the command
-func (cmd *FreeBSD) RunEach(image ContainerImage) (string, string, error) {
+func (cmd *FreeBSD) Step(image ContainerImage) (string, string, error) {
 	//
 	// build
 	//

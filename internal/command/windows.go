@@ -24,12 +24,16 @@ var (
 
 // Windows build and package the fyne app for the windows OS
 type Windows struct {
-	CrossBuilderCommand
 	CrossBuilder
 }
 
+var _ PlatformSpecific = (*Windows)(nil)
+var _ Command = (*Windows)(nil)
+
 func NewWindowsCommand() *Windows {
-	return &Windows{CrossBuilder: CrossBuilder{name: "windows", description: "Build and package a fyne application for the windows OS"}}
+	r := &Windows{CrossBuilder: CrossBuilder{name: "windows", description: "Build and package a fyne application for the windows OS"}}
+	r.PlatformSpecific = r
+	return r
 }
 
 // Parse parses the arguments and set the usage for the command
@@ -64,13 +68,8 @@ func (cmd *Windows) Parse(args []string) error {
 	return err
 }
 
-// Run runs the command using helper code
-func (cmd *Windows) Run() error {
-	return cmd.RunInternal(cmd)
-}
-
 // Run runs the command
-func (cmd *Windows) RunEach(image ContainerImage) (string, string, error) {
+func (cmd *Windows) Step(image ContainerImage) (string, string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
 		return "", "", err

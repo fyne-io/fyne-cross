@@ -22,11 +22,13 @@ type Command interface {
 	Run() error                // Run runs the command
 }
 
-type CrossBuilderCommand interface {
-	RunEach(image ContainerImage) (string, string, error) // Called to build each possible architecture/OS combination
+type PlatformSpecific interface {
+	Step(image ContainerImage) (string, string, error) // Called to build each possible architecture/OS combination
 }
 
 type CrossBuilder struct {
+	PlatformSpecific
+
 	Images []ContainerImage
 
 	defaultContext Context
@@ -34,8 +36,8 @@ type CrossBuilder struct {
 	description    string
 }
 
-// RunInternal runs generic code for each image to be build
-func (cb *CrossBuilder) RunInternal(cmd CrossBuilderCommand) error {
+// Run runs the command using helper code
+func (cb *CrossBuilder) Run() error {
 	err := bumpFyneAppBuild(cb.defaultContext)
 	if err != nil {
 		log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
@@ -63,7 +65,7 @@ func (cb *CrossBuilder) RunInternal(cmd CrossBuilderCommand) error {
 			return err
 		}
 
-		srcFile, packageName, err := cmd.RunEach(image)
+		srcFile, packageName, err := cb.Step(image)
 		if err != nil {
 			return err
 		}
