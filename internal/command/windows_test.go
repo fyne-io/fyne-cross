@@ -49,7 +49,7 @@ func Test_makeWindowsContext(t *testing.T) {
 			},
 			wantImages: []ContainerImage{
 				&LocalContainerImage{
-					AllContainerImage: AllContainerImage{
+					baseContainerImage: baseContainerImage{
 						Architecture: "amd64",
 						OS:           "windows",
 						ID:           "windows-amd64",
@@ -85,7 +85,7 @@ func Test_makeWindowsContext(t *testing.T) {
 			},
 			wantImages: []ContainerImage{
 				&LocalContainerImage{
-					AllContainerImage: AllContainerImage{
+					baseContainerImage: baseContainerImage{
 						Architecture: "386",
 						OS:           "windows",
 						ID:           "windows-386",
@@ -122,7 +122,7 @@ func Test_makeWindowsContext(t *testing.T) {
 			},
 			wantImages: []ContainerImage{
 				&LocalContainerImage{
-					AllContainerImage: AllContainerImage{
+					baseContainerImage: baseContainerImage{
 						Architecture: "amd64",
 						OS:           "windows",
 						ID:           "windows-amd64",
@@ -159,7 +159,7 @@ func Test_makeWindowsContext(t *testing.T) {
 			},
 			wantImages: []ContainerImage{
 				&LocalContainerImage{
-					AllContainerImage: AllContainerImage{
+					baseContainerImage: baseContainerImage{
 						Architecture: "amd64",
 						OS:           "windows",
 						ID:           "windows-amd64",

@@ -60,7 +60,7 @@ type ContainerMountPoint struct {
 	InContainer string
 }
 
-type AllContainerImage struct {
+type baseContainerImage struct {
 	Architecture        // Arch defines the target architecture
 	OS           string // OS defines the target OS
 	ID           string // ID is the context ID
@@ -106,19 +106,19 @@ func (a *baseEngine) newImageContainerInternal(arch Architecture, OS string, ima
 	return ret
 }
 
-func (a *AllContainerImage) GetArchitecture() Architecture {
+func (a *baseContainerImage) GetArchitecture() Architecture {
 	return a.Architecture
 }
 
-func (a *AllContainerImage) GetOS() string {
+func (a *baseContainerImage) GetOS() string {
 	return a.OS
 }
 
-func (a *AllContainerImage) GetID() string {
+func (a *baseContainerImage) GetID() string {
 	return a.ID
 }
 
-func (a *AllContainerImage) GetTarget() string {
+func (a *baseContainerImage) GetTarget() string {
 	target := a.OS
 	if a.OS == androidOS && a.Architecture != ArchMultiple {
 		target += "/" + a.Architecture.String()
@@ -127,20 +127,20 @@ func (a *AllContainerImage) GetTarget() string {
 	return target
 }
 
-func (a *AllContainerImage) GetEnv(key string) (v string, ok bool) {
+func (a *baseContainerImage) GetEnv(key string) (v string, ok bool) {
 	v, ok = a.Env[key]
 	return
 }
 
-func (a *AllContainerImage) SetEnv(key string, value string) {
+func (a *baseContainerImage) SetEnv(key string, value string) {
 	a.Env[key] = value
 }
 
-func (a *AllContainerImage) SetMount(local string, inContainer string) {
+func (a *baseContainerImage) SetMount(local string, inContainer string) {
 	a.Mount = append(a.Mount, ContainerMountPoint{LocalHost: local, InContainer: inContainer})
 }
 
-func (a *AllContainerImage) AppendTag(tag string) {
+func (a *baseContainerImage) AppendTag(tag string) {
 	a.Tags = append(a.Tags, tag)
 }
 

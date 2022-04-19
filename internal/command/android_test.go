@@ -84,7 +84,7 @@ func Test_makeAndroidContext(t *testing.T) {
 			},
 			wantImages: []ContainerImage{
 				&LocalContainerImage{
-					AllContainerImage: AllContainerImage{
+					baseContainerImage: baseContainerImage{
 						Architecture: ArchMultiple,
 						OS:           androidOS,
 						ID:           androidOS,
@@ -125,7 +125,7 @@ func Test_makeAndroidContext(t *testing.T) {
 			},
 			wantImages: []ContainerImage{
 				&LocalContainerImage{
-					AllContainerImage: AllContainerImage{
+					baseContainerImage: baseContainerImage{
 						Architecture: ArchMultiple,
 						OS:           androidOS,
 						ID:           androidOS,

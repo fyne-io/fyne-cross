@@ -44,7 +44,7 @@ func NewLocalContainerEngine(context Context) ContainerEngine {
 }
 
 type LocalContainerImage struct {
-	AllContainerImage
+	baseContainerImage
 
 	Pull bool
 
@@ -54,7 +54,7 @@ type LocalContainerImage struct {
 func (r *LocalContainerEngine) NewImageContainer(arch Architecture, OS string, image string) ContainerImage {
 	ret := r.newImageContainerInternal(arch, OS, image, func(arch Architecture, OS, ID, image string) ContainerImage {
 		return &LocalContainerImage{
-			AllContainerImage: AllContainerImage{
+			baseContainerImage: baseContainerImage{
 				Architecture: arch,
 				OS:           OS,
 				ID:           ID,
