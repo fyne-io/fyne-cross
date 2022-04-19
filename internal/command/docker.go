@@ -20,8 +20,8 @@ type Options struct {
 	WorkDir string // WorkDir set the workdir, default to volume's workdir
 }
 
-type LocalContainerRunner struct {
-	AllContainerRunner
+type LocalContainerEngine struct {
+	AllContainerEngine
 
 	Engine *Engine
 
@@ -29,9 +29,9 @@ type LocalContainerRunner struct {
 	cacheEnabled bool
 }
 
-func NewLocalContainerRunner(context Context) ContainerRunner {
-	return &LocalContainerRunner{
-		AllContainerRunner: AllContainerRunner{
+func NewLocalContainerEngine(context Context) ContainerEngine {
+	return &LocalContainerEngine{
+		AllContainerEngine: AllContainerEngine{
 			Env:   context.Env,
 			Tags:  context.Tags,
 			vol:   context.Volume,
@@ -48,10 +48,10 @@ type LocalContainerImage struct {
 
 	Pull bool
 
-	Runner *LocalContainerRunner
+	Runner *LocalContainerEngine
 }
 
-func (r *LocalContainerRunner) NewImageContainer(arch Architecture, OS string, image string) ContainerImage {
+func (r *LocalContainerEngine) NewImageContainer(arch Architecture, OS string, image string) ContainerImage {
 	ret := r.newImageContainerInternal(arch, OS, image, func(arch Architecture, OS, ID, image string) ContainerImage {
 		return &LocalContainerImage{
 			AllContainerImage: AllContainerImage{
@@ -87,7 +87,7 @@ func AppendEnv(args []string, environs map[string]string, quoteNeeded bool) []st
 	return args
 }
 
-func (i *LocalContainerImage) GetRunner() ContainerRunner {
+func (i *LocalContainerImage) Engine() ContainerEngine {
 	return i.Runner
 }
 

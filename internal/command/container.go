@@ -19,15 +19,15 @@ const (
 	gowindresBin = "/usr/local/bin/gowindres"
 )
 
-type ContainerRunner interface {
+type ContainerEngine interface {
 	NewImageContainer(arch Architecture, OS string, image string) ContainerImage
 
 	Debug(v ...interface{})
 	GetDebug() bool
 }
 
-type AllContainerRunner struct {
-	ContainerRunner
+type AllContainerEngine struct {
+	ContainerEngine
 
 	Env  map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
 	Tags []string          // Tags defines the tags to use
@@ -52,7 +52,7 @@ type ContainerImage interface {
 	SetMount(string, string)
 	AppendTag(string)
 
-	GetRunner() ContainerRunner
+	Engine() ContainerEngine
 }
 
 type ContainerMountPoint struct {
@@ -72,24 +72,24 @@ type AllContainerImage struct {
 	DockerImage string // DockerImage defines the docker image used to build
 }
 
-func NewContainerRunner(context Context) ContainerRunner {
+func NewContainerEngine(context Context) ContainerEngine {
 	if context.Engine.IsDocker() || context.Engine.IsPodman() {
-		return NewLocalContainerRunner(context)
+		return NewLocalContainerEngine(context)
 	}
 	return nil
 }
 
-func (a *AllContainerRunner) Debug(v ...interface{}) {
+func (a *AllContainerEngine) Debug(v ...interface{}) {
 	if a.debug {
 		log.Debug(v...)
 	}
 }
 
-func (a *AllContainerRunner) GetDebug() bool {
+func (a *AllContainerEngine) GetDebug() bool {
 	return a.debug
 }
 
-func (a *AllContainerRunner) newImageContainerInternal(arch Architecture, OS string, image string, fn func(arch Architecture, OS string, ID string, image string) ContainerImage) ContainerImage {
+func (a *AllContainerEngine) newImageContainerInternal(arch Architecture, OS string, image string, fn func(arch Architecture, OS string, ID string, image string) ContainerImage) ContainerImage {
 	var ID string
 
 	if arch == "" || arch == ArchMultiple {
@@ -206,7 +206,7 @@ func goBuild(ctx Context, image ContainerImage) error {
 	args = append(args, "-o", output)
 
 	// enable debug mode
-	if image.GetRunner().GetDebug() {
+	if image.Engine().GetDebug() {
 		args = append(args, "-v")
 	}
 
@@ -225,7 +225,7 @@ func goBuild(ctx Context, image ContainerImage) error {
 
 // fynePackage package the application using the fyne cli tool
 func fynePackage(ctx Context, image ContainerImage) error {
-	if image.GetRunner().GetDebug() {
+	if image.Engine().GetDebug() {
 		err := image.Run(ctx.Volume, Options{}, []string{fyneBin, "version"})
 		if err != nil {
 			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
@@ -287,7 +287,7 @@ func fynePackage(ctx Context, image ContainerImage) error {
 // fyneRelease package and release the application using the fyne cli tool
 // Note: at the moment this is used only for the android builds
 func fyneRelease(ctx Context, image ContainerImage) error {
-	if image.GetRunner().GetDebug() {
+	if image.Engine().GetDebug() {
 		err := image.Run(ctx.Volume, Options{}, []string{fyneBin, "version"})
 		if err != nil {
 			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)

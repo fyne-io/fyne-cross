@@ -134,7 +134,7 @@ func (cmd *Linux) makeLinuxContainerImages(flags *linuxFlags, args []string) err
 	}
 
 	cmd.defaultContext = ctx
-	runner := NewContainerRunner(ctx)
+	runner := NewContainerEngine(ctx)
 
 	for _, arch := range targetArch {
 		var image ContainerImage

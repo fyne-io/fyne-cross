@@ -123,7 +123,7 @@ func TestCmdEngineDocker(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runner := NewContainerRunner(tt.args.context)
+			runner := NewContainerEngine(tt.args.context)
 			image := runner.NewImageContainer("", "", tt.args.image)
 
 			cmd := image.Cmd(tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()
@@ -253,7 +253,7 @@ func TestCmdEnginePodman(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runner := NewContainerRunner(tt.args.context)
+			runner := NewContainerEngine(tt.args.context)
 			image := runner.NewImageContainer("", "", tt.args.image)
 
 			cmd := image.Cmd(tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()

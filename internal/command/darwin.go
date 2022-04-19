@@ -179,7 +179,7 @@ func (cmd *Darwin) makeDarwinContainerImages(flags *darwinFlags, args []string) 
 	ctx.Category = flags.Category
 
 	cmd.defaultContext = ctx
-	runner := NewContainerRunner(ctx)
+	runner := NewContainerEngine(ctx)
 
 	for _, arch := range targetArch {
 		var image ContainerImage

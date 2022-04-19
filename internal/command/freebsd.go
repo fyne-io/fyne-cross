@@ -133,7 +133,7 @@ func (cmd *FreeBSD) makeFreebsdContainerImages(flags *freebsdFlags, args []strin
 	}
 
 	cmd.defaultContext = ctx
-	runner := NewContainerRunner(ctx)
+	runner := NewContainerEngine(ctx)
 
 	for _, arch := range targetArch {
 		var image ContainerImage
