@@ -166,7 +166,7 @@ func (cmd *Android) makeAndroidContainerImages(flags *androidFlags, args []strin
 		// instruction sets (arm, 386, amd64, arm64). A subset of instruction sets can
 		// be selected by specifying target type with the architecture name.
 		// E.g.: -os=android/arm
-		image := runner.NewContainerImage(arch, androidOS, overrideDockerImage(flags.CommonFlags, androidImage))
+		image := runner.CreateContainerImage(arch, androidOS, overrideDockerImage(flags.CommonFlags, androidImage))
 
 		if path.IsAbs(flags.Keystore) {
 			return fmt.Errorf("keystore location must be relative to the project root: %s", ctx.Volume.WorkDirHost())

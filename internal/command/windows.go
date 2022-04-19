@@ -198,7 +198,7 @@ func (cmd *Windows) makeWindowsContainerImages(flags *windowsFlags, args []strin
 	runner := NewContainerEngine(ctx)
 
 	for _, arch := range targetArch {
-		image := runner.NewContainerImage(arch, windowsOS, overrideDockerImage(flags.CommonFlags, windowsImage))
+		image := runner.CreateContainerImage(arch, windowsOS, overrideDockerImage(flags.CommonFlags, windowsImage))
 
 		image.SetEnv("GOOS", "windows")
 		switch arch {
