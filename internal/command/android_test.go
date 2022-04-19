@@ -85,10 +85,10 @@ func Test_makeAndroidContext(t *testing.T) {
 			wantImages: []ContainerImage{
 				&LocalContainerImage{
 					baseContainerImage: baseContainerImage{
-						Architecture: ArchMultiple,
-						OS:           androidOS,
-						ID:           androidOS,
-						Env:          map[string]string{},
+						arch: ArchMultiple,
+						os:   androidOS,
+						id:   androidOS,
+						env:  map[string]string{},
 						Mount: []ContainerMountPoint{
 							{vol.WorkDirHost(), vol.WorkDirContainer()},
 							{vol.CacheDirHost(), vol.CacheDirContainer()},
@@ -126,10 +126,10 @@ func Test_makeAndroidContext(t *testing.T) {
 			wantImages: []ContainerImage{
 				&LocalContainerImage{
 					baseContainerImage: baseContainerImage{
-						Architecture: ArchMultiple,
-						OS:           androidOS,
-						ID:           androidOS,
-						Env:          map[string]string{},
+						arch: ArchMultiple,
+						os:   androidOS,
+						id:   androidOS,
+						env:  map[string]string{},
 						Mount: []ContainerMountPoint{
 							{vol.WorkDirHost(), vol.WorkDirContainer()},
 							{vol.CacheDirHost(), vol.CacheDirContainer()},

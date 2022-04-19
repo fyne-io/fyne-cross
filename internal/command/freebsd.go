@@ -84,7 +84,7 @@ func (cmd *FreeBSD) Step(image ContainerImage) (string, string, error) {
 	}
 
 	// move the dist package into the "dist" folder
-	srcFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.GetID(), packageName)
+	srcFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.ID(), packageName)
 
 	return srcFile, packageName, nil
 }

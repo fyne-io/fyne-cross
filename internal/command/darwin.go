@@ -115,7 +115,7 @@ func (cmd *Darwin) Step(image ContainerImage) (string, string, error) {
 		}
 
 		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
-		srcFile = volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.GetID(), packageName)
+		srcFile = volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.ID(), packageName)
 
 		err = fynePackage(cmd.defaultContext, image)
 		if err != nil {

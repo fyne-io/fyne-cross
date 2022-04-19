@@ -123,8 +123,8 @@ func (cmd *Windows) Step(image ContainerImage) (string, string, error) {
 
 	// create a zip archive from the compiled binary under the "bin" folder
 	// and place it under the "dist" folder
-	srcFile := volume.JoinPathHost(cmd.defaultContext.BinDirHost(), image.GetID(), cmd.defaultContext.Name)
-	tmpFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.GetID(), packageName)
+	srcFile := volume.JoinPathHost(cmd.defaultContext.BinDirHost(), image.ID(), cmd.defaultContext.Name)
+	tmpFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.ID(), packageName)
 	err = volume.Zip(srcFile, tmpFile)
 	if err != nil {
 		return "", "", err

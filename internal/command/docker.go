@@ -52,17 +52,11 @@ type LocalContainerImage struct {
 }
 
 func (r *LocalContainerEngine) CreateContainerImage(arch Architecture, OS string, image string) ContainerImage {
-	ret := r.createContainerImageInternal(arch, OS, image, func(arch Architecture, OS, ID, image string) ContainerImage {
+	ret := r.createContainerImageInternal(arch, OS, image, func(base baseContainerImage) ContainerImage {
 		return &LocalContainerImage{
-			baseContainerImage: baseContainerImage{
-				Architecture: arch,
-				OS:           OS,
-				ID:           ID,
-				DockerImage:  image,
-				Env:          make(map[string]string),
-			},
-			Pull:   r.pull,
-			Runner: r,
+			baseContainerImage: base,
+			Pull:               r.pull,
+			Runner:             r,
 		}
 	})
 
@@ -134,8 +128,8 @@ func (i *LocalContainerImage) Cmd(vol volume.Volume, opts Options, cmdArgs []str
 	)
 
 	// add custom env variables
-	args = AppendEnv(args, i.Runner.Env, i.Env["GOOS"] != freebsdOS)
-	args = AppendEnv(args, i.Env, i.Env["GOOS"] != freebsdOS)
+	args = AppendEnv(args, i.Runner.Env, i.env["GOOS"] != freebsdOS)
+	args = AppendEnv(args, i.env, i.env["GOOS"] != freebsdOS)
 
 	// specify the image to use
 	args = append(args, i.DockerImage)
@@ -187,7 +181,7 @@ func (i *LocalContainerImage) Prepare() error {
 }
 
 func (i *LocalContainerImage) Finalize(srcFile string, packageName string) error {
-	distFile := volume.JoinPathHost(i.Runner.vol.DistDirHost(), i.GetID(), packageName)
+	distFile := volume.JoinPathHost(i.Runner.vol.DistDirHost(), i.ID(), packageName)
 	err := os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
 		return fmt.Errorf("could not create the dist package dir: %v", err)

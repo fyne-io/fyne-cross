@@ -48,11 +48,11 @@ type ContainerImage interface {
 	Prepare() error
 	Finalize(srcFile string, packageName string) error
 
-	GetArchitecture() Architecture
-	GetOS() string
-	GetID() string
-	GetTarget() string
-	GetEnv(string) (string, bool)
+	Architecture() Architecture
+	OS() string
+	ID() string
+	Target() string
+	Env(string) (string, bool)
 	SetEnv(string, string)
 	SetMount(string, string)
 	AppendTag(string)
@@ -66,11 +66,11 @@ type ContainerMountPoint struct {
 }
 
 type baseContainerImage struct {
-	Architecture        // Arch defines the target architecture
-	OS           string // OS defines the target OS
-	ID           string // ID is the context ID
+	arch Architecture // Arch defines the target architecture
+	os   string       // OS defines the target OS
+	id   string       // ID is the context ID
 
-	Env   map[string]string     // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
+	env   map[string]string     // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
 	Tags  []string              // Tags defines the tags to use
 	Mount []ContainerMountPoint // Mount point between local host [key] and in container point [target]
 
@@ -94,7 +94,7 @@ func (a *baseEngine) Debugging() bool {
 	return a.debug
 }
 
-func (a *baseEngine) createContainerImageInternal(arch Architecture, OS string, image string, fn func(arch Architecture, OS string, ID string, image string) ContainerImage) ContainerImage {
+func (a *baseEngine) createContainerImageInternal(arch Architecture, OS string, image string, fn func(base baseContainerImage) ContainerImage) ContainerImage {
 	var ID string
 
 	if arch == "" || arch == ArchMultiple {
@@ -103,7 +103,7 @@ func (a *baseEngine) createContainerImageInternal(arch Architecture, OS string, 
 		ID = fmt.Sprintf("%s-%s", OS, arch)
 	}
 
-	ret := fn(arch, OS, ID, image)
+	ret := fn(baseContainerImage{arch: arch, os: OS, id: ID, DockerImage: image, env: make(map[string]string)})
 
 	// mount the working dir
 	ret.SetMount(a.vol.WorkDirHost(), a.vol.WorkDirContainer())
@@ -111,34 +111,34 @@ func (a *baseEngine) createContainerImageInternal(arch Architecture, OS string, 
 	return ret
 }
 
-func (a *baseContainerImage) GetArchitecture() Architecture {
-	return a.Architecture
+func (a *baseContainerImage) Architecture() Architecture {
+	return a.arch
 }
 
-func (a *baseContainerImage) GetOS() string {
-	return a.OS
+func (a *baseContainerImage) OS() string {
+	return a.os
 }
 
-func (a *baseContainerImage) GetID() string {
-	return a.ID
+func (a *baseContainerImage) ID() string {
+	return a.id
 }
 
-func (a *baseContainerImage) GetTarget() string {
-	target := a.OS
-	if a.OS == androidOS && a.Architecture != ArchMultiple {
-		target += "/" + a.Architecture.String()
+func (a *baseContainerImage) Target() string {
+	target := a.OS()
+	if target == androidOS && a.Architecture() != ArchMultiple {
+		target += "/" + a.Architecture().String()
 	}
 
 	return target
 }
 
-func (a *baseContainerImage) GetEnv(key string) (v string, ok bool) {
-	v, ok = a.Env[key]
+func (a *baseContainerImage) Env(key string) (v string, ok bool) {
+	v, ok = a.env[key]
 	return
 }
 
 func (a *baseContainerImage) SetEnv(key string, value string) {
-	a.Env[key] = value
+	a.env[key] = value
 }
 
 func (a *baseContainerImage) SetMount(local string, inContainer string) {
@@ -180,7 +180,7 @@ func goBuild(ctx Context, image ContainerImage) error {
 	if ctx.StripDebug {
 		// ensure that CGO_LDFLAGS is not overwritten as they can be passed
 		// by the --env argument
-		if v, ok := image.GetEnv("CGO_LDFLAGS"); ok {
+		if v, ok := image.Env("CGO_LDFLAGS"); ok {
 			// append the ldflags after the existing CGO_LDFLAGS
 			image.SetEnv("CGO_LDFLAGS", strings.Trim(v, "\"")+" -w -s")
 		} else {
@@ -191,7 +191,7 @@ func goBuild(ctx Context, image ContainerImage) error {
 
 	ldflags := ctx.LdFlags
 	// honour the GOFLAGS env variable adding to existing ones
-	if v, ok := image.GetEnv("GOFLAGS"); ok {
+	if v, ok := image.Env("GOFLAGS"); ok {
 		ldflags = append(ldflags, v)
 	}
 
@@ -206,7 +206,7 @@ func goBuild(ctx Context, image ContainerImage) error {
 	}
 
 	// set output folder to fyne-cross/bin/<target>
-	output := volume.JoinPathContainer(ctx.Volume.BinDirContainer(), image.GetID(), ctx.Name)
+	output := volume.JoinPathContainer(ctx.Volume.BinDirContainer(), image.ID(), ctx.Name)
 
 	args = append(args, "-o", output)
 
@@ -224,7 +224,7 @@ func goBuild(ctx Context, image ContainerImage) error {
 		return err
 	}
 
-	log.Infof("[✓] Binary: %s", volume.JoinPathHost(ctx.BinDirHost(), image.GetID(), ctx.Name))
+	log.Infof("[✓] Binary: %s", volume.JoinPathHost(ctx.BinDirHost(), image.ID(), ctx.Name))
 	return nil
 }
 
@@ -237,13 +237,13 @@ func fynePackage(ctx Context, image ContainerImage) error {
 		}
 	}
 
-	target := image.GetTarget()
+	target := image.Target()
 
 	args := []string{
 		fyneBin, "package",
 		"-os", target,
 		"-name", ctx.Name,
-		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), image.GetID(), icon.Default),
+		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default),
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
 	}
@@ -267,15 +267,15 @@ func fynePackage(ctx Context, image ContainerImage) error {
 	// workDir default value
 	workDir := ctx.WorkDirContainer()
 
-	if image.GetOS() == androidOS {
+	if image.OS() == androidOS {
 		workDir = volume.JoinPathContainer(workDir, ctx.Package)
 	}
 
 	// linux, darwin and freebsd targets are built by fyne-cross
 	// in these cases fyne tool is used only to package the app specifying the executable flag
-	if image.GetOS() == linuxOS || image.GetOS() == darwinOS || image.GetOS() == freebsdOS {
-		args = append(args, "-executable", volume.JoinPathContainer(ctx.BinDirContainer(), image.GetID(), ctx.Name))
-		workDir = volume.JoinPathContainer(ctx.TmpDirContainer(), image.GetID())
+	if image.OS() == linuxOS || image.OS() == darwinOS || image.OS() == freebsdOS {
+		args = append(args, "-executable", volume.JoinPathContainer(ctx.BinDirContainer(), image.ID(), ctx.Name))
+		workDir = volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID())
 	}
 
 	runOpts := Options{
@@ -299,13 +299,13 @@ func fyneRelease(ctx Context, image ContainerImage) error {
 		}
 	}
 
-	target := image.GetTarget()
+	target := image.Target()
 
 	args := []string{
 		fyneBin, "release",
 		"-os", target,
 		"-name", ctx.Name,
-		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), image.GetID(), icon.Default),
+		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default),
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
 	}
@@ -324,7 +324,7 @@ func fyneRelease(ctx Context, image ContainerImage) error {
 	// workDir default value
 	workDir := ctx.WorkDirContainer()
 
-	switch image.GetOS() {
+	switch image.OS() {
 	case androidOS:
 		workDir = volume.JoinPathContainer(workDir, ctx.Package)
 		if ctx.Keystore != "" {
@@ -371,13 +371,13 @@ func fyneRelease(ctx Context, image ContainerImage) error {
 func WindowsResource(ctx Context, image ContainerImage) (string, error) {
 	args := []string{
 		gowindresBin,
-		"-arch", image.GetArchitecture().String(),
+		"-arch", image.Architecture().String(),
 		"-output", ctx.Name,
-		"-workdir", volume.JoinPathContainer(ctx.TmpDirContainer(), image.GetID()),
+		"-workdir", volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID()),
 	}
 
 	runOpts := Options{
-		WorkDir: volume.JoinPathContainer(ctx.TmpDirContainer(), image.GetID()),
+		WorkDir: volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID()),
 	}
 
 	err := image.Run(ctx.Volume, runOpts, args)
@@ -389,7 +389,7 @@ func WindowsResource(ctx Context, image ContainerImage) (string, error) {
 	// it will be automatically linked by compiler during build
 	windres := ctx.Name + ".syso"
 	out := filepath.Join(ctx.Package, windres)
-	err = volume.Copy(volume.JoinPathHost(ctx.TmpDirHost(), image.GetID(), windres), volume.JoinPathHost(ctx.WorkDirHost(), out))
+	err = volume.Copy(volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), windres), volume.JoinPathHost(ctx.WorkDirHost(), out))
 	if err != nil {
 		return "", fmt.Errorf("could not copy windows resource under the package root: %v", err)
 	}
