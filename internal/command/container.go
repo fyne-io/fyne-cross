@@ -26,7 +26,7 @@ type ContainerEngine interface {
 	GetDebug() bool
 }
 
-type AllContainerEngine struct {
+type baseEngine struct {
 	ContainerEngine
 
 	Env  map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
@@ -79,17 +79,17 @@ func NewContainerEngine(context Context) ContainerEngine {
 	return nil
 }
 
-func (a *AllContainerEngine) Debug(v ...interface{}) {
+func (a *baseEngine) Debug(v ...interface{}) {
 	if a.debug {
 		log.Debug(v...)
 	}
 }
 
-func (a *AllContainerEngine) GetDebug() bool {
+func (a *baseEngine) GetDebug() bool {
 	return a.debug
 }
 
-func (a *AllContainerEngine) newImageContainerInternal(arch Architecture, OS string, image string, fn func(arch Architecture, OS string, ID string, image string) ContainerImage) ContainerImage {
+func (a *baseEngine) newImageContainerInternal(arch Architecture, OS string, image string, fn func(arch Architecture, OS string, ID string, image string) ContainerImage) ContainerImage {
 	var ID string
 
 	if arch == "" || arch == ArchMultiple {

@@ -21,7 +21,7 @@ type Options struct {
 }
 
 type LocalContainerEngine struct {
-	AllContainerEngine
+	baseEngine
 
 	Engine *Engine
 
@@ -31,7 +31,7 @@ type LocalContainerEngine struct {
 
 func NewLocalContainerEngine(context Context) ContainerEngine {
 	return &LocalContainerEngine{
-		AllContainerEngine: AllContainerEngine{
+		baseEngine: baseEngine{
 			Env:   context.Env,
 			Tags:  context.Tags,
 			vol:   context.Volume,
