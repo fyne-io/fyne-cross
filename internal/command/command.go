@@ -22,12 +22,12 @@ type Command interface {
 	Run() error                // Run runs the command
 }
 
-type PlatformSpecific interface {
-	Step(image ContainerImage) (string, string, error) // Called to build each possible architecture/OS combination
+type PlatformBuilder interface {
+	Build(image ContainerImage) (string, string, error) // Called to build each possible architecture/OS combination
 }
 
 type CrossBuilder struct {
-	PlatformSpecific
+	builder PlatformBuilder
 
 	Images []ContainerImage
 
@@ -65,7 +65,7 @@ func (cb *CrossBuilder) Run() error {
 			return err
 		}
 
-		srcFile, packageName, err := cb.Step(image)
+		srcFile, packageName, err := cb.builder.Build(image)
 		if err != nil {
 			return err
 		}

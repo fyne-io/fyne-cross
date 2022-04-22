@@ -27,12 +27,12 @@ type FreeBSD struct {
 	CrossBuilder
 }
 
-var _ PlatformSpecific = (*FreeBSD)(nil)
+var _ PlatformBuilder = (*FreeBSD)(nil)
 var _ Command = (*FreeBSD)(nil)
 
 func NewFreeBSD() *FreeBSD {
 	r := &FreeBSD{CrossBuilder: CrossBuilder{name: "freebsd", description: "Build and package a fyne application for the freebsd OS"}}
-	r.PlatformSpecific = r
+	r.builder = r
 	return r
 }
 
@@ -57,7 +57,7 @@ func (cmd *FreeBSD) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *FreeBSD) Step(image ContainerImage) (string, string, error) {
+func (cmd *FreeBSD) Build(image ContainerImage) (string, string, error) {
 	//
 	// build
 	//

@@ -28,12 +28,12 @@ type Linux struct {
 	CrossBuilder
 }
 
-var _ PlatformSpecific = (*Linux)(nil)
+var _ PlatformBuilder = (*Linux)(nil)
 var _ Command = (*Linux)(nil)
 
 func NewLinuxCommand() *Linux {
 	r := &Linux{CrossBuilder: CrossBuilder{name: "linux", description: "Build and package a fyne application for the linux OS"}}
-	r.PlatformSpecific = r
+	r.builder = r
 	return r
 }
 
@@ -58,7 +58,7 @@ func (cmd *Linux) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *Linux) Step(image ContainerImage) (string, string, error) {
+func (cmd *Linux) Build(image ContainerImage) (string, string, error) {
 	//
 	// build
 	//

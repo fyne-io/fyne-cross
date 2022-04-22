@@ -27,12 +27,12 @@ type Windows struct {
 	CrossBuilder
 }
 
-var _ PlatformSpecific = (*Windows)(nil)
+var _ PlatformBuilder = (*Windows)(nil)
 var _ Command = (*Windows)(nil)
 
 func NewWindowsCommand() *Windows {
 	r := &Windows{CrossBuilder: CrossBuilder{name: "windows", description: "Build and package a fyne application for the windows OS"}}
-	r.PlatformSpecific = r
+	r.builder = r
 	return r
 }
 
@@ -69,7 +69,7 @@ func (cmd *Windows) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *Windows) Step(image ContainerImage) (string, string, error) {
+func (cmd *Windows) Build(image ContainerImage) (string, string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
 		return "", "", err

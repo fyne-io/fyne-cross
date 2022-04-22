@@ -27,12 +27,12 @@ type Android struct {
 	CrossBuilder
 }
 
-var _ PlatformSpecific = (*Android)(nil)
+var _ PlatformBuilder = (*Android)(nil)
 var _ Command = (*Android)(nil)
 
 func NewAndroidCommand() *Android {
 	r := &Android{CrossBuilder: CrossBuilder{name: "android", description: "Build and package a fyne application for the android OS"}}
-	r.PlatformSpecific = r
+	r.builder = r
 	return r
 }
 
@@ -61,7 +61,7 @@ func (cmd *Android) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *Android) Step(image ContainerImage) (string, string, error) {
+func (cmd *Android) Build(image ContainerImage) (string, string, error) {
 	//
 	// package
 	//

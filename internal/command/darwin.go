@@ -28,7 +28,7 @@ type Darwin struct {
 	localBuild bool
 }
 
-var _ PlatformSpecific = (*Darwin)(nil)
+var _ PlatformBuilder = (*Darwin)(nil)
 var _ Command = (*Darwin)(nil)
 
 func NewDarwinCommand() *Darwin {
@@ -39,7 +39,7 @@ func NewDarwinCommand() *Darwin {
 		},
 		localBuild: false,
 	}
-	r.PlatformSpecific = r
+	r.builder = r
 	return r
 }
 
@@ -75,7 +75,7 @@ func (cmd *Darwin) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *Darwin) Step(image ContainerImage) (string, string, error) {
+func (cmd *Darwin) Build(image ContainerImage) (string, string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
 		return "", "", err

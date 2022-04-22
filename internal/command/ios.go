@@ -20,12 +20,12 @@ type IOS struct {
 	CrossBuilder
 }
 
-var _ PlatformSpecific = (*IOS)(nil)
+var _ PlatformBuilder = (*IOS)(nil)
 var _ Command = (*IOS)(nil)
 
 func NewIOSCommand() *IOS {
 	r := &IOS{CrossBuilder: CrossBuilder{name: "ios", description: "Build and package a fyne application for the iOS OS"}}
-	r.PlatformSpecific = r
+	r.builder = r
 	return r
 }
 
@@ -55,7 +55,7 @@ func (cmd *IOS) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *IOS) Step(image ContainerImage) (string, string, error) {
+func (cmd *IOS) Build(image ContainerImage) (string, string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
 		return "", "", err
