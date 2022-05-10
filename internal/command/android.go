@@ -100,8 +100,8 @@ func (cmd *android) Build(image containerImage) (string, error) {
 	// https://github.com/fyne-io/fyne/blob/v1.4.0/cmd/fyne/internal/mobile/build_androidapp.go#L297
 	// To avoid to duplicate the fyne tool sanitize logic here, the location of
 	// the dist package to move will be detected using a matching pattern
-	command := fmt.Sprintf("mv %q %q",
-		volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), cmd.defaultContext.Package, "*.apk"),
+	command := fmt.Sprintf("mv %s %q",
+		volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), cmd.defaultContext.Package, "*.apk"),
 		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
 	)
 
