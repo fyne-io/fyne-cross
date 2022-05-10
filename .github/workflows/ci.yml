@@ -104,6 +104,7 @@ jobs:
         working-directory: fyne-cross
         run: go install
 
+        # attempt to use "go install" but fallback to "go get"
       - name: Install Fyne
         run: |
           go install fyne.io/fyne/v2/cmd/fyne@latest ||
