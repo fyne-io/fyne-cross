@@ -98,19 +98,19 @@ Use "fyne-cross <command> -help" for more information about a command.
 func cleanTargetDirs(ctx Context, image containerImage) error {
 
 	dirs := map[string]string{
-		"bin":  volume.JoinPathHost(ctx.BinDirHost(), image.ID()),
-		"dist": volume.JoinPathHost(ctx.DistDirHost(), image.ID()),
-		"temp": volume.JoinPathHost(ctx.TmpDirHost(), image.ID()),
+		"bin":  volume.JoinPathContainer(ctx.BinDirContainer(), image.ID()),
+		"dist": volume.JoinPathHost(ctx.DistDirContainer(), image.ID()),
+		"temp": volume.JoinPathHost(ctx.TmpDirContainer(), image.ID()),
 	}
 
 	log.Infof("[i] Cleaning target directories...")
 	for k, v := range dirs {
-		err := os.RemoveAll(v)
+		err := image.Run(ctx.Volume, options{}, []string{"rm", "-rf", v})
 		if err != nil {
 			return fmt.Errorf("could not clean the %q dir %s: %v", k, v, err)
 		}
 
-		err = os.MkdirAll(v, 0755)
+		err = image.Run(ctx.Volume, options{}, []string{"mkdir", "-p", v})
 		if err != nil {
 			return fmt.Errorf("could not create the %q dir %s: %v", k, v, err)
 		}
@@ -152,7 +152,7 @@ func prepareIcon(ctx Context, image containerImage) error {
 		return nil
 	}
 
-	err := image.Run(ctx.Volume, options{}, []string{"cp", ctx.Icon, volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default)})
+	err := image.Run(ctx.Volume, options{}, []string{"cp", volume.JoinPathContainer(ctx.WorkDirContainer(), ctx.Icon), volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default)})
 	if err != nil {
 		return fmt.Errorf("could not copy the icon to temp folder: %v", err)
 	}
