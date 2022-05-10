@@ -69,9 +69,12 @@ jobs:
           - os: darwin
             args: -app-id calc.${GITHUB_SHA}
             host: macos-latest
-          - os: ios
-            args: -app-id calc.${GITHUB_SHA}
-            host: macos-latest
+          
+          ## Currently not easily supported from GitHub actions.
+          ## https://github.com/fyne-io/fyne-cross/pull/104#issuecomment-1099494308
+          # - os: ios
+          #   args: -app-id calc.${GITHUB_SHA}
+          #   host: macos-latest
 
     steps:
       - name: Setup Go environment
