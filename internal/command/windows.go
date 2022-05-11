@@ -23,21 +23,21 @@ var (
 )
 
 // Windows build and package the fyne app for the windows OS
-type Windows struct {
-	CrossBuilder
+type windows struct {
+	crossBuilder
 }
 
-var _ PlatformBuilder = (*Windows)(nil)
-var _ Command = (*Windows)(nil)
+var _ platformBuilder = (*windows)(nil)
+var _ Command = (*windows)(nil)
 
-func NewWindowsCommand() *Windows {
-	r := &Windows{CrossBuilder: CrossBuilder{name: "windows", description: "Build and package a fyne application for the windows OS"}}
+func NewWindowsCommand() *windows {
+	r := &windows{crossBuilder: crossBuilder{name: "windows", description: "Build and package a fyne application for the windows OS"}}
 	r.builder = r
 	return r
 }
 
 // Parse parses the arguments and set the usage for the command
-func (cmd *Windows) Parse(args []string) error {
+func (cmd *windows) Parse(args []string) error {
 	commonFlags, err := newCommonFlags()
 	if err != nil {
 		return err
@@ -64,12 +64,12 @@ func (cmd *Windows) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	err = cmd.makeWindowsContainerImages(flags, flagSet.Args())
+	err = cmd.setupContainerImages(flags, flagSet.Args())
 	return err
 }
 
 // Run runs the command
-func (cmd *Windows) Build(image ContainerImage) (string, string, error) {
+func (cmd *windows) Build(image containerImage) (string, string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
 		return "", "", err
@@ -134,7 +134,7 @@ func (cmd *Windows) Build(image ContainerImage) (string, string, error) {
 }
 
 // Usage displays the command usage
-func (cmd *Windows) Usage() {
+func (cmd *windows) Usage() {
 	data := struct {
 		Name        string
 		Description string
@@ -173,8 +173,8 @@ type windowsFlags struct {
 	Password string
 }
 
-// makeWindowsContext returns the command ContainerImages for a windows target
-func (cmd *Windows) makeWindowsContainerImages(flags *windowsFlags, args []string) error {
+// setupContainerImages returns the command ContainerImages for a windows target
+func (cmd *windows) setupContainerImages(flags *windowsFlags, args []string) error {
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, windowsArchSupported)
 	if err != nil {
 		return fmt.Errorf("could not make build context for %s OS: %s", windowsOS, err)
@@ -194,10 +194,10 @@ func (cmd *Windows) makeWindowsContainerImages(flags *windowsFlags, args []strin
 	}
 
 	cmd.defaultContext = ctx
-	runner := NewContainerEngine(ctx)
+	runner := newContainerEngine(ctx)
 
 	for _, arch := range targetArch {
-		image := runner.CreateContainerImage(arch, windowsOS, overrideDockerImage(flags.CommonFlags, windowsImage))
+		image := runner.createContainerImage(arch, windowsOS, overrideDockerImage(flags.CommonFlags, windowsImage))
 
 		image.SetEnv("GOOS", "windows")
 		switch arch {

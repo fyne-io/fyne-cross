@@ -23,22 +23,22 @@ var (
 	linuxArchSupported = []Architecture{ArchAmd64, Arch386, ArchArm, ArchArm64}
 )
 
-// Linux build and package the fyne app for the linux OS
-type Linux struct {
-	CrossBuilder
+// linux build and package the fyne app for the linux OS
+type linux struct {
+	crossBuilder
 }
 
-var _ PlatformBuilder = (*Linux)(nil)
-var _ Command = (*Linux)(nil)
+var _ platformBuilder = (*linux)(nil)
+var _ Command = (*linux)(nil)
 
-func NewLinuxCommand() *Linux {
-	r := &Linux{CrossBuilder: CrossBuilder{name: "linux", description: "Build and package a fyne application for the linux OS"}}
+func NewLinuxCommand() *linux {
+	r := &linux{crossBuilder: crossBuilder{name: "linux", description: "Build and package a fyne application for the linux OS"}}
 	r.builder = r
 	return r
 }
 
 // Parse parses the arguments and set the usage for the command
-func (cmd *Linux) Parse(args []string) error {
+func (cmd *linux) Parse(args []string) error {
 	commonFlags, err := newCommonFlags()
 	if err != nil {
 		return err
@@ -53,12 +53,12 @@ func (cmd *Linux) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	err = cmd.makeLinuxContainerImages(flags, flagSet.Args())
+	err = cmd.setupContainerImages(flags, flagSet.Args())
 	return err
 }
 
 // Run runs the command
-func (cmd *Linux) Build(image ContainerImage) (string, string, error) {
+func (cmd *linux) Build(image containerImage) (string, string, error) {
 	//
 	// build
 	//
@@ -91,7 +91,7 @@ func (cmd *Linux) Build(image ContainerImage) (string, string, error) {
 }
 
 // Usage displays the command usage
-func (cmd *Linux) Usage() {
+func (cmd *linux) Usage() {
 	data := struct {
 		Name        string
 		Description string
@@ -120,8 +120,8 @@ type linuxFlags struct {
 	TargetArch *targetArchFlag
 }
 
-// linuxContext returns the command ContainerImages for a linux target
-func (cmd *Linux) makeLinuxContainerImages(flags *linuxFlags, args []string) error {
+// setupContainerImages returns the command ContainerImages for a linux target
+func (cmd *linux) setupContainerImages(flags *linuxFlags, args []string) error {
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, linuxArchSupported)
 	if err != nil {
 		return fmt.Errorf("could not make build context for %s OS: %s", linuxOS, err)
@@ -133,28 +133,28 @@ func (cmd *Linux) makeLinuxContainerImages(flags *linuxFlags, args []string) err
 	}
 
 	cmd.defaultContext = ctx
-	runner := NewContainerEngine(ctx)
+	runner := newContainerEngine(ctx)
 
 	for _, arch := range targetArch {
-		var image ContainerImage
+		var image containerImage
 
 		switch arch {
 		case ArchAmd64:
-			image = runner.CreateContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageAmd64))
+			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageAmd64))
 			image.SetEnv("GOARCH", "amd64")
 			image.SetEnv("CC", "gcc")
 		case Arch386:
-			image = runner.CreateContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImage386))
+			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImage386))
 			image.SetEnv("GOARCH", "386")
 			image.SetEnv("CC", "i686-linux-gnu-gcc")
 		case ArchArm:
-			image = runner.CreateContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm))
+			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm))
 			image.SetEnv("GOARCH", "arm")
 			image.SetEnv("CC", "arm-linux-gnueabihf-gcc")
 			image.SetEnv("GOARM", "7")
 			image.AppendTag("gles")
 		case ArchArm64:
-			image = runner.CreateContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm64))
+			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm64))
 			image.SetEnv("GOARCH", "arm64")
 			image.SetEnv("CC", "aarch64-linux-gnu-gcc")
 			image.AppendTag("gles")

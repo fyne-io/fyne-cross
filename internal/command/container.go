@@ -19,32 +19,32 @@ const (
 	gowindresBin = "/usr/local/bin/gowindres"
 )
 
-type Debugger interface {
-	Debug(v ...interface{})
-	Debugging() bool
+type debugger interface {
+	debug(v ...interface{})
+	debugging() bool
 }
 
-type ContainerEngine interface {
-	CreateContainerImage(arch Architecture, OS string, image string) ContainerImage
-	Debugger
+type containerEngine interface {
+	createContainerImage(arch Architecture, OS string, image string) containerImage
+	debugger
 }
 
 type baseEngine struct {
-	ContainerEngine
+	containerEngine
 
-	Env  map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
-	Tags []string          // Tags defines the tags to use
+	env  map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
+	tags []string          // Tags defines the tags to use
 
 	vol volume.Volume
 
-	debug bool
+	debugEnable bool
 }
 
-var _ Debugger = (*baseEngine)(nil)
+var _ debugger = (*baseEngine)(nil)
 
-type ContainerImage interface {
-	Cmd(vol volume.Volume, opts Options, cmdArgs []string) *execabs.Cmd
-	Run(vol volume.Volume, opts Options, cmdArgs []string) error
+type containerImage interface {
+	Cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd
+	Run(vol volume.Volume, opts options, cmdArgs []string) error
 	Prepare() error
 	Finalize(srcFile string, packageName string) error
 
@@ -56,13 +56,14 @@ type ContainerImage interface {
 	SetEnv(string, string)
 	SetMount(string, string)
 	AppendTag(string)
+	Tags() []string
 
-	Engine() ContainerEngine
+	Engine() containerEngine
 }
 
-type ContainerMountPoint struct {
-	LocalHost   string
-	InContainer string
+type containerMountPoint struct {
+	localHost   string
+	inContainer string
 }
 
 type baseContainerImage struct {
@@ -71,30 +72,30 @@ type baseContainerImage struct {
 	id   string       // ID is the context ID
 
 	env   map[string]string     // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
-	Tags  []string              // Tags defines the tags to use
-	Mount []ContainerMountPoint // Mount point between local host [key] and in container point [target]
+	tags  []string              // Tags defines the tags to use
+	mount []containerMountPoint // Mount point between local host [key] and in container point [target]
 
 	DockerImage string // DockerImage defines the docker image used to build
 }
 
-func NewContainerEngine(context Context) ContainerEngine {
+func newContainerEngine(context Context) containerEngine {
 	if context.Engine.IsDocker() || context.Engine.IsPodman() {
-		return NewLocalContainerEngine(context)
+		return newLocalContainerEngine(context)
 	}
 	return nil
 }
 
-func (a *baseEngine) Debug(v ...interface{}) {
-	if a.debug {
+func (a *baseEngine) debug(v ...interface{}) {
+	if a.debugEnable {
 		log.Debug(v...)
 	}
 }
 
-func (a *baseEngine) Debugging() bool {
-	return a.debug
+func (a *baseEngine) debugging() bool {
+	return a.debugEnable
 }
 
-func (a *baseEngine) createContainerImageInternal(arch Architecture, OS string, image string, fn func(base baseContainerImage) ContainerImage) ContainerImage {
+func (a *baseEngine) createContainerImageInternal(arch Architecture, OS string, image string, fn func(base baseContainerImage) containerImage) containerImage {
 	var ID string
 
 	if arch == "" || arch == ArchMultiple {
@@ -103,7 +104,7 @@ func (a *baseEngine) createContainerImageInternal(arch Architecture, OS string, 
 		ID = fmt.Sprintf("%s-%s", OS, arch)
 	}
 
-	ret := fn(baseContainerImage{arch: arch, os: OS, id: ID, DockerImage: image, env: make(map[string]string)})
+	ret := fn(baseContainerImage{arch: arch, os: OS, id: ID, DockerImage: image, env: make(map[string]string), tags: a.tags})
 
 	// mount the working dir
 	ret.SetMount(a.vol.WorkDirHost(), a.vol.WorkDirContainer())
@@ -142,15 +143,19 @@ func (a *baseContainerImage) SetEnv(key string, value string) {
 }
 
 func (a *baseContainerImage) SetMount(local string, inContainer string) {
-	a.Mount = append(a.Mount, ContainerMountPoint{LocalHost: local, InContainer: inContainer})
+	a.mount = append(a.mount, containerMountPoint{localHost: local, inContainer: inContainer})
 }
 
 func (a *baseContainerImage) AppendTag(tag string) {
-	a.Tags = append(a.Tags, tag)
+	a.tags = append(a.tags, tag)
+}
+
+func (a *baseContainerImage) Tags() []string {
+	return a.tags
 }
 
 // goModInit ensure a go.mod exists. If not try to generates a temporary one
-func goModInit(ctx Context, image ContainerImage) error {
+func goModInit(ctx Context, image containerImage) error {
 
 	goModPath := volume.JoinPathHost(ctx.WorkDirHost(), "go.mod")
 	log.Infof("[i] Checking for go.mod: %s", goModPath)
@@ -161,7 +166,7 @@ func goModInit(ctx Context, image ContainerImage) error {
 	}
 
 	log.Info("[i] go.mod not found, creating a temporary one...")
-	err = image.Run(ctx.Volume, Options{}, []string{"go", "mod", "init", ctx.Name})
+	err = image.Run(ctx.Volume, options{}, []string{"go", "mod", "init", ctx.Name})
 	if err != nil {
 		return fmt.Errorf("could not generate the temporary go module: %v", err)
 	}
@@ -171,7 +176,7 @@ func goModInit(ctx Context, image ContainerImage) error {
 }
 
 // goBuild run the go build command in the container
-func goBuild(ctx Context, image ContainerImage) error {
+func goBuild(ctx Context, image containerImage) error {
 	log.Infof("[i] Building binary...")
 	// add go build command
 	args := []string{"go", "build", "-trimpath"}
@@ -200,7 +205,7 @@ func goBuild(ctx Context, image ContainerImage) error {
 	}
 
 	// add tags to command, if any
-	tags := ctx.Tags
+	tags := image.Tags()
 	if len(tags) > 0 {
 		args = append(args, "-tags", strings.Join(tags, ","))
 	}
@@ -211,14 +216,14 @@ func goBuild(ctx Context, image ContainerImage) error {
 	args = append(args, "-o", output)
 
 	// enable debug mode
-	if image.Engine().Debugging() {
+	if image.Engine().debugging() {
 		args = append(args, "-v")
 	}
 
 	//add package
 	args = append(args, ctx.Package)
 
-	err := image.Run(ctx.Volume, Options{}, args)
+	err := image.Run(ctx.Volume, options{}, args)
 
 	if err != nil {
 		return err
@@ -229,9 +234,9 @@ func goBuild(ctx Context, image ContainerImage) error {
 }
 
 // fynePackage package the application using the fyne cli tool
-func fynePackage(ctx Context, image ContainerImage) error {
-	if image.Engine().Debugging() {
-		err := image.Run(ctx.Volume, Options{}, []string{fyneBin, "version"})
+func fynePackage(ctx Context, image containerImage) error {
+	if image.Engine().debugging() {
+		err := image.Run(ctx.Volume, options{}, []string{fyneBin, "version"})
 		if err != nil {
 			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
 		}
@@ -254,7 +259,7 @@ func fynePackage(ctx Context, image ContainerImage) error {
 	}
 
 	// add tags to command, if any
-	tags := ctx.Tags
+	tags := image.Tags()
 	if len(tags) > 0 {
 		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
 	}
@@ -278,7 +283,7 @@ func fynePackage(ctx Context, image ContainerImage) error {
 		workDir = volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID())
 	}
 
-	runOpts := Options{
+	runOpts := options{
 		WorkDir: workDir,
 	}
 
@@ -291,9 +296,9 @@ func fynePackage(ctx Context, image ContainerImage) error {
 
 // fyneRelease package and release the application using the fyne cli tool
 // Note: at the moment this is used only for the android builds
-func fyneRelease(ctx Context, image ContainerImage) error {
-	if image.Engine().Debugging() {
-		err := image.Run(ctx.Volume, Options{}, []string{fyneBin, "version"})
+func fyneRelease(ctx Context, image containerImage) error {
+	if image.Engine().debugging() {
+		err := image.Run(ctx.Volume, options{}, []string{fyneBin, "version"})
 		if err != nil {
 			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
 		}
@@ -316,7 +321,7 @@ func fyneRelease(ctx Context, image ContainerImage) error {
 	}
 
 	// add tags to command, if any
-	tags := ctx.Tags
+	tags := image.Tags()
 	if len(tags) > 0 {
 		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
 	}
@@ -355,7 +360,7 @@ func fyneRelease(ctx Context, image ContainerImage) error {
 		}
 	}
 
-	runOpts := Options{
+	runOpts := options{
 		WorkDir: workDir,
 	}
 
@@ -368,7 +373,7 @@ func fyneRelease(ctx Context, image ContainerImage) error {
 
 // WindowsResource create a windows resource under the project root
 // that will be automatically linked by compliler during the build
-func WindowsResource(ctx Context, image ContainerImage) (string, error) {
+func WindowsResource(ctx Context, image containerImage) (string, error) {
 	args := []string{
 		gowindresBin,
 		"-arch", image.Architecture().String(),
@@ -376,7 +381,7 @@ func WindowsResource(ctx Context, image ContainerImage) (string, error) {
 		"-workdir", volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID()),
 	}
 
-	runOpts := Options{
+	runOpts := options{
 		WorkDir: volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID()),
 	}
 

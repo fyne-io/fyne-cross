@@ -22,14 +22,14 @@ type Command interface {
 	Run() error                // Run runs the command
 }
 
-type PlatformBuilder interface {
-	Build(image ContainerImage) (string, string, error) // Called to build each possible architecture/OS combination
+type platformBuilder interface {
+	Build(image containerImage) (string, string, error) // Called to build each possible architecture/OS combination
 }
 
-type CrossBuilder struct {
-	builder PlatformBuilder
+type crossBuilder struct {
+	builder platformBuilder
 
-	Images []ContainerImage
+	Images []containerImage
 
 	defaultContext Context
 	name           string
@@ -37,7 +37,7 @@ type CrossBuilder struct {
 }
 
 // Run runs the command using helper code
-func (cb *CrossBuilder) Run() error {
+func (cb *crossBuilder) Run() error {
 	err := bumpFyneAppBuild(cb.defaultContext)
 	if err != nil {
 		log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
@@ -76,12 +76,12 @@ func (cb *CrossBuilder) Run() error {
 	return nil
 }
 
-func (cb *CrossBuilder) Name() string {
+func (cb *crossBuilder) Name() string {
 	return cb.name
 }
 
 // Description returns the command description
-func (cb *CrossBuilder) Description() string {
+func (cb *crossBuilder) Description() string {
 	return cb.description
 }
 
@@ -101,7 +101,7 @@ Use "fyne-cross <command> -help" for more information about a command.
 }
 
 // cleanTargetDirs cleans the temp dir for the target context
-func cleanTargetDirs(ctx Context, image ContainerImage) error {
+func cleanTargetDirs(ctx Context, image containerImage) error {
 
 	dirs := map[string]string{
 		"bin":  volume.JoinPathHost(ctx.BinDirHost(), image.ID()),
@@ -128,7 +128,7 @@ func cleanTargetDirs(ctx Context, image ContainerImage) error {
 }
 
 // prepareIcon prepares the icon for packaging
-func prepareIcon(ctx Context, image ContainerImage) error {
+func prepareIcon(ctx Context, image containerImage) error {
 
 	if _, err := os.Stat(ctx.Icon); os.IsNotExist(err) {
 		defaultIcon, err := volume.DefaultIconHost()
@@ -189,7 +189,7 @@ func checkFyneBinHost(ctx Context) (string, error) {
 
 // fynePackageHost package the application using the fyne cli tool from the host
 // Note: at the moment this is used only for the ios builds
-func fynePackageHost(ctx Context, image ContainerImage) error {
+func fynePackageHost(ctx Context, image containerImage) error {
 
 	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {
@@ -235,7 +235,7 @@ func fynePackageHost(ctx Context, image ContainerImage) error {
 
 // fyneReleaseHost package and release the application using the fyne cli tool from the host
 // Note: at the moment this is used only for the ios and windows builds
-func fyneReleaseHost(ctx Context, image ContainerImage) error {
+func fyneReleaseHost(ctx Context, image containerImage) error {
 
 	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {

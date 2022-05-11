@@ -16,47 +16,46 @@ import (
 )
 
 // Options define the options for the docker run command
-type Options struct {
+type options struct {
 	WorkDir string // WorkDir set the workdir, default to volume's workdir
 }
 
-type LocalContainerEngine struct {
+type localContainerEngine struct {
 	baseEngine
 
-	Engine *Engine
+	engine *Engine
 
 	pull         bool
 	cacheEnabled bool
 }
 
-func NewLocalContainerEngine(context Context) ContainerEngine {
-	return &LocalContainerEngine{
+func newLocalContainerEngine(context Context) containerEngine {
+	return &localContainerEngine{
 		baseEngine: baseEngine{
-			Env:   context.Env,
-			Tags:  context.Tags,
-			vol:   context.Volume,
-			debug: context.Debug,
+			env:         context.Env,
+			tags:        context.Tags,
+			vol:         context.Volume,
+			debugEnable: context.Debug,
 		},
-		Engine:       &context.Engine,
+		engine:       &context.Engine,
 		pull:         context.Pull,
 		cacheEnabled: context.CacheEnabled,
 	}
 }
 
-type LocalContainerImage struct {
+type localContainerImage struct {
 	baseContainerImage
 
-	Pull bool
-
-	Runner *LocalContainerEngine
+	runner *localContainerEngine
 }
 
-func (r *LocalContainerEngine) CreateContainerImage(arch Architecture, OS string, image string) ContainerImage {
-	ret := r.createContainerImageInternal(arch, OS, image, func(base baseContainerImage) ContainerImage {
-		return &LocalContainerImage{
+var _ containerEngine = (*localContainerEngine)(nil)
+
+func (r *localContainerEngine) createContainerImage(arch Architecture, OS string, image string) containerImage {
+	ret := r.createContainerImageInternal(arch, OS, image, func(base baseContainerImage) containerImage {
+		return &localContainerImage{
 			baseContainerImage: base,
-			Pull:               r.pull,
-			Runner:             r,
+			runner:             r,
 		}
 	})
 
@@ -81,12 +80,12 @@ func AppendEnv(args []string, environs map[string]string, quoteNeeded bool) []st
 	return args
 }
 
-func (i *LocalContainerImage) Engine() ContainerEngine {
-	return i.Runner
+func (i *localContainerImage) Engine() containerEngine {
+	return i.runner
 }
 
 // Cmd returns a command to run in a new container for the specified image
-func (i *LocalContainerImage) Cmd(vol volume.Volume, opts Options, cmdArgs []string) *execabs.Cmd {
+func (i *localContainerImage) Cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd {
 
 	// define workdir
 	w := vol.WorkDirContainer()
@@ -99,12 +98,12 @@ func (i *LocalContainerImage) Cmd(vol volume.Volume, opts Options, cmdArgs []str
 		"-w", w, // set workdir
 	}
 
-	for _, mountPoint := range i.Mount {
-		args = append(args, "-v", fmt.Sprintf("%s:%s:z", mountPoint.LocalHost, mountPoint.InContainer))
+	for _, mountPoint := range i.mount {
+		args = append(args, "-v", fmt.Sprintf("%s:%s:z", mountPoint.localHost, mountPoint.inContainer))
 	}
 
 	// handle settings related to engine
-	if i.Runner.Engine.IsPodman() {
+	if i.runner.engine.IsPodman() {
 		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
 	} else {
 		// docker: pass current user id to handle mount permissions on linux and MacOS
@@ -113,7 +112,7 @@ func (i *LocalContainerImage) Cmd(vol volume.Volume, opts Options, cmdArgs []str
 			if err == nil {
 				args = append(args, "-u", fmt.Sprintf("%s:%s", u.Uid, u.Gid))
 				args = append(args, "--entrypoint", "fixuid")
-				if !i.Runner.debug {
+				if !i.runner.debugging() {
 					// silent fixuid if not debug mode
 					cmdArgs = append([]string{"-q"}, cmdArgs...)
 				}
@@ -128,7 +127,7 @@ func (i *LocalContainerImage) Cmd(vol volume.Volume, opts Options, cmdArgs []str
 	)
 
 	// add custom env variables
-	args = AppendEnv(args, i.Runner.Env, i.env["GOOS"] != freebsdOS)
+	args = AppendEnv(args, i.runner.env, i.env["GOOS"] != freebsdOS)
 	args = AppendEnv(args, i.env, i.env["GOOS"] != freebsdOS)
 
 	// specify the image to use
@@ -137,7 +136,7 @@ func (i *LocalContainerImage) Cmd(vol volume.Volume, opts Options, cmdArgs []str
 	// add the command to execute
 	args = append(args, cmdArgs...)
 
-	cmd := execabs.Command(i.Runner.Engine.Binary, args...)
+	cmd := execabs.Command(i.runner.engine.Binary, args...)
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
 
@@ -145,15 +144,15 @@ func (i *LocalContainerImage) Cmd(vol volume.Volume, opts Options, cmdArgs []str
 }
 
 // Run runs a command in a new container for the specified image
-func (i *LocalContainerImage) Run(vol volume.Volume, opts Options, cmdArgs []string) error {
+func (i *localContainerImage) Run(vol volume.Volume, opts options, cmdArgs []string) error {
 	cmd := i.Cmd(vol, opts, cmdArgs)
-	i.Runner.Debug(cmd)
+	i.runner.debug(cmd)
 	return cmd.Run()
 }
 
 // pullImage attempts to pull a newer version of the docker image
-func (i *LocalContainerImage) Prepare() error {
-	if !i.Pull {
+func (i *localContainerImage) Prepare() error {
+	if !i.runner.pull {
 		return nil
 	}
 
@@ -162,15 +161,15 @@ func (i *LocalContainerImage) Prepare() error {
 	buf := bytes.Buffer{}
 
 	// run the command inside the container
-	cmd := execabs.Command(i.Runner.Engine.Binary, "pull", i.DockerImage)
+	cmd := execabs.Command(i.runner.engine.Binary, "pull", i.DockerImage)
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 
-	i.Runner.Debug(cmd)
+	i.runner.debug(cmd)
 
 	err := cmd.Run()
 
-	i.Runner.Debug(buf.String())
+	i.runner.debug(buf.String())
 
 	if err != nil {
 		return fmt.Errorf("could not pull the docker image: %v", err)
@@ -180,8 +179,8 @@ func (i *LocalContainerImage) Prepare() error {
 	return nil
 }
 
-func (i *LocalContainerImage) Finalize(srcFile string, packageName string) error {
-	distFile := volume.JoinPathHost(i.Runner.vol.DistDirHost(), i.ID(), packageName)
+func (i *localContainerImage) Finalize(srcFile string, packageName string) error {
+	distFile := volume.JoinPathHost(i.runner.vol.DistDirHost(), i.ID(), packageName)
 	err := os.MkdirAll(filepath.Dir(distFile), 0755)
 	if err != nil {
 		return fmt.Errorf("could not create the dist package dir: %v", err)

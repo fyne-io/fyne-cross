@@ -23,21 +23,21 @@ var (
 )
 
 // FreeBSD build and package the fyne app for the freebsd OS
-type FreeBSD struct {
-	CrossBuilder
+type freeBSD struct {
+	crossBuilder
 }
 
-var _ PlatformBuilder = (*FreeBSD)(nil)
-var _ Command = (*FreeBSD)(nil)
+var _ platformBuilder = (*freeBSD)(nil)
+var _ Command = (*freeBSD)(nil)
 
-func NewFreeBSD() *FreeBSD {
-	r := &FreeBSD{CrossBuilder: CrossBuilder{name: "freebsd", description: "Build and package a fyne application for the freebsd OS"}}
+func NewFreeBSD() *freeBSD {
+	r := &freeBSD{crossBuilder: crossBuilder{name: "freebsd", description: "Build and package a fyne application for the freebsd OS"}}
 	r.builder = r
 	return r
 }
 
 // Parse parses the arguments and set the usage for the command
-func (cmd *FreeBSD) Parse(args []string) error {
+func (cmd *freeBSD) Parse(args []string) error {
 	commonFlags, err := newCommonFlags()
 	if err != nil {
 		return err
@@ -52,12 +52,12 @@ func (cmd *FreeBSD) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	err = cmd.makeFreebsdContainerImages(flags, flagSet.Args())
+	err = cmd.setupContainerImages(flags, flagSet.Args())
 	return err
 }
 
 // Run runs the command
-func (cmd *FreeBSD) Build(image ContainerImage) (string, string, error) {
+func (cmd *freeBSD) Build(image containerImage) (string, string, error) {
 	//
 	// build
 	//
@@ -90,7 +90,7 @@ func (cmd *FreeBSD) Build(image ContainerImage) (string, string, error) {
 }
 
 // Usage displays the command usage
-func (cmd *FreeBSD) Usage() {
+func (cmd *freeBSD) Usage() {
 	data := struct {
 		Name        string
 		Description string
@@ -119,8 +119,8 @@ type freebsdFlags struct {
 	TargetArch *targetArchFlag
 }
 
-// freebsdContext returns the command context for a freebsd target
-func (cmd *FreeBSD) makeFreebsdContainerImages(flags *freebsdFlags, args []string) error {
+// setupContainerImages returns the command context for a freebsd target
+func (cmd *freeBSD) setupContainerImages(flags *freebsdFlags, args []string) error {
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, freebsdArchSupported)
 	if err != nil {
 		return fmt.Errorf("could not make build context for %s OS: %s", freebsdOS, err)
@@ -132,18 +132,18 @@ func (cmd *FreeBSD) makeFreebsdContainerImages(flags *freebsdFlags, args []strin
 	}
 
 	cmd.defaultContext = ctx
-	runner := NewContainerEngine(ctx)
+	runner := newContainerEngine(ctx)
 
 	for _, arch := range targetArch {
-		var image ContainerImage
+		var image containerImage
 
 		switch arch {
 		case ArchAmd64:
-			image = runner.CreateContainerImage(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageAmd64))
+			image = runner.createContainerImage(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageAmd64))
 			image.SetEnv("GOARCH", "amd64")
 			image.SetEnv("CC", "x86_64-unknown-freebsd12-clang")
 		case ArchArm64:
-			image = runner.CreateContainerImage(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageArm64))
+			image = runner.createContainerImage(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageArm64))
 			image.SetEnv("GOARCH", "arm64")
 			if v, ok := ctx.Env["CGO_LDFLAGS"]; ok {
 				image.SetEnv("CGO_LDFLAGS", v+" -fuse-ld=lld")

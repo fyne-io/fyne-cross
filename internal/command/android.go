@@ -23,21 +23,21 @@ var (
 )
 
 // Android build and package the fyne app for the android OS
-type Android struct {
-	CrossBuilder
+type android struct {
+	crossBuilder
 }
 
-var _ PlatformBuilder = (*Android)(nil)
-var _ Command = (*Android)(nil)
+var _ platformBuilder = (*android)(nil)
+var _ Command = (*android)(nil)
 
-func NewAndroidCommand() *Android {
-	r := &Android{CrossBuilder: CrossBuilder{name: "android", description: "Build and package a fyne application for the android OS"}}
+func NewAndroidCommand() *android {
+	r := &android{crossBuilder: crossBuilder{name: "android", description: "Build and package a fyne application for the android OS"}}
 	r.builder = r
 	return r
 }
 
 // Parse parses the arguments and set the usage for the command
-func (cmd *Android) Parse(args []string) error {
+func (cmd *android) Parse(args []string) error {
 	commonFlags, err := newCommonFlags()
 	if err != nil {
 		return err
@@ -56,12 +56,12 @@ func (cmd *Android) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	err = cmd.makeAndroidContainerImages(flags, flagSet.Args())
+	err = cmd.setupContainerImages(flags, flagSet.Args())
 	return err
 }
 
 // Run runs the command
-func (cmd *Android) Build(image ContainerImage) (string, string, error) {
+func (cmd *android) Build(image containerImage) (string, string, error) {
 	//
 	// package
 	//
@@ -106,7 +106,7 @@ func (cmd *Android) Build(image ContainerImage) (string, string, error) {
 }
 
 // Usage displays the command usage
-func (cmd *Android) Usage() {
+func (cmd *android) Usage() {
 	data := struct {
 		Name        string
 		Description string
@@ -139,8 +139,8 @@ type androidFlags struct {
 	TargetArch *targetArchFlag
 }
 
-// makeAndroidContext returns the command context for an android target
-func (cmd *Android) makeAndroidContainerImages(flags *androidFlags, args []string) error {
+// setupContainerImages returns the command context for an android target
+func (cmd *android) setupContainerImages(flags *androidFlags, args []string) error {
 
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, androidArchSupported)
 	if err != nil {
@@ -158,14 +158,14 @@ func (cmd *Android) makeAndroidContainerImages(flags *androidFlags, args []strin
 	}
 
 	cmd.defaultContext = ctx
-	runner := NewContainerEngine(ctx)
+	runner := newContainerEngine(ctx)
 
 	for _, arch := range targetArch {
 		// By default, the fyne cli tool builds a fat APK for all supported
 		// instruction sets (arm, 386, amd64, arm64). A subset of instruction sets can
 		// be selected by specifying target type with the architecture name.
 		// E.g.: -os=android/arm
-		image := runner.CreateContainerImage(arch, androidOS, overrideDockerImage(flags.CommonFlags, androidImage))
+		image := runner.createContainerImage(arch, androidOS, overrideDockerImage(flags.CommonFlags, androidImage))
 
 		if path.IsAbs(flags.Keystore) {
 			return fmt.Errorf("keystore location must be relative to the project root: %s", ctx.Volume.WorkDirHost())

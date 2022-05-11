@@ -16,21 +16,21 @@ const (
 )
 
 // IOS build and package the fyne app for the ios OS
-type IOS struct {
-	CrossBuilder
+type iOS struct {
+	crossBuilder
 }
 
-var _ PlatformBuilder = (*IOS)(nil)
-var _ Command = (*IOS)(nil)
+var _ platformBuilder = (*iOS)(nil)
+var _ Command = (*iOS)(nil)
 
-func NewIOSCommand() *IOS {
-	r := &IOS{CrossBuilder: CrossBuilder{name: "ios", description: "Build and package a fyne application for the iOS OS"}}
+func NewIOSCommand() *iOS {
+	r := &iOS{crossBuilder: crossBuilder{name: "ios", description: "Build and package a fyne application for the iOS OS"}}
 	r.builder = r
 	return r
 }
 
 // Parse parses the arguments and set the usage for the command
-func (cmd *IOS) Parse(args []string) error {
+func (cmd *iOS) Parse(args []string) error {
 	commonFlags, err := newCommonFlags()
 	if err != nil {
 		return err
@@ -50,12 +50,12 @@ func (cmd *IOS) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	err = cmd.makeIOSContainerImages(flags, flagSet.Args())
+	err = cmd.setupContainerImages(flags, flagSet.Args())
 	return err
 }
 
 // Run runs the command
-func (cmd *IOS) Build(image ContainerImage) (string, string, error) {
+func (cmd *iOS) Build(image containerImage) (string, string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
 		return "", "", err
@@ -85,7 +85,7 @@ func (cmd *IOS) Build(image ContainerImage) (string, string, error) {
 }
 
 // Usage displays the command usage
-func (cmd *IOS) Usage() {
+func (cmd *iOS) Usage() {
 	data := struct {
 		Name        string
 		Description string
@@ -119,8 +119,8 @@ type iosFlags struct {
 	Profile string
 }
 
-// makeIOSContext returns the command ContainerImages for an iOS target
-func (cmd *IOS) makeIOSContainerImages(flags *iosFlags, args []string) error {
+// setupContainerImages returns the command ContainerImages for an iOS target
+func (cmd *iOS) setupContainerImages(flags *iosFlags, args []string) error {
 	if runtime.GOOS != darwinOS {
 		return fmt.Errorf("iOS build is supported only on darwin hosts")
 	}
@@ -136,9 +136,9 @@ func (cmd *IOS) makeIOSContainerImages(flags *iosFlags, args []string) error {
 	}
 
 	cmd.defaultContext = ctx
-	runner := NewContainerEngine(ctx)
+	runner := newContainerEngine(ctx)
 
-	cmd.Images = append(cmd.Images, runner.CreateContainerImage("", iosOS, overrideDockerImage(flags.CommonFlags, iosImage)))
+	cmd.Images = append(cmd.Images, runner.createContainerImage("", iosOS, overrideDockerImage(flags.CommonFlags, iosImage)))
 
 	ctx.Certificate = flags.Certificate
 	ctx.Profile = flags.Profile

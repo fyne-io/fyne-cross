@@ -24,7 +24,7 @@ func Test_makeAndroidContext(t *testing.T) {
 		name        string
 		args        args
 		wantContext Context
-		wantImages  []ContainerImage
+		wantImages  []containerImage
 		wantErr     bool
 	}{
 		{
@@ -40,7 +40,7 @@ func Test_makeAndroidContext(t *testing.T) {
 				},
 			},
 			wantContext: Context{},
-			wantImages:  []ContainerImage{},
+			wantImages:  []containerImage{},
 			wantErr:     true,
 		},
 		{
@@ -56,7 +56,7 @@ func Test_makeAndroidContext(t *testing.T) {
 				},
 			},
 			wantContext: Context{},
-			wantImages:  []ContainerImage{},
+			wantImages:  []containerImage{},
 			wantErr:     true,
 		},
 		{
@@ -82,20 +82,19 @@ func Test_makeAndroidContext(t *testing.T) {
 				Engine:       engine,
 				Env:          map[string]string{},
 			},
-			wantImages: []ContainerImage{
-				&LocalContainerImage{
+			wantImages: []containerImage{
+				&localContainerImage{
 					baseContainerImage: baseContainerImage{
 						arch: ArchMultiple,
 						os:   androidOS,
 						id:   androidOS,
 						env:  map[string]string{},
-						Mount: []ContainerMountPoint{
+						mount: []containerMountPoint{
 							{vol.WorkDirHost(), vol.WorkDirContainer()},
 							{vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: androidImage,
 					},
-					Pull: false,
 				},
 			},
 			wantErr: false,
@@ -123,20 +122,19 @@ func Test_makeAndroidContext(t *testing.T) {
 				Engine:       engine,
 				Env:          map[string]string{},
 			},
-			wantImages: []ContainerImage{
-				&LocalContainerImage{
+			wantImages: []containerImage{
+				&localContainerImage{
 					baseContainerImage: baseContainerImage{
 						arch: ArchMultiple,
 						os:   androidOS,
 						id:   androidOS,
 						env:  map[string]string{},
-						Mount: []ContainerMountPoint{
+						mount: []containerMountPoint{
 							{vol.WorkDirHost(), vol.WorkDirContainer()},
 							{vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: androidImage,
 					},
-					Pull: false,
 				},
 			},
 			wantErr: false,
@@ -153,7 +151,7 @@ func Test_makeAndroidContext(t *testing.T) {
 				},
 			},
 			wantContext: Context{},
-			wantImages:  []ContainerImage{},
+			wantImages:  []containerImage{},
 			wantErr:     true,
 		},
 	}
@@ -161,7 +159,7 @@ func Test_makeAndroidContext(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			android := NewAndroidCommand()
 
-			err := android.makeAndroidContainerImages(tt.args.flags, tt.args.args)
+			err := android.setupContainerImages(tt.args.flags, tt.args.args)
 
 			if tt.wantErr {
 				require.NotNil(t, err)
@@ -171,7 +169,7 @@ func Test_makeAndroidContext(t *testing.T) {
 			assert.Equal(t, tt.wantContext, android.defaultContext)
 
 			for index := range android.Images {
-				android.Images[index].(*LocalContainerImage).Runner = nil
+				android.Images[index].(*localContainerImage).runner = nil
 			}
 
 			assert.Equal(t, tt.wantImages, android.Images)

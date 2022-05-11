@@ -22,18 +22,18 @@ var (
 )
 
 // Darwin build and package the fyne app for the darwin OS
-type Darwin struct {
-	CrossBuilder
+type darwin struct {
+	crossBuilder
 
 	localBuild bool
 }
 
-var _ PlatformBuilder = (*Darwin)(nil)
-var _ Command = (*Darwin)(nil)
+var _ platformBuilder = (*darwin)(nil)
+var _ Command = (*darwin)(nil)
 
-func NewDarwinCommand() *Darwin {
-	r := &Darwin{
-		CrossBuilder: CrossBuilder{
+func NewDarwinCommand() *darwin {
+	r := &darwin{
+		crossBuilder: crossBuilder{
 			name:        "darwin",
 			description: "Build and package a fyne application for the darwin OS",
 		},
@@ -44,7 +44,7 @@ func NewDarwinCommand() *Darwin {
 }
 
 // Parse parses the arguments and set the usage for the command
-func (cmd *Darwin) Parse(args []string) error {
+func (cmd *darwin) Parse(args []string) error {
 	commonFlags, err := newCommonFlags()
 	if err != nil {
 		return err
@@ -70,12 +70,12 @@ func (cmd *Darwin) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	err = cmd.makeDarwinContainerImages(flags, flagSet.Args())
+	err = cmd.setupContainerImages(flags, flagSet.Args())
 	return err
 }
 
 // Run runs the command
-func (cmd *Darwin) Build(image ContainerImage) (string, string, error) {
+func (cmd *darwin) Build(image containerImage) (string, string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
 		return "", "", err
@@ -127,7 +127,7 @@ func (cmd *Darwin) Build(image ContainerImage) (string, string, error) {
 }
 
 // Usage displays the command usage
-func (cmd *Darwin) Usage() {
+func (cmd *darwin) Usage() {
 	data := struct {
 		Name        string
 		Description string
@@ -159,8 +159,8 @@ type darwinFlags struct {
 	TargetArch *targetArchFlag
 }
 
-// darwinContext returns the command context for a darwin target
-func (cmd *Darwin) makeDarwinContainerImages(flags *darwinFlags, args []string) error {
+// setupContainerImages returns the command context for a darwin target
+func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error {
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, darwinArchSupported)
 	if err != nil {
 		return fmt.Errorf("could not make command context for %s OS: %s", darwinOS, err)
@@ -178,20 +178,20 @@ func (cmd *Darwin) makeDarwinContainerImages(flags *darwinFlags, args []string) 
 	ctx.Category = flags.Category
 
 	cmd.defaultContext = ctx
-	runner := NewContainerEngine(ctx)
+	runner := newContainerEngine(ctx)
 
 	for _, arch := range targetArch {
-		var image ContainerImage
+		var image containerImage
 
 		switch arch {
 		case ArchAmd64:
-			image = runner.CreateContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
+			image = runner.createContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
 			image.SetEnv("GOARCH", "amd64")
 			image.SetEnv("CC", "o64-clang")
 			image.SetEnv("CGO_CFLAGS", "-mmacosx-version-min=10.12")
 			image.SetEnv("CGO_LDFLAGS", "-mmacosx-version-min=10.12")
 		case ArchArm64:
-			image = runner.CreateContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
+			image = runner.createContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
 			image.SetEnv("GOARCH", "arm64")
 			image.SetEnv("CC", "oa64-clang")
 			image.SetEnv("CGO_CFLAGS", "-mmacosx-version-min=11.1")
