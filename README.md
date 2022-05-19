@@ -40,8 +40,14 @@ Supported targets are:
 
 ### Installation
 
+For go >= 1.16:
 ```
-go get -u github.com/fyne-io/fyne-cross
+go install github.com/fyne-io/fyne-cross@latest
+```
+
+For older go:
+```
+GO111MODULE=on go get -u github.com/fyne-io/fyne-cross
 ```
 
 > `fyne-cross` will be installed in GOPATH/bin, unless GOBIN is set.
