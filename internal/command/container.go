@@ -26,7 +26,6 @@ type debugger interface {
 
 type containerEngine interface {
 	createContainerImage(arch Architecture, OS string, image string) containerImage
-	debugger
 }
 
 type baseEngine struct {
@@ -59,6 +58,7 @@ type containerImage interface {
 	Tags() []string
 
 	Engine() containerEngine
+	Debugger() debugger
 }
 
 type containerMountPoint struct {
@@ -216,7 +216,7 @@ func goBuild(ctx Context, image containerImage) error {
 	args = append(args, "-o", output)
 
 	// enable debug mode
-	if image.Engine().debugging() {
+	if image.Debugger().debugging() {
 		args = append(args, "-v")
 	}
 
@@ -235,7 +235,7 @@ func goBuild(ctx Context, image containerImage) error {
 
 // fynePackage package the application using the fyne cli tool
 func fynePackage(ctx Context, image containerImage) error {
-	if image.Engine().debugging() {
+	if image.Debugger().debugging() {
 		err := image.Run(ctx.Volume, options{}, []string{fyneBin, "version"})
 		if err != nil {
 			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
@@ -297,11 +297,12 @@ func fynePackage(ctx Context, image containerImage) error {
 // fyneRelease package and release the application using the fyne cli tool
 // Note: at the moment this is used only for the android builds
 func fyneRelease(ctx Context, image containerImage) error {
-	if image.Engine().debugging() {
+	if image.Debugger().debugging() {
 		err := image.Run(ctx.Volume, options{}, []string{fyneBin, "version"})
 		if err != nil {
 			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
 		}
+		return nil
 	}
 
 	target := image.Target()

@@ -84,6 +84,10 @@ func (i *localContainerImage) Engine() containerEngine {
 	return i.runner
 }
 
+func (i *localContainerImage) Debugger() debugger {
+	return i.runner
+}
+
 // Cmd returns a command to run in a new container for the specified image
 func (i *localContainerImage) Cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd {
 
