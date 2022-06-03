@@ -32,10 +32,9 @@ type localContainerEngine struct {
 func newLocalContainerEngine(context Context) containerEngine {
 	return &localContainerEngine{
 		baseEngine: baseEngine{
-			env:         context.Env,
-			tags:        context.Tags,
-			vol:         context.Volume,
-			debugEnable: context.Debug,
+			env:  context.Env,
+			tags: context.Tags,
+			vol:  context.Volume,
 		},
 		engine:       &context.Engine,
 		pull:         context.Pull,
@@ -84,10 +83,6 @@ func (i *localContainerImage) Engine() containerEngine {
 	return i.runner
 }
 
-func (i *localContainerImage) Debugger() debugger {
-	return i.runner
-}
-
 // Cmd returns a command to run in a new container for the specified image
 func (i *localContainerImage) Cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd {
 
@@ -116,7 +111,7 @@ func (i *localContainerImage) Cmd(vol volume.Volume, opts options, cmdArgs []str
 			if err == nil {
 				args = append(args, "-u", fmt.Sprintf("%s:%s", u.Uid, u.Gid))
 				args = append(args, "--entrypoint", "fixuid")
-				if !i.runner.debugging() {
+				if !debugging() {
 					// silent fixuid if not debug mode
 					cmdArgs = append([]string{"-q"}, cmdArgs...)
 				}
@@ -150,7 +145,7 @@ func (i *localContainerImage) Cmd(vol volume.Volume, opts options, cmdArgs []str
 // Run runs a command in a new container for the specified image
 func (i *localContainerImage) Run(vol volume.Volume, opts options, cmdArgs []string) error {
 	cmd := i.Cmd(vol, opts, cmdArgs)
-	i.runner.debug(cmd)
+	log.Debug(cmd)
 	return cmd.Run()
 }
 
@@ -169,11 +164,11 @@ func (i *localContainerImage) Prepare() error {
 	cmd.Stdout = &buf
 	cmd.Stderr = &buf
 
-	i.runner.debug(cmd)
+	log.Debug(cmd)
 
 	err := cmd.Run()
 
-	i.runner.debug(buf.String())
+	log.Debug(buf.String())
 
 	if err != nil {
 		return fmt.Errorf("could not pull the docker image: %v", err)

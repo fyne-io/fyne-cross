@@ -19,11 +19,6 @@ const (
 	gowindresBin = "/usr/local/bin/gowindres"
 )
 
-type debugger interface {
-	debug(v ...interface{})
-	debugging() bool
-}
-
 type containerEngine interface {
 	createContainerImage(arch Architecture, OS string, image string) containerImage
 }
@@ -35,11 +30,7 @@ type baseEngine struct {
 	tags []string          // Tags defines the tags to use
 
 	vol volume.Volume
-
-	debugEnable bool
 }
-
-var _ debugger = (*baseEngine)(nil)
 
 type containerImage interface {
 	Cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd
@@ -58,7 +49,6 @@ type containerImage interface {
 	Tags() []string
 
 	Engine() containerEngine
-	Debugger() debugger
 }
 
 type containerMountPoint struct {
@@ -85,14 +75,10 @@ func newContainerEngine(context Context) containerEngine {
 	return nil
 }
 
-func (a *baseEngine) debug(v ...interface{}) {
-	if a.debugEnable {
-		log.Debug(v...)
-	}
-}
+var debugEnable bool
 
-func (a *baseEngine) debugging() bool {
-	return a.debugEnable
+func debugging() bool {
+	return debugEnable
 }
 
 func (a *baseEngine) createContainerImageInternal(arch Architecture, OS string, image string, fn func(base baseContainerImage) containerImage) containerImage {
@@ -216,7 +202,7 @@ func goBuild(ctx Context, image containerImage) error {
 	args = append(args, "-o", output)
 
 	// enable debug mode
-	if image.Debugger().debugging() {
+	if debugging() {
 		args = append(args, "-v")
 	}
 
@@ -235,7 +221,7 @@ func goBuild(ctx Context, image containerImage) error {
 
 // fynePackage package the application using the fyne cli tool
 func fynePackage(ctx Context, image containerImage) error {
-	if image.Debugger().debugging() {
+	if debugging() {
 		err := image.Run(ctx.Volume, options{}, []string{fyneBin, "version"})
 		if err != nil {
 			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
@@ -297,7 +283,7 @@ func fynePackage(ctx Context, image containerImage) error {
 // fyneRelease package and release the application using the fyne cli tool
 // Note: at the moment this is used only for the android builds
 func fyneRelease(ctx Context, image containerImage) error {
-	if image.Debugger().debugging() {
+	if debugging() {
 		err := image.Run(ctx.Volume, options{}, []string{fyneBin, "version"})
 		if err != nil {
 			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)

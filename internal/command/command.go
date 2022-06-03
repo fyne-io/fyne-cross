@@ -176,7 +176,7 @@ func checkFyneBinHost(ctx Context) (string, error) {
 		return "", fmt.Errorf("missed requirement: fyne. To install: `go get fyne.io/fyne/v2/cmd/fyne` and add $GOPATH/bin to $PATH")
 	}
 
-	if ctx.Debug {
+	if debugging() {
 		out, err := execabs.Command(fyne, "version").Output()
 		if err != nil {
 			return fyne, fmt.Errorf("could not get fyne cli %s version: %v", fyne, err)
@@ -222,7 +222,7 @@ func fynePackageHost(ctx Context, image containerImage) error {
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
 
-	if ctx.Debug {
+	if debugging() {
 		log.Debug(fyneCmd)
 	}
 
@@ -292,7 +292,7 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
 
-	if ctx.Debug {
+	if debugging() {
 		log.Debug(fyneCmd)
 	}
 

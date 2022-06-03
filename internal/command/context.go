@@ -53,7 +53,6 @@ type Context struct {
 	Package      string // Package is the package to build named by the import path as per 'go build'
 	Release      bool   // Enable release mode. If true, prepares an application for public distribution
 	StripDebug   bool   // StripDebug if true, strips binary output
-	Debug        bool   // Debug if true enable debug log
 	Pull         bool   // Pull if true attempts to pull a newer version of the docker image
 
 	// Release context
@@ -115,7 +114,6 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		Icon:         flags.Icon,
 		Name:         flags.Name,
 		StripDebug:   !flags.NoStripDebug,
-		Debug:        flags.Debug,
 		Volume:       vol,
 		Pull:         flags.Pull,
 		Release:      flags.Release,
@@ -155,6 +153,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 
 	if flags.Debug {
 		log.SetLevel(log.LevelDebug)
+		debugEnable = true
 	}
 
 	return ctx, nil
