@@ -24,16 +24,28 @@ var (
 
 // Windows build and package the fyne app for the windows OS
 type windows struct {
-	crossBuilder
+	Images         []containerImage
+	defaultContext Context
 }
 
 var _ platformBuilder = (*windows)(nil)
 var _ Command = (*windows)(nil)
 
 func NewWindowsCommand() *windows {
-	r := &windows{crossBuilder: crossBuilder{name: "windows", description: "Build and package a fyne application for the windows OS"}}
-	r.builder = r
-	return r
+	return &windows{}
+}
+
+func (cmd *windows) Name() string {
+	return "windows"
+}
+
+// Description returns the command description
+func (cmd *windows) Description() string {
+	return "Build and package a fyne application for the windows OS"
+}
+
+func (cmd *windows) Run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
 }
 
 // Parse parses the arguments and set the usage for the command

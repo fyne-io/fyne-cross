@@ -26,24 +26,13 @@ type platformBuilder interface {
 	Build(image containerImage) (string, string, error) // Called to build each possible architecture/OS combination
 }
 
-type crossBuilder struct {
-	builder platformBuilder
-
-	Images []containerImage
-
-	defaultContext Context
-	name           string
-	description    string
-}
-
-// Run runs the command using helper code
-func (cb *crossBuilder) Run() error {
-	err := bumpFyneAppBuild(cb.defaultContext)
+func commonRun(defaultContext Context, images []containerImage, builder platformBuilder) error {
+	err := bumpFyneAppBuild(defaultContext)
 	if err != nil {
 		log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
 	}
 
-	for _, image := range cb.Images {
+	for _, image := range images {
 		log.Infof("[i] Target: %s/%s", image.OS(), image.Architecture())
 		log.Debugf("%#v", image)
 
@@ -55,17 +44,17 @@ func (cb *crossBuilder) Run() error {
 			return err
 		}
 
-		err = cleanTargetDirs(cb.defaultContext, image)
+		err = cleanTargetDirs(defaultContext, image)
 		if err != nil {
 			return err
 		}
 
-		err = goModInit(cb.defaultContext, image)
+		err = goModInit(defaultContext, image)
 		if err != nil {
 			return err
 		}
 
-		srcFile, packageName, err := cb.builder.Build(image)
+		srcFile, packageName, err := builder.Build(image)
 		if err != nil {
 			return err
 		}
@@ -74,15 +63,7 @@ func (cb *crossBuilder) Run() error {
 	}
 
 	return nil
-}
 
-func (cb *crossBuilder) Name() string {
-	return cb.name
-}
-
-// Description returns the command description
-func (cb *crossBuilder) Description() string {
-	return cb.description
 }
 
 // Usage prints the fyne-cross command usage

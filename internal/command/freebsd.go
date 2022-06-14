@@ -24,16 +24,28 @@ var (
 
 // FreeBSD build and package the fyne app for the freebsd OS
 type freeBSD struct {
-	crossBuilder
+	Images         []containerImage
+	defaultContext Context
 }
 
 var _ platformBuilder = (*freeBSD)(nil)
 var _ Command = (*freeBSD)(nil)
 
 func NewFreeBSD() *freeBSD {
-	r := &freeBSD{crossBuilder: crossBuilder{name: "freebsd", description: "Build and package a fyne application for the freebsd OS"}}
-	r.builder = r
-	return r
+	return &freeBSD{}
+}
+
+func (cmd *freeBSD) Name() string {
+	return "freebsd"
+}
+
+// Description returns the command description
+func (cmd *freeBSD) Description() string {
+	return "Build and package a fyne application for the freebsd OS"
+}
+
+func (cmd *freeBSD) Run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
 }
 
 // Parse parses the arguments and set the usage for the command

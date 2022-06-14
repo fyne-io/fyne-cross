@@ -25,16 +25,28 @@ var (
 
 // linux build and package the fyne app for the linux OS
 type linux struct {
-	crossBuilder
+	Images         []containerImage
+	defaultContext Context
 }
 
 var _ platformBuilder = (*linux)(nil)
 var _ Command = (*linux)(nil)
 
 func NewLinuxCommand() *linux {
-	r := &linux{crossBuilder: crossBuilder{name: "linux", description: "Build and package a fyne application for the linux OS"}}
-	r.builder = r
-	return r
+	return &linux{}
+}
+
+func (cmd *linux) Name() string {
+	return "linux"
+}
+
+// Description returns the command description
+func (cmd *linux) Description() string {
+	return "Build and package a fyne application for the linux OS"
+}
+
+func (cmd *linux) Run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
 }
 
 // Parse parses the arguments and set the usage for the command

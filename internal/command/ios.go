@@ -17,16 +17,28 @@ const (
 
 // IOS build and package the fyne app for the ios OS
 type iOS struct {
-	crossBuilder
+	Images         []containerImage
+	defaultContext Context
 }
 
 var _ platformBuilder = (*iOS)(nil)
 var _ Command = (*iOS)(nil)
 
 func NewIOSCommand() *iOS {
-	r := &iOS{crossBuilder: crossBuilder{name: "ios", description: "Build and package a fyne application for the iOS OS"}}
-	r.builder = r
-	return r
+	return &iOS{}
+}
+
+func (cmd *iOS) Name() string {
+	return "ios"
+}
+
+// Description returns the command description
+func (cmd *iOS) Description() string {
+	return "Build and package a fyne application for the iOS OS"
+}
+
+func (cmd *iOS) Run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
 }
 
 // Parse parses the arguments and set the usage for the command

@@ -24,16 +24,28 @@ var (
 
 // Android build and package the fyne app for the android OS
 type android struct {
-	crossBuilder
+	Images         []containerImage
+	defaultContext Context
 }
 
 var _ platformBuilder = (*android)(nil)
 var _ Command = (*android)(nil)
 
 func NewAndroidCommand() *android {
-	r := &android{crossBuilder: crossBuilder{name: "android", description: "Build and package a fyne application for the android OS"}}
-	r.builder = r
-	return r
+	return &android{}
+}
+
+func (cmd *android) Name() string {
+	return "android"
+}
+
+// Description returns the command description
+func (cmd *android) Description() string {
+	return "Build and package a fyne application for the android OS"
+}
+
+func (cmd *android) Run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
 }
 
 // Parse parses the arguments and set the usage for the command
