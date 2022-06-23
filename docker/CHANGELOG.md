@@ -23,6 +23,10 @@ above.
 
 Example: `fyneio/fyne-cross:1.3-base-22.06.23`
 
+## Release 23.06.23
+- Update Go to v1.18.3
+- Update Fyne CLI to v2.2.2-rc1
+
 ## fyne 1.2.x compatible
 
 Latest versions available on Docker Hub are:
