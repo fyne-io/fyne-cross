@@ -20,7 +20,7 @@ var (
 	// darwinArchSupported defines the supported target architectures on darwin
 	darwinArchSupported = []Architecture{ArchAmd64, ArchArm64}
 	// darwinImage is the fyne-cross image for the Darwin OS
-	darwinImage = "docker.io/fyneio/fyne-cross:1.2-darwin"
+	darwinImage = "docker.io/fyneio/fyne-cross:1.3-darwin"
 )
 
 // Darwin build and package the fyne app for the darwin OS

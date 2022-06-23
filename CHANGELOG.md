@@ -1,6 +1,6 @@
 # Changelog - Fyne.io fyne-cross
 
-## Unreleased
+## 1.3.0 - Unreleased
 
 ### Changed
 
