@@ -89,7 +89,7 @@ func (i *localContainerImage) Engine() containerEngine {
 }
 
 // Cmd returns a command to run in a new container for the specified image
-func (i *localContainerImage) Cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd {
+func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd {
 
 	// define workdir
 	w := vol.WorkDirContainer()
@@ -149,7 +149,7 @@ func (i *localContainerImage) Cmd(vol volume.Volume, opts options, cmdArgs []str
 
 // Run runs a command in a new container for the specified image
 func (i *localContainerImage) Run(vol volume.Volume, opts options, cmdArgs []string) error {
-	cmd := i.Cmd(vol, opts, cmdArgs)
+	cmd := i.cmd(vol, opts, cmdArgs)
 	log.Debug(cmd)
 	return cmd.Run()
 }
