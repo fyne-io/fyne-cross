@@ -206,7 +206,10 @@ func (cmd *windows) setupContainerImages(flags *windowsFlags, args []string) err
 	}
 
 	cmd.defaultContext = ctx
-	runner := newContainerEngine(ctx)
+	runner, err := newContainerEngine(ctx)
+	if err != nil {
+		return err
+	}
 
 	for _, arch := range targetArch {
 		image := runner.createContainerImage(arch, windowsOS, overrideDockerImage(flags.CommonFlags, windowsImage))

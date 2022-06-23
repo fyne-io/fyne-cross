@@ -29,7 +29,7 @@ type localContainerEngine struct {
 	cacheEnabled bool
 }
 
-func newLocalContainerEngine(context Context) containerEngine {
+func newLocalContainerEngine(context Context) (containerEngine, error) {
 	return &localContainerEngine{
 		baseEngine: baseEngine{
 			env:  context.Env,
@@ -39,7 +39,7 @@ func newLocalContainerEngine(context Context) containerEngine {
 		engine:       &context.Engine,
 		pull:         context.Pull,
 		cacheEnabled: context.CacheEnabled,
-	}
+	}, nil
 }
 
 type localContainerImage struct {

@@ -184,7 +184,10 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 	ctx.Category = flags.Category
 
 	cmd.defaultContext = ctx
-	runner := newContainerEngine(ctx)
+	runner, err := newContainerEngine(ctx)
+	if err != nil {
+		return err
+	}
 
 	for _, arch := range targetArch {
 		var image containerImage

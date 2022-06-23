@@ -145,7 +145,10 @@ func (cmd *linux) setupContainerImages(flags *linuxFlags, args []string) error {
 	}
 
 	cmd.defaultContext = ctx
-	runner := newContainerEngine(ctx)
+	runner, err := newContainerEngine(ctx)
+	if err != nil {
+		return err
+	}
 
 	for _, arch := range targetArch {
 		var image containerImage

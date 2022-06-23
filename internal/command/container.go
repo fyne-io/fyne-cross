@@ -68,11 +68,11 @@ type baseContainerImage struct {
 	DockerImage string // DockerImage defines the docker image used to build
 }
 
-func newContainerEngine(context Context) containerEngine {
+func newContainerEngine(context Context) (containerEngine, error) {
 	if context.Engine.IsDocker() || context.Engine.IsPodman() {
 		return newLocalContainerEngine(context)
 	}
-	return nil
+	return nil, fmt.Errorf("unknown engine: '%s'", context.Engine)
 }
 
 var debugEnable bool
