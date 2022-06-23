@@ -18,6 +18,7 @@ func main() {
 		&command.Android{},
 		&command.IOS{},
 		&command.FreeBSD{},
+		&command.Web{},
 		&command.Version{},
 	}
 

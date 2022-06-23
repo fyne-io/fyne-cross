@@ -2,6 +2,10 @@
 
 ## 1.3.0 - Unreleased
 
+### Added
+
+- Add support for web target #92
+
 ### Changed
 
 - Bump min Go version to 1.14 to align with Fyne requirements
