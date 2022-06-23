@@ -15,6 +15,7 @@ Latest versions available on Docker Hub are:
 - fyneio/fyne-cross:1.3-linux-386
 - fyneio/fyne-cross:1.3-linux-arm64
 - fyneio/fyne-cross:1.3-linux-arm
+- fyneio/fyne-cross:1.3-web
 - fyneio/fyne-cross:1.3-windows
 
 Release cycle won't follow the fyne-cross one, so the images will be tagged and
@@ -24,6 +25,7 @@ above.
 Example: `fyneio/fyne-cross:1.3-base-22.06.23`
 
 ## Release 23.06.23
+- Add `web` base image
 - Update Go to v1.18.3
 - Update Fyne CLI to v2.2.2-rc1
 
@@ -40,6 +42,7 @@ Latest versions available on Docker Hub are:
 - fyneio/fyne-cross:1.2-linux-386
 - fyneio/fyne-cross:1.2-linux-arm64
 - fyneio/fyne-cross:1.2-linux-arm
+- fyneio/fyne-cross:1.2-web
 - fyneio/fyne-cross:1.2-windows
 
 Release cycle won't follow the fyne-cross one, so the images will be tagged and
