@@ -70,6 +70,8 @@ func (cmd *darwin) Parse(args []string) error {
 	// flags used only in release mode
 	flagSet.StringVar(&flags.Category, "category", "", "The category of the app for store listing")
 
+	flagSet.StringVar(&flags.MacOSXVersionMin, "macosx-version-min", "unset", "Specify the minimum version that the SDK you used to create the Darwin image support")
+
 	flagAppID := flagSet.Lookup("app-id")
 	flagAppID.Usage = fmt.Sprintf("%s [required]", flagAppID.Usage)
 
@@ -173,6 +175,9 @@ type darwinFlags struct {
 
 	// TargetArch represents a list of target architecture to build on separated by comma
 	TargetArch *targetArchFlag
+
+	// Specify MacOSX minimum version
+	MacOSXVersionMin string
 }
 
 // setupContainerImages returns the command context for a darwin target
@@ -207,14 +212,26 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 			image = runner.createContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
 			image.SetEnv("GOARCH", "amd64")
 			image.SetEnv("CC", "o64-clang")
-			image.SetEnv("CGO_CFLAGS", "-mmacosx-version-min=10.12")
-			image.SetEnv("CGO_LDFLAGS", "-mmacosx-version-min=10.12")
+
+			if flags.MacOSXVersionMin == "unset" {
+				flags.MacOSXVersionMin = "10.12"
+			}
+			if flags.MacOSXVersionMin != "" {
+				image.SetEnv("CGO_CFLAGS", fmt.Sprintf("-mmacosx-version-min=%s", flags.MacOSXVersionMin))
+				image.SetEnv("CGO_LDFLAGS", fmt.Sprintf("-mmacosx-version-min=%s", flags.MacOSXVersionMin))
+			}
 		case ArchArm64:
 			image = runner.createContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
 			image.SetEnv("GOARCH", "arm64")
 			image.SetEnv("CC", "oa64-clang")
-			image.SetEnv("CGO_CFLAGS", "-mmacosx-version-min=11.1")
-			image.SetEnv("CGO_LDFLAGS", "-fuse-ld=lld -mmacosx-version-min=11.1")
+
+			if flags.MacOSXVersionMin == "unset" {
+				flags.MacOSXVersionMin = "11.1"
+			}
+			if flags.MacOSXVersionMin != "" {
+				image.SetEnv("CGO_CFLAGS", fmt.Sprintf("-mmacosx-version-min=%s", flags.MacOSXVersionMin))
+				image.SetEnv("CGO_LDFLAGS", fmt.Sprintf("-fuse-ld=lld -mmacosx-version-min=%s", flags.MacOSXVersionMin))
+			}
 		}
 		image.SetEnv("GOOS", "darwin")
 
