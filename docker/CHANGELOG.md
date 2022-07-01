@@ -24,6 +24,9 @@ above.
 
 Example: `fyneio/fyne-cross:1.3-base-22.06.23`
 
+## Release 22.07.01
+- Update Fyne CLI to v2.2.2
+
 ## Release 22.06.23
 - Add `web` base image
 - Update freebsd to v12.3
