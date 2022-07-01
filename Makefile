@@ -35,7 +35,7 @@ web: base
 	@$(RUNNER) build --build-arg FYNE_CROSS_VERSION=${FYNE_CROSS_VERSION} -f ${CURDIR}/docker/web/Dockerfile -t fyneio/fyne-cross:${FYNE_CROSS_VERSION}-web .
 
 # build all images for release. Note do not build darwin
-build-images: base android freebsd linux windows
+build-images: base android freebsd linux windows web
 ifeq ($(RUNNER),podman)
 	$(MAKE) podman-tag
 endif
