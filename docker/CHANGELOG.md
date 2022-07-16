@@ -2,6 +2,41 @@
 
 All notable changes to the fyne-cross docker images will be documented in this file.
 
+## fyne 1.3.x compatible
+
+Latest versions available on Docker Hub are:
+
+- fyneio/fyne-cross:1.3-base
+- fyneio/fyne-cross:1.3-base-llvm
+- fyneio/fyne-cross:1.3-base-freebsd
+- fyneio/fyne-cross:1.3-android
+- fyneio/fyne-cross:1.3-freebsd-amd64
+- fyneio/fyne-cross:1.3-freebsd-arm64
+- fyneio/fyne-cross:1.3-linux-386
+- fyneio/fyne-cross:1.3-linux-arm64
+- fyneio/fyne-cross:1.3-linux-arm
+- fyneio/fyne-cross:1.3-web
+- fyneio/fyne-cross:1.3-windows
+
+Release cycle won't follow the fyne-cross one, so the images will be tagged and
+available on Docker Hub using the label year.month.day along with the tags
+above.
+
+Example: `fyneio/fyne-cross:1.3-base-22.06.23`
+
+## Release 22.07.13
+- Update Fyne CLI to v2.2.3
+- Update Go to v1.18.4
+
+## Release 22.07.01
+- Update Fyne CLI to v2.2.2
+
+## Release 22.06.23
+- Add `web` base image
+- Update freebsd to v12.3
+- Update Go to v1.18.3
+- Update Fyne CLI to v2.2.2-rc1
+
 ## fyne 1.2.x compatible
 
 Latest versions available on Docker Hub are:
@@ -15,6 +50,7 @@ Latest versions available on Docker Hub are:
 - fyneio/fyne-cross:1.2-linux-386
 - fyneio/fyne-cross:1.2-linux-arm64
 - fyneio/fyne-cross:1.2-linux-arm
+- fyneio/fyne-cross:1.2-web
 - fyneio/fyne-cross:1.2-windows
 
 Release cycle won't follow the fyne-cross one, so the images will be tagged and

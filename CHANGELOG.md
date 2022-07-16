@@ -1,5 +1,17 @@
 # Changelog - Fyne.io fyne-cross
 
+## 1.3.0 - Unreleased
+
+### Added
+
+- Add support for web target #92
+- Add CI job to build calculator app #104 
+
+### Changed
+
+- Bump min Go version to 1.14 to align with Fyne requirements
+- Update README for matching modern go command line #114
+
 ## 1.2.1 - 09 Apr 2022
 
 ### Added

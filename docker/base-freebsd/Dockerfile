@@ -30,7 +30,7 @@ RUN apt-get update -qq \
 
 RUN mkdir -p /pkg-src \
     && mkdir -p /pkg/etc \
-    && curl -L https://github.com/freebsd/pkg/archive/1.12.0.tar.gz | bsdtar -xf - -C /pkg-src \
+    && curl -L https://github.com/freebsd/pkg/archive/1.18.2.tar.gz | bsdtar -xf - -C /pkg-src \
     && cd /pkg-src/pkg-* \ 
     && ./scripts/install_deps.sh \
     && ./configure --with-libarchive.pc --prefix=/pkg \
