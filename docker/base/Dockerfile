@@ -32,6 +32,7 @@ RUN apt-get update -qq \
         x11proto-dev \
         # deps to support wayland
         libxkbcommon-dev \
+        libwebkit2gtk-4.0-dev \
     && apt-get -qy autoremove \
     && apt-get clean \
     && rm -r /var/lib/apt/lists/*;
