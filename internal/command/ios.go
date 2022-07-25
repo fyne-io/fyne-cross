@@ -2,8 +2,6 @@ package command
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"runtime"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -18,22 +16,33 @@ const (
 )
 
 // IOS build and package the fyne app for the ios OS
-type IOS struct {
-	Context Context
+type iOS struct {
+	Images         []containerImage
+	defaultContext Context
 }
 
-// Name returns the one word command name
-func (cmd *IOS) Name() string {
+var _ platformBuilder = (*iOS)(nil)
+var _ Command = (*iOS)(nil)
+
+func NewIOSCommand() *iOS {
+	return &iOS{}
+}
+
+func (cmd *iOS) Name() string {
 	return "ios"
 }
 
 // Description returns the command description
-func (cmd *IOS) Description() string {
+func (cmd *iOS) Description() string {
 	return "Build and package a fyne application for the iOS OS"
 }
 
+func (cmd *iOS) Run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
+}
+
 // Parse parses the arguments and set the usage for the command
-func (cmd *IOS) Parse(args []string) error {
+func (cmd *iOS) Parse(args []string) error {
 	commonFlags, err := newCommonFlags()
 	if err != nil {
 		return err
@@ -53,83 +62,42 @@ func (cmd *IOS) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	ctx, err := makeIOSContext(flags, flagSet.Args())
-	if err != nil {
-		return err
-	}
-	cmd.Context = ctx
-	return nil
+	err = cmd.setupContainerImages(flags, flagSet.Args())
+	return err
 }
 
 // Run runs the command
-func (cmd *IOS) Run() error {
-
-	ctx := cmd.Context
-	log.Infof("[i] Target: %s", ctx.OS)
-	log.Debugf("%#v", ctx)
-
-	//
-	// pull image, if requested
-	//
-	err := pullImage(ctx)
+func (cmd *iOS) Build(image containerImage) (string, string, error) {
+	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return err
-	}
-
-	//
-	// prepare build
-	//
-	err = cleanTargetDirs(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = goModInit(ctx)
-	if err != nil {
-		return err
-	}
-
-	err = prepareIcon(ctx)
-	if err != nil {
-		return err
+		return "", "", err
 	}
 
 	log.Info("[i] Packaging app...")
 
 	var packageName string
-	if ctx.Release {
+	if cmd.defaultContext.Release {
 		// Release mode
-		packageName = fmt.Sprintf("%s.ipa", ctx.Name)
-		err = fyneReleaseHost(ctx)
+		packageName = fmt.Sprintf("%s.ipa", cmd.defaultContext.Name)
+		err = fyneReleaseHost(cmd.defaultContext, image)
 	} else {
 		// Build mode
-		packageName = fmt.Sprintf("%s.app", ctx.Name)
-		err = fynePackageHost(ctx)
+		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
+		err = fynePackageHost(cmd.defaultContext, image)
 	}
 
 	if err != nil {
-		return fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 
 	// move the dist package into the "dist" folder
-	srcFile := volume.JoinPathHost(ctx.WorkDirHost(), packageName)
-	distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
-	err = os.MkdirAll(filepath.Dir(distFile), 0755)
-	if err != nil {
-		return fmt.Errorf("could not create the dist package dir: %v", err)
-	}
+	srcFile := volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), packageName)
 
-	err = os.Rename(srcFile, distFile)
-	if err != nil {
-		return err
-	}
-
-	log.Infof("[✓] Package: %s", distFile)
-	return nil
+	return srcFile, packageName, nil
 }
 
 // Usage displays the command usage
-func (cmd *IOS) Usage() {
+func (cmd *iOS) Usage() {
 	data := struct {
 		Name        string
 		Description string
@@ -163,32 +131,29 @@ type iosFlags struct {
 	Profile string
 }
 
-// makeIOSContext returns the command context for an iOS target
-func makeIOSContext(flags *iosFlags, args []string) (Context, error) {
-
+// setupContainerImages returns the command ContainerImages for an iOS target
+func (cmd *iOS) setupContainerImages(flags *iosFlags, args []string) error {
 	if runtime.GOOS != darwinOS {
-		return Context{}, fmt.Errorf("iOS build is supported only on darwin hosts")
+		return fmt.Errorf("iOS build is supported only on darwin hosts")
 	}
 
 	ctx, err := makeDefaultContext(flags.CommonFlags, args)
 	if err != nil {
-		return Context{}, err
+		return err
 	}
 
 	// appID is mandatory for ios
 	if ctx.AppID == "" {
-		return Context{}, fmt.Errorf("appID is mandatory for %s", iosImage)
+		return fmt.Errorf("appID is mandatory for %s", iosImage)
 	}
 
-	ctx.OS = iosOS
-	ctx.ID = iosOS
+	cmd.defaultContext = ctx
+	runner := newContainerEngine(ctx)
+
+	cmd.Images = append(cmd.Images, runner.createContainerImage("", iosOS, overrideDockerImage(flags.CommonFlags, iosImage)))
+
 	ctx.Certificate = flags.Certificate
 	ctx.Profile = flags.Profile
 
-	// set context based on command-line flags
-	if flags.DockerImage == "" {
-		ctx.DockerImage = iosImage
-	}
-
-	return ctx, nil
+	return nil
 }
