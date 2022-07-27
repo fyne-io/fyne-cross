@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"os"
 	"os/user"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -180,12 +179,16 @@ func (i *localContainerImage) Prepare() error {
 
 func (i *localContainerImage) Finalize(srcFile string, packageName string) error {
 	distFile := volume.JoinPathHost(i.runner.vol.DistDirHost(), i.ID(), packageName)
-	err := os.MkdirAll(filepath.Dir(distFile), 0755)
-	if err != nil {
-		return fmt.Errorf("could not create the dist package dir: %v", err)
+
+	// If packageName is empty, we are copying an entire directory directly in the DistDirHost directory
+	if packageName == "" {
+		err := os.RemoveAll(distFile)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = os.Rename(srcFile, distFile)
+	err := os.Rename(srcFile, distFile)
 	if err != nil {
 		return err
 	}

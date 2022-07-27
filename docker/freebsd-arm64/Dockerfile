@@ -8,7 +8,7 @@ FROM fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-freebsd
 ENV ABI="FreeBSD:12:aarch64"
 RUN mkdir /freebsd \
     && mkdir /etc/pkg/ \
-	&& curl https://download.freebsd.org/ftp/releases/arm64/12.2-RELEASE/base.txz | \
+	&& curl https://download.freebsd.org/ftp/releases/arm64/12.3-RELEASE/base.txz | \
 		bsdtar -xf - -C /freebsd ./lib ./usr/lib ./usr/libdata ./usr/include ./usr/share/keys ./etc \
     && cp /freebsd/etc/pkg/FreeBSD.conf /etc/pkg/ \
     && ln -s /freebsd/usr/share/keys /usr/share/keys 
