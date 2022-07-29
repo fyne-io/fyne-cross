@@ -59,12 +59,12 @@ func (cmd *web) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *web) Build(image containerImage) (string, string, error) {
+func (cmd *web) Build(image containerImage) (string, error) {
 	log.Info("[i] Packaging app...")
 
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	if cmd.defaultContext.Release {
@@ -75,13 +75,13 @@ func (cmd *web) Build(image containerImage) (string, string, error) {
 		err = fynePackage(cmd.defaultContext, image)
 	}
 	if err != nil {
-		return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 
-	// move the dist package into the "dist" folder
-	srcFile := volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), cmd.defaultContext.Package, "web")
-
-	return srcFile, "", nil
+	// move the dist package into the "tmp" folder
+	srcFile := volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), cmd.defaultContext.Package, "web")
+	dstFile := volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID())
+	return "", image.Run(cmd.defaultContext.Volume, options{}, []string{"mv", srcFile, dstFile})
 }
 
 // Usage displays the command usage
@@ -121,7 +121,10 @@ func (cmd *web) setupContainerImages(flags *webFlags, args []string) error {
 	}
 
 	cmd.defaultContext = ctx
-	runner := newContainerEngine(ctx)
+	runner, err := newContainerEngine(ctx)
+	if err != nil {
+		return err
+	}
 
 	image := runner.createContainerImage("", webOS, overrideDockerImage(flags.CommonFlags, webImage))
 	cmd.Images = append(cmd.Images, image)
