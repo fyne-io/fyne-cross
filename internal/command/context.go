@@ -102,7 +102,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 
 	engine := flags.Engine.Engine
 	if (engine == Engine{}) {
-		if flags.Namespace != "" {
+		if flags.Namespace != "" && flags.Namespace != "default" {
 			engine, err = MakeEngine(kubernetesEngine)
 			if err != nil {
 				return Context{}, err
