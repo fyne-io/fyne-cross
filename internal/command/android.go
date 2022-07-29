@@ -13,7 +13,7 @@ const (
 	// androidOS is the android OS name
 	androidOS = "android"
 	// androidImage is the fyne-cross image for the Android OS
-	androidImage = "docker.io/fyneio/fyne-cross:1.2-android"
+	androidImage = "docker.io/fyneio/fyne-cross:1.3-android"
 )
 
 var (

@@ -18,6 +18,7 @@ func main() {
 		command.NewAndroidCommand(),
 		command.NewIOSCommand(),
 		command.NewFreeBSD(),
+		command.NewWebCommand(),
 		&command.Version{},
 	}
 

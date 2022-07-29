@@ -65,7 +65,10 @@ func commonRun(defaultContext Context, images []containerImage, builder platform
 				return err
 			}
 
-			image.Finalize(packageName)
+			err = image.Finalize(packageName)
+			if err != nil {
+				return err
+			}
 
 			return nil
 		}()

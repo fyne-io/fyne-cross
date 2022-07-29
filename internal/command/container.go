@@ -263,7 +263,7 @@ func fynePackage(ctx Context, image containerImage) error {
 	// workDir default value
 	workDir := ctx.WorkDirContainer()
 
-	if image.OS() == androidOS {
+	if image.OS() == androidOS || image.OS() == webOS {
 		workDir = volume.JoinPathContainer(workDir, ctx.Package)
 	}
 
@@ -340,6 +340,8 @@ func fyneRelease(ctx Context, image containerImage) error {
 		if ctx.Profile != "" {
 			args = append(args, "-profile", ctx.Profile)
 		}
+	case webOS:
+		workDir = volume.JoinPathContainer(workDir, ctx.Package)
 	case windowsOS:
 		if ctx.Certificate != "" {
 			args = append(args, "-certificate", ctx.Certificate)
