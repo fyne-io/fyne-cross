@@ -2,6 +2,7 @@ package command
 
 import (
 	"context"
+	"crypto/rand"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -224,7 +225,11 @@ func (i *kubernetesContainerImage) Prepare() error {
 		})
 	}
 
-	i.podName = fmt.Sprintf("fyne-cross-%s", i.ID())
+	// This allow to run more than one fyne-cross for a specific architecture per cluster namespace
+	var unique [6]byte
+	rand.Read(unique[:])
+
+	i.podName = fmt.Sprintf("fyne-cross-%s-%x", i.ID(), unique)
 	namespace := i.runner.namespace
 	timeout := time.Duration(10) * time.Minute
 	env := []v1.EnvVar{
