@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/fs"
 	"log"
 	"os"
 	"path/filepath"
@@ -137,7 +136,7 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 	errorChannel := make(chan error)
 
 	go func() {
-		err := filepath.Walk(localDirectoy, func(path string, info fs.FileInfo, err error) error {
+		err := filepath.Walk(localDirectoy, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
 			}
