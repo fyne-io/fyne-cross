@@ -238,8 +238,10 @@ func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDir
 		}
 		defer d.Close()
 
-		// Copy content...
-		_, err = io.Copy(outZstd, d)
+		go func() {
+			// Copy content...
+			io.Copy(outZstd, d)
+		}()
 
 		compression = archiver.NewTar()
 		err = compression.Open(inTar, 0)
