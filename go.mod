@@ -8,7 +8,7 @@ require (
 	github.com/andybalholm/brotli v1.0.4 // indirect
 	github.com/aws/aws-sdk-go v1.43.31
 	github.com/golang/snappy v0.0.4 // indirect
-	github.com/klauspost/compress v1.15.9 // indirect
+	github.com/klauspost/compress v1.13.4 // indirect
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
 	github.com/stretchr/testify v1.7.0
