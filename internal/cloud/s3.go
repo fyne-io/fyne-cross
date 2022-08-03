@@ -44,6 +44,10 @@ func NewAWSSessionFromEnvironment() (*AWSSession, error) {
 func NewAWSSession(akid string, secret string, endpoint string, region string, bucket string) (*AWSSession, error) {
 	var cred *credentials.Credentials
 
+	if len(bucket) == 0 {
+		return nil, fmt.Errorf("no bucket specified")
+	}
+
 	if akid != "" && secret != "" {
 		cred = credentials.NewStaticCredentials(akid, secret, "")
 	}
