@@ -13,9 +13,9 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 
-	v1 "k8s.io/api/core/v1"
+	core "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/resource"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
@@ -76,7 +76,7 @@ type kubernetesContainerImage struct {
 	cloudLocalMount []containerMountPoint
 
 	runner *kubernetesContainerEngine
-	pod    *v1.Pod
+	pod    *core.Pod
 }
 
 var _ containerEngine = (*kubernetesContainerEngine)(nil)
@@ -103,8 +103,8 @@ func (i *kubernetesContainerImage) Engine() containerEngine {
 
 func (i *kubernetesContainerImage) close() error {
 	if i.podName != "" {
-		deletePolicy := metav1.DeletePropagationForeground
-		if err := i.runner.kubectl.CoreV1().Pods(i.runner.namespace).Delete(context.Background(), i.podName, metav1.DeleteOptions{
+		deletePolicy := meta.DeletePropagationForeground
+		if err := i.runner.kubectl.CoreV1().Pods(i.runner.namespace).Delete(context.Background(), i.podName, meta.DeleteOptions{
 			PropagationPolicy: &deletePolicy}); err != nil {
 			return err
 		}
@@ -132,7 +132,7 @@ func (i *kubernetesContainerImage) Run(vol volume.Volume, opts options, cmdArgs 
 
 	req := api.RESTClient().Post().Resource("pods").Name(i.podName).
 		Namespace(i.runner.namespace).SubResource("exec")
-	option := &v1.PodExecOptions{
+	option := &core.PodExecOptions{
 		Command: cmdArgs,
 		Stdin:   true,
 		Stdout:  true,
@@ -186,9 +186,9 @@ func AddAWSParameters(aws *cloud.AWSSession, command string, s ...string) []stri
 	return append(r, s...)
 }
 
-func appendKubernetesEnv(env []v1.EnvVar, environs map[string]string) []v1.EnvVar {
+func appendKubernetesEnv(env []core.EnvVar, environs map[string]string) []core.EnvVar {
 	for k, v := range environs {
-		env = append(env, v1.EnvVar{Name: k, Value: v})
+		env = append(env, core.EnvVar{Name: k, Value: v})
 	}
 	return env
 }
@@ -209,17 +209,17 @@ func (i *kubernetesContainerImage) Prepare() error {
 	}
 
 	// Build pod
-	var volumesMount []v1.VolumeMount
-	var volumes []v1.Volume
+	var volumesMount []core.VolumeMount
+	var volumes []core.Volume
 
 	for _, mountPoint := range append(i.mount, i.cloudLocalMount...) {
-		volumesMount = append(volumesMount, v1.VolumeMount{
+		volumesMount = append(volumesMount, core.VolumeMount{
 			Name:      mountPoint.name,
 			MountPath: mountPoint.inContainer,
 		})
-		volumes = append(volumes, v1.Volume{
+		volumes = append(volumes, core.Volume{
 			Name: mountPoint.name,
-			VolumeSource: v1.VolumeSource{EmptyDir: &v1.EmptyDirVolumeSource{
+			VolumeSource: core.VolumeSource{EmptyDir: &core.EmptyDirVolumeSource{
 				SizeLimit: &i.runner.storageLimit,
 			}},
 		})
@@ -232,22 +232,22 @@ func (i *kubernetesContainerImage) Prepare() error {
 	i.podName = fmt.Sprintf("fyne-cross-%s-%x", i.ID(), unique)
 	namespace := i.runner.namespace
 	timeout := time.Duration(10) * time.Minute
-	env := []v1.EnvVar{
+	env := []core.EnvVar{
 		{Name: "CGO_ENABLED", Value: "1"},                            // enable CGO
 		{Name: "GOCACHE", Value: i.runner.vol.GoCacheDirContainer()}, // mount GOCACHE to reuse cache between builds
 	}
 	env = appendKubernetesEnv(env, i.runner.env)
 	env = appendKubernetesEnv(env, i.env)
 
-	pod := &v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{Name: i.podName},
-		Spec: v1.PodSpec{
-			RestartPolicy: v1.RestartPolicyNever,
-			Containers: []v1.Container{
+	pod := &core.Pod{
+		ObjectMeta: meta.ObjectMeta{Name: i.podName},
+		Spec: core.PodSpec{
+			RestartPolicy: core.RestartPolicyNever,
+			Containers: []core.Container{
 				{
 					Name:            "fyne-cross",
 					Image:           i.DockerImage,
-					ImagePullPolicy: v1.PullAlways,
+					ImagePullPolicy: core.PullAlways,
 					Command:         []string{"/bin/bash"},
 					// The pod will stop itself after 30min
 					Args:         []string{"-c", "trap : TERM INT; sleep 1800 & wait"},
@@ -271,7 +271,7 @@ func (i *kubernetesContainerImage) Prepare() error {
 	i.pod, err = api.Pods(namespace).Create(
 		context.Background(),
 		pod,
-		metav1.CreateOptions{},
+		meta.CreateOptions{},
 	)
 	if err != nil {
 		return err
@@ -279,15 +279,15 @@ func (i *kubernetesContainerImage) Prepare() error {
 
 	log.Infof("Waiting for pod to be ready")
 	err = wait.PollImmediate(time.Second, timeout, func() (bool, error) {
-		pod, err := api.Pods(namespace).Get(context.Background(), i.podName, metav1.GetOptions{})
+		pod, err := api.Pods(namespace).Get(context.Background(), i.podName, meta.GetOptions{})
 		if err != nil {
 			return false, err
 		}
 
 		switch pod.Status.Phase {
-		case v1.PodRunning:
+		case core.PodRunning:
 			return true, nil
-		case v1.PodFailed, v1.PodSucceeded:
+		case core.PodFailed, core.PodSucceeded:
 			return false, fmt.Errorf("pod terminated")
 		}
 		return false, nil
