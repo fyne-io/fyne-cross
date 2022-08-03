@@ -1,6 +1,7 @@
 package cloud
 
 import (
+	"archive/tar"
 	"context"
 	"errors"
 	"fmt"
@@ -107,6 +108,7 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 	extension := strings.ToLower(filepath.Ext(s3FilePath))
 
 	var compression archiver.Writer
+	var enc *zstd.Encoder
 
 	switch extension {
 	case ".xz":
@@ -124,11 +126,10 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 			return err
 		}
 
-		enc, err := zstd.NewWriter(out)
+		enc, err = zstd.NewWriter(out)
 		if err != nil {
 			return err
 		}
-		defer enc.Close()
 
 		go func() {
 			io.Copy(enc, inZstd)
@@ -140,9 +141,30 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 	errorChannel := make(chan error)
 
 	go func() {
+		base := filepath.Base(localDirectoy)
+
 		err := filepath.Walk(localDirectoy, func(path string, info os.FileInfo, err error) error {
 			if err != nil {
 				return err
+			}
+
+			customName := strings.TrimPrefix(path, localDirectoy)
+			if customName == path {
+				return fmt.Errorf("unexpected path: `%v` triming `%v`", path, localDirectoy)
+			}
+			customName = filepath.ToSlash(customName)
+			if len(customName) == 0 || customName[0] != '/' {
+				customName = "/" + customName
+			}
+			customName = base + customName
+
+			if info.IsDir() {
+				return compression.Write(archiver.File{
+					FileInfo: archiver.FileInfo{
+						FileInfo:   info,
+						CustomName: customName,
+					},
+				})
 			}
 
 			f, err := os.Open(path)
@@ -150,15 +172,6 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 				return err
 			}
 			defer f.Close()
-
-			customName := strings.TrimPrefix(path, localDirectoy)
-			if len(customName) == 0 {
-				return fmt.Errorf("unexpected path: %v", path)
-			}
-			customName = filepath.ToSlash(customName)
-			if customName[0] != '/' {
-				customName = "/" + customName
-			}
 
 			return compression.Write(archiver.File{
 				FileInfo: archiver.FileInfo{
@@ -170,6 +183,8 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 		})
 
 		compression.Close()
+		enc.Close()
+		out.Close()
 
 		errorChannel <- err
 	}()
@@ -236,15 +251,15 @@ func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDir
 	case ".zstd":
 		inTar, outZstd := io.Pipe()
 
-		d, err := zstd.NewReader(in)
+		dec, err := zstd.NewReader(in)
 		if err != nil {
 			return err
 		}
-		defer d.Close()
+		defer dec.Close()
 
 		go func() {
 			// Copy content...
-			io.Copy(outZstd, d)
+			io.Copy(outZstd, dec)
 		}()
 
 		compression = archiver.NewTar()
@@ -272,7 +287,7 @@ func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDir
 			}
 		}
 
-		in.Close()
+		compression.Close()
 		if err == io.EOF {
 			err = nil
 		}
@@ -315,20 +330,23 @@ func uncompressFile(localRootDirectory string, f archiver.File) error {
 	// be sure to close f before moving on!!
 	defer f.Close()
 
+	header := f.Header.(*tar.Header)
+
 	// Do not use strings.Split to split a path as it will generate empty string when given "//"
 	splitFn := func(c rune) bool {
 		return c == '/'
 	}
-	paths := strings.FieldsFunc(f.Name(), splitFn)
-
+	paths := strings.FieldsFunc(header.Name, splitFn)
 	if len(paths) == 0 {
-		return fmt.Errorf("incorrect path")
+		if f.Name() != "/" {
+			return fmt.Errorf("incorrect path")
+		}
+		paths = append(paths, "/")
 	}
 
 	// Replace top directory in the archive with local path
 	paths[0] = localRootDirectory
 	localFile := filepath.Join(paths...)
-
 	if f.IsDir() {
 		if !Exists(localFile) {
 			log.Println("Creating directory:", localFile)
@@ -343,7 +361,7 @@ func uncompressFile(localRootDirectory string, f archiver.File) error {
 	}
 	defer outFile.Close()
 
-	log.Println(f.Name(), "->", localFile)
+	log.Println(header.Name, "->", localFile)
 	_, err = io.Copy(outFile, f)
 
 	return err
