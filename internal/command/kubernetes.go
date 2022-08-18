@@ -5,8 +5,11 @@ import (
 	"crypto/rand"
 	"fmt"
 	"os"
+	"os/signal"
 	"path/filepath"
 	"strings"
+	"sync"
+	"syscall"
 	"time"
 
 	"github.com/fyne-io/fyne-cross/internal/cloud"
@@ -30,6 +33,9 @@ type kubernetesContainerEngine struct {
 	config  *rest.Config
 	kubectl *kubernetes.Clientset
 
+	mutex        sync.Mutex
+	currentImage *kubernetesContainerImage
+
 	namespace    string
 	s3Path       string
 	storageLimit resource.Quantity
@@ -49,7 +55,7 @@ func newKubernetesContainerRunner(context Context) (containerEngine, error) {
 		return nil, err
 	}
 
-	return &kubernetesContainerEngine{
+	engine := &kubernetesContainerEngine{
 		baseEngine: baseEngine{
 			env:  context.Env,
 			tags: context.Tags,
@@ -63,7 +69,18 @@ func newKubernetesContainerRunner(context Context) (containerEngine, error) {
 		kubectl:          kubectl,
 		config:           config,
 		storageLimit:     resource.MustParse(context.SizeLimit),
-	}, nil
+	}
+
+	c := make(chan os.Signal)
+	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
+	go func() {
+		<-c
+		log.Info("Interupting")
+		engine.close()
+		os.Exit(1)
+	}()
+
+	return engine, nil
 }
 
 type kubernetesContainerImage struct {
@@ -97,17 +114,34 @@ func (r *kubernetesContainerEngine) createContainerImage(arch Architecture, OS s
 	})
 }
 
+func (r *kubernetesContainerEngine) close() {
+	r.mutex.Lock()
+	currentImage := r.currentImage
+	r.mutex.Unlock()
+
+	if currentImage != nil {
+		currentImage.close()
+	}
+}
+
 func (i *kubernetesContainerImage) Engine() containerEngine {
 	return i.runner
 }
 
 func (i *kubernetesContainerImage) close() error {
+	defer i.runner.mutex.Unlock()
+	i.runner.mutex.Lock()
+
 	if i.podName != "" {
 		deletePolicy := meta.DeletePropagationForeground
 		if err := i.runner.kubectl.CoreV1().Pods(i.runner.namespace).Delete(context.Background(), i.podName, meta.DeleteOptions{
 			PropagationPolicy: &deletePolicy}); err != nil {
 			return err
 		}
+		i.podName = ""
+	}
+	if i.runner.currentImage == i {
+		i.runner.currentImage = nil
 	}
 
 	return nil
@@ -337,6 +371,8 @@ func (i *kubernetesContainerImage) Prepare() error {
 		download(i.runner.vol, i.runner.s3Path+"/"+mountPoint.name+"-"+i.ID()+".tar.zstd", mountPoint.inContainer)
 	}
 
+	i.runner.currentImage = i
+
 	return nil
 }
 
@@ -348,6 +384,10 @@ func (i *kubernetesContainerImage) Finalize(packageName string) (ret error) {
 			ret = err
 		}
 	}()
+
+	// golang does use a LIFO for defer, this will be triggered before the i.close()
+	defer i.runner.mutex.Unlock()
+	i.runner.mutex.Lock()
 
 	// Upload package result to S3
 	uploadPath := i.runner.s3Path + "/" + i.ID() + "/" + packageName
