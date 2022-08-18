@@ -240,7 +240,10 @@ func (i *kubernetesContainerImage) Prepare() error {
 	env = appendKubernetesEnv(env, i.env)
 
 	pod := &core.Pod{
-		ObjectMeta: meta.ObjectMeta{Name: i.podName},
+		ObjectMeta: meta.ObjectMeta{Name: i.podName,
+			Labels: map[string]string{
+				"app": "fyne-cross",
+			}},
 		Spec: core.PodSpec{
 			RestartPolicy: core.RestartPolicyNever,
 			Containers: []core.Container{
@@ -257,6 +260,24 @@ func (i *kubernetesContainerImage) Prepare() error {
 				},
 			},
 			Volumes: volumes,
+			Affinity: &core.Affinity{
+				PodAntiAffinity: &core.PodAntiAffinity{
+					RequiredDuringSchedulingIgnoredDuringExecution: []core.PodAffinityTerm{
+						{
+							LabelSelector: &meta.LabelSelector{
+								MatchExpressions: []meta.LabelSelectorRequirement{
+									{
+										Key:      "app",
+										Operator: "In",
+										Values:   []string{"fyne-cross"},
+									},
+								},
+							},
+							TopologyKey: "kubernetes.io/hostname",
+						},
+					},
+				},
+			},
 		},
 	}
 
