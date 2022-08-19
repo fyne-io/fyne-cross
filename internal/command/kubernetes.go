@@ -71,7 +71,7 @@ func newKubernetesContainerRunner(context Context) (containerEngine, error) {
 		storageLimit:     resource.MustParse(context.SizeLimit),
 	}
 
-	c := make(chan os.Signal)
+	c := make(chan os.Signal, 1)
 	signal.Notify(c, os.Interrupt, syscall.SIGTERM)
 	go func() {
 		<-c
