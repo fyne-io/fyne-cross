@@ -66,9 +66,10 @@ jobs:
           - os: freebsd
           - os: android
             args: -app-id calc.${GITHUB_SHA}
-          - os: darwin
-            args: -app-id calc.${GITHUB_SHA}
-            host: macos-latest
+          ## Not shared darwin image is available at the moment
+          # - os: darwin
+          #  args: -app-id calc.${GITHUB_SHA}
+          #  host: macos-latest
           - os: web
           
           ## Currently not easily supported from GitHub actions.
