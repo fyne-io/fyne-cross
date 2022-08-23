@@ -259,11 +259,6 @@ func fynePackage(ctx Context, image containerImage) error {
 		return err
 	}
 
-	// Enable release mode, if specified
-	if ctx.Release {
-		args = append(args, "-release")
-	}
-
 	// workDir default value
 	workDir := ctx.WorkDirContainer()
 
@@ -276,6 +271,8 @@ func fynePackage(ctx Context, image containerImage) error {
 	if image.OS() == linuxOS || image.OS() == darwinOS || image.OS() == freebsdOS {
 		args = append(args, "-executable", volume.JoinPathContainer(ctx.BinDirContainer(), image.ID(), ctx.Name))
 		workDir = volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID())
+	} else if ctx.StripDebug {
+		args = append(args, "-release")
 	}
 
 	runOpts := options{
