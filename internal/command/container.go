@@ -219,19 +219,18 @@ func goBuild(ctx Context, image containerImage) error {
 	return nil
 }
 
-// fynePackage package the application using the fyne cli tool
-func fynePackage(ctx Context, image containerImage) error {
+func fyneCommand(command string, ctx Context, image containerImage) ([]string, error) {
 	if debugging() {
 		err := image.Run(ctx.Volume, options{}, []string{fyneBin, "version"})
 		if err != nil {
-			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
+			return nil, fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
 		}
 	}
 
 	target := image.Target()
 
 	args := []string{
-		fyneBin, "package",
+		fyneBin, command,
 		"-os", target,
 		"-name", ctx.Name,
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default),
@@ -248,6 +247,16 @@ func fynePackage(ctx Context, image containerImage) error {
 	tags := image.Tags()
 	if len(tags) > 0 {
 		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
+	}
+
+	return args, nil
+}
+
+// fynePackage package the application using the fyne cli tool
+func fynePackage(ctx Context, image containerImage) error {
+	args, err := fyneCommand("package", ctx, image)
+	if err != nil {
+		return err
 	}
 
 	// Enable release mode, if specified
@@ -273,7 +282,7 @@ func fynePackage(ctx Context, image containerImage) error {
 		WorkDir: workDir,
 	}
 
-	err := image.Run(ctx.Volume, runOpts, args)
+	err = image.Run(ctx.Volume, runOpts, args)
 	if err != nil {
 		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
@@ -283,34 +292,9 @@ func fynePackage(ctx Context, image containerImage) error {
 // fyneRelease package and release the application using the fyne cli tool
 // Note: at the moment this is used only for the android builds
 func fyneRelease(ctx Context, image containerImage) error {
-	if debugging() {
-		err := image.Run(ctx.Volume, options{}, []string{fyneBin, "version"})
-		if err != nil {
-			return fmt.Errorf("could not get fyne cli %s version: %v", fyneBin, err)
-		}
-		return nil
-	}
-
-	target := image.Target()
-
-	args := []string{
-		fyneBin, "release",
-		"-os", target,
-		"-name", ctx.Name,
-		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default),
-		"-appBuild", ctx.AppBuild,
-		"-appVersion", ctx.AppVersion,
-	}
-
-	// add appID to command, if any
-	if ctx.AppID != "" {
-		args = append(args, "-appID", ctx.AppID)
-	}
-
-	// add tags to command, if any
-	tags := image.Tags()
-	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
+	args, err := fyneCommand("release", ctx, image)
+	if err != nil {
+		return err
 	}
 
 	// workDir default value
@@ -353,7 +337,7 @@ func fyneRelease(ctx Context, image containerImage) error {
 		WorkDir: workDir,
 	}
 
-	err := image.Run(ctx.Volume, runOpts, args)
+	err = image.Run(ctx.Volume, runOpts, args)
 	if err != nil {
 		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
