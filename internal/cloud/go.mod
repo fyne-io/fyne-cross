@@ -3,8 +3,8 @@ module fyne.io/fyne-cross/internal/cloud
 go 1.18
 
 require (
-	github.com/aws/aws-sdk-go v1.44.94
-	github.com/klauspost/compress v1.15.9
+	github.com/aws/aws-sdk-go v1.41.19
+	github.com/klauspost/compress v1.13.4
 	github.com/mholt/archiver/v3 v3.5.1
 	k8s.io/api v0.25.0
 	k8s.io/apimachinery v0.25.0
@@ -25,7 +25,7 @@ require (
 	github.com/go-openapi/swag v0.19.14 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect
-	github.com/golang/snappy v0.0.2 // indirect
+	github.com/golang/snappy v0.0.3 // indirect
 	github.com/google/gnostic v0.5.7-v3refs // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
 	github.com/imdario/mergo v0.3.6 // indirect
