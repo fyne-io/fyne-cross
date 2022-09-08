@@ -10,38 +10,34 @@ import (
 	"strings"
 	"sync"
 	"syscall"
-	"time"
 
 	"github.com/fyne-io/fyne-cross/internal/cloud"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
-
-	core "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/resource"
-	meta "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
-	"k8s.io/client-go/tools/remotecommand"
-	"k8s.io/kubectl/pkg/scheme"
 )
 
 type kubernetesContainerEngine struct {
 	baseEngine
 
-	aws     *cloud.AWSSession
-	config  *rest.Config
-	kubectl *kubernetes.Clientset
+	aws    *cloud.AWSSession
+	client *cloud.K8sClient
 
 	mutex        sync.Mutex
 	currentImage *kubernetesContainerImage
 
 	namespace    string
 	s3Path       string
-	storageLimit resource.Quantity
+	storageLimit string
 
 	noProjectUpload  bool
 	noResultDownload bool
+}
+
+var client *cloud.K8sClient
+
+func checkKubernetesClient() (err error) {
+	client, err = cloud.GetKubernetesClient()
+	return err
 }
 
 func newKubernetesContainerRunner(context Context) (containerEngine, error) {
@@ -50,8 +46,7 @@ func newKubernetesContainerRunner(context Context) (containerEngine, error) {
 		return nil, err
 	}
 
-	config, kubectl, err := cloud.GetKubernetesClient()
-	if err != nil {
+	if client == nil {
 		return nil, err
 	}
 
@@ -66,9 +61,8 @@ func newKubernetesContainerRunner(context Context) (containerEngine, error) {
 		noProjectUpload:  context.NoProjectUpload,
 		noResultDownload: context.NoResultDownload,
 		aws:              aws,
-		kubectl:          kubectl,
-		config:           config,
-		storageLimit:     resource.MustParse(context.SizeLimit),
+		client:           client,
+		storageLimit:     context.SizeLimit,
 	}
 
 	c := make(chan os.Signal, 1)
@@ -86,14 +80,13 @@ func newKubernetesContainerRunner(context Context) (containerEngine, error) {
 type kubernetesContainerImage struct {
 	baseContainerImage
 
-	podName string
+	pod *cloud.Pod
 
 	noProjectUpload bool
 
 	cloudLocalMount []containerMountPoint
 
 	runner *kubernetesContainerEngine
-	pod    *core.Pod
 }
 
 var _ containerEngine = (*kubernetesContainerEngine)(nil)
@@ -129,67 +122,24 @@ func (i *kubernetesContainerImage) Engine() containerEngine {
 }
 
 func (i *kubernetesContainerImage) close() error {
+	var err error
+
 	defer i.runner.mutex.Unlock()
 	i.runner.mutex.Lock()
 
-	if i.podName != "" {
-		deletePolicy := meta.DeletePropagationForeground
-		if err := i.runner.kubectl.CoreV1().Pods(i.runner.namespace).Delete(context.Background(), i.podName, meta.DeleteOptions{
-			PropagationPolicy: &deletePolicy}); err != nil {
-			return err
-		}
-		i.podName = ""
+	if i.pod != nil {
+		err = i.pod.Close()
+		i.pod = nil
 	}
 	if i.runner.currentImage == i {
 		i.runner.currentImage = nil
 	}
 
-	return nil
+	return err
 }
 
 func (i *kubernetesContainerImage) Run(vol volume.Volume, opts options, cmdArgs []string) error {
-	api := i.runner.kubectl.CoreV1()
-
-	if opts.WorkDir != "" && opts.WorkDir != i.runner.vol.WorkDirContainer() {
-		shellCommand := "cd " + opts.WorkDir + " && " + cmdArgs[0] + " "
-
-		for _, s := range cmdArgs[1:] {
-			shellCommand = shellCommand + fmt.Sprintf("%q ", s)
-		}
-
-		cmdArgs = []string{
-			"sh",
-			"-c",
-			shellCommand,
-		}
-	}
-
-	req := api.RESTClient().Post().Resource("pods").Name(i.podName).
-		Namespace(i.runner.namespace).SubResource("exec")
-	option := &core.PodExecOptions{
-		Command: cmdArgs,
-		Stdin:   true,
-		Stdout:  true,
-		Stderr:  true,
-		TTY:     false,
-	}
-	req.VersionedParams(
-		option,
-		scheme.ParameterCodec,
-	)
-	exec, err := remotecommand.NewSPDYExecutor(i.runner.config, "POST", req.URL())
-	if err != nil {
-		return err
-	}
-
-	log.Infof("Executing command %v", cmdArgs)
-	err = exec.Stream(remotecommand.StreamOptions{
-		Stdin:  os.Stdin,
-		Stdout: os.Stderr,
-		Stderr: os.Stderr,
-		Tty:    false,
-	})
-	return err
+	return i.pod.Run(opts.WorkDir, cmdArgs)
 }
 
 func AddAWSParameters(aws *cloud.AWSSession, command string, s ...string) []string {
@@ -220,9 +170,9 @@ func AddAWSParameters(aws *cloud.AWSSession, command string, s ...string) []stri
 	return append(r, s...)
 }
 
-func appendKubernetesEnv(env []core.EnvVar, environs map[string]string) []core.EnvVar {
+func appendKubernetesEnv(env []cloud.Env, environs map[string]string) []cloud.Env {
 	for k, v := range environs {
-		env = append(env, core.EnvVar{Name: k, Value: v})
+		env = append(env, cloud.Env{Name: k, Value: v})
 	}
 	return env
 }
@@ -243,110 +193,32 @@ func (i *kubernetesContainerImage) Prepare() error {
 	}
 
 	// Build pod
-	var volumesMount []core.VolumeMount
-	var volumes []core.Volume
+	var mount []cloud.Mount
 
 	for _, mountPoint := range append(i.mount, i.cloudLocalMount...) {
-		volumesMount = append(volumesMount, core.VolumeMount{
-			Name:      mountPoint.name,
-			MountPath: mountPoint.inContainer,
-		})
-		volumes = append(volumes, core.Volume{
-			Name: mountPoint.name,
-			VolumeSource: core.VolumeSource{EmptyDir: &core.EmptyDirVolumeSource{
-				SizeLimit: &i.runner.storageLimit,
-			}},
+		mount = append(mount, cloud.Mount{
+			Name:            mountPoint.name,
+			PathInContainer: mountPoint.inContainer,
 		})
 	}
 
-	// This allow to run more than one fyne-cross for a specific architecture per cluster namespace
-	var unique [6]byte
-	rand.Read(unique[:])
-
-	i.podName = fmt.Sprintf("fyne-cross-%s-%x", i.ID(), unique)
-	namespace := i.runner.namespace
-	timeout := time.Duration(10) * time.Minute
-	env := []core.EnvVar{
+	env := []cloud.Env{
 		{Name: "CGO_ENABLED", Value: "1"},                            // enable CGO
 		{Name: "GOCACHE", Value: i.runner.vol.GoCacheDirContainer()}, // mount GOCACHE to reuse cache between builds
 	}
 	env = appendKubernetesEnv(env, i.runner.env)
 	env = appendKubernetesEnv(env, i.env)
 
-	pod := &core.Pod{
-		ObjectMeta: meta.ObjectMeta{Name: i.podName,
-			Labels: map[string]string{
-				"app": "fyne-cross",
-			}},
-		Spec: core.PodSpec{
-			RestartPolicy: core.RestartPolicyNever,
-			Containers: []core.Container{
-				{
-					Name:            "fyne-cross",
-					Image:           i.DockerImage,
-					ImagePullPolicy: core.PullAlways,
-					Command:         []string{"/bin/bash"},
-					// The pod will stop itself after 30min
-					Args:         []string{"-c", "trap : TERM INT; sleep 1800 & wait"},
-					Env:          env,
-					VolumeMounts: volumesMount,
-					WorkingDir:   i.runner.vol.WorkDirContainer(),
-				},
-			},
-			Volumes: volumes,
-			Affinity: &core.Affinity{
-				PodAntiAffinity: &core.PodAntiAffinity{
-					RequiredDuringSchedulingIgnoredDuringExecution: []core.PodAffinityTerm{
-						{
-							LabelSelector: &meta.LabelSelector{
-								MatchExpressions: []meta.LabelSelectorRequirement{
-									{
-										Key:      "app",
-										Operator: "In",
-										Values:   []string{"fyne-cross"},
-									},
-								},
-							},
-							TopologyKey: "kubernetes.io/hostname",
-						},
-					},
-				},
-			},
-		},
-	}
+	// This allow to run more than one fyne-cross for a specific architecture per cluster namespace
+	var unique [6]byte
+	rand.Read(unique[:])
 
-	log.Infof("Creating pod %q", i.podName)
-	if debugging() {
-		log.Debug(pod)
-	}
+	name := fmt.Sprintf("fyne-cross-%s-%x", i.ID(), unique)
+	namespace := i.runner.namespace
 
-	// Start pod
-	api := i.runner.kubectl.CoreV1()
-
-	i.pod, err = api.Pods(namespace).Create(
-		context.Background(),
-		pod,
-		meta.CreateOptions{},
-	)
-	if err != nil {
-		return err
-	}
-
-	log.Infof("Waiting for pod to be ready")
-	err = wait.PollImmediate(time.Second, timeout, func() (bool, error) {
-		pod, err := api.Pods(namespace).Get(context.Background(), i.podName, meta.GetOptions{})
-		if err != nil {
-			return false, err
-		}
-
-		switch pod.Status.Phase {
-		case core.PodRunning:
-			return true, nil
-		case core.PodFailed, core.PodSucceeded:
-			return false, fmt.Errorf("pod terminated")
-		}
-		return false, nil
-	})
+	i.pod, err = i.runner.client.NewPod(context.Background(),
+		name, i.DockerImage, namespace,
+		i.runner.storageLimit, i.runner.vol.WorkDirContainer(), mount, env)
 	if err != nil {
 		return err
 	}

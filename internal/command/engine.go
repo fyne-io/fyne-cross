@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/fyne-io/fyne-cross/internal/cloud"
 	"golang.org/x/sys/execabs"
 )
 
@@ -79,7 +78,7 @@ func MakeEngine(e string) (Engine, error) {
 		}
 	case kubernetesEngine:
 		// Try establishing a connection to Kubernetes cluster
-		_, _, err := cloud.GetKubernetesClient()
+		err := checkKubernetesClient()
 		if err != nil {
 			return Engine{}, err
 		}
