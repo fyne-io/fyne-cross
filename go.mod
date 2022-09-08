@@ -6,7 +6,6 @@ require (
 	github.com/BurntSushi/toml v1.1.0
 	github.com/Kodeworks/golang-image-ico v0.0.0-20141118225523-73f0f4cfade9
 	github.com/andybalholm/brotli v1.0.4 // indirect
-	github.com/emicklei/go-restful v2.9.5+incompatible // indirect
 	github.com/fyne-io/fyne-cross/internal/cloud v0.0.0
 	github.com/golang/snappy v0.0.4 // indirect
 	github.com/pierrec/lz4/v4 v4.1.14 // indirect
