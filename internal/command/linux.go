@@ -70,10 +70,15 @@ func (cmd *linux) Parse(args []string) error {
 
 // Run runs the command
 func (cmd *linux) Build(image containerImage) (string, error) {
+	err := prepareIcon(cmd.defaultContext, image)
+	if err != nil {
+		return "", err
+	}
+
 	//
 	// build
 	//
-	err := goBuild(cmd.defaultContext, image)
+	err = goBuild(cmd.defaultContext, image)
 	if err != nil {
 		return "", err
 	}
@@ -84,11 +89,6 @@ func (cmd *linux) Build(image containerImage) (string, error) {
 	log.Info("[i] Packaging app...")
 
 	packageName := fmt.Sprintf("%s.tar.xz", cmd.defaultContext.Name)
-
-	err = prepareIcon(cmd.defaultContext, image)
-	if err != nil {
-		return "", err
-	}
 
 	err = fynePackage(cmd.defaultContext, image)
 	if err != nil {
