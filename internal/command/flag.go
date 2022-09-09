@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/metadata"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
@@ -81,11 +82,7 @@ func newCommonFlags() (*CommonFlags, error) {
 		return nil, err
 	}
 
-	defaultIcon, err := volume.DefaultIconHost()
-	if err != nil {
-		return nil, err
-	}
-
+	defaultIcon := icon.Default
 	appID := ""
 	appVersion := "1.0"
 	appBuild := 1
