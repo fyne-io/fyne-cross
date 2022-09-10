@@ -6,6 +6,7 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"os"
 	"path/filepath"
@@ -103,7 +104,11 @@ func (a *AWSSession) UploadFile(localFile string, s3FilePath string) error {
 }
 
 func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath string) error {
-	in, out := io.Pipe()
+	file, err := ioutil.TempFile("", "fyne-cross-s3")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(file.Name())
 
 	extension := strings.ToLower(filepath.Ext(s3FilePath))
 
@@ -113,7 +118,7 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 	switch extension {
 	case ".xz":
 		compression = archiver.NewTarXz()
-		err := compression.Create(out)
+		err := compression.Create(file)
 		if err != nil {
 			return err
 		}
@@ -126,68 +131,64 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 			return err
 		}
 
-		enc, err = zstd.NewWriter(out)
+		enc, err = zstd.NewWriter(file)
 		if err != nil {
 			return err
 		}
 
 		go func() {
 			io.Copy(enc, inZstd)
+			inZstd.Close()
 		}()
 	default:
 		return fmt.Errorf("unknown extension for %v", s3FilePath)
 	}
 
-	errorChannel := make(chan error)
+	base := filepath.Base(localDirectoy)
 
-	go func() {
-		base := filepath.Base(localDirectoy)
+	err = filepath.Walk(localDirectoy, func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
 
-		err := filepath.Walk(localDirectoy, func(path string, info os.FileInfo, err error) error {
-			if err != nil {
-				return err
-			}
+		customName := strings.TrimPrefix(path, localDirectoy)
+		if customName == path {
+			return fmt.Errorf("unexpected path: `%v` triming `%v`", path, localDirectoy)
+		}
+		customName = filepath.ToSlash(customName)
+		if len(customName) == 0 || customName[0] != '/' {
+			customName = "/" + customName
+		}
+		customName = base + customName
 
-			customName := strings.TrimPrefix(path, localDirectoy)
-			if customName == path {
-				return fmt.Errorf("unexpected path: `%v` triming `%v`", path, localDirectoy)
-			}
-			customName = filepath.ToSlash(customName)
-			if len(customName) == 0 || customName[0] != '/' {
-				customName = "/" + customName
-			}
-			customName = base + customName
-
-			if info.IsDir() {
-				return compression.Write(archiver.File{
-					FileInfo: archiver.FileInfo{
-						FileInfo:   info,
-						CustomName: customName,
-					},
-				})
-			}
-
-			f, err := os.Open(path)
-			if err != nil {
-				return err
-			}
-			defer f.Close()
-
+		if info.IsDir() {
 			return compression.Write(archiver.File{
 				FileInfo: archiver.FileInfo{
 					FileInfo:   info,
 					CustomName: customName,
 				},
-				ReadCloser: f,
 			})
+		}
+
+		f, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer f.Close()
+
+		return compression.Write(archiver.File{
+			FileInfo: archiver.FileInfo{
+				FileInfo:   info,
+				CustomName: customName,
+			},
+			ReadCloser: f,
 		})
+	})
+	if err != nil {
+		return err
+	}
 
-		compression.Close()
-		enc.Close()
-		out.Close()
-
-		errorChannel <- err
-	}()
+	compression.Close()
 
 	uploader := s3manager.NewUploader(a.s)
 
@@ -197,18 +198,22 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 	a.m.Unlock()
 	defer a.Cancel()
 
-	_, err := uploader.UploadWithContext(ctxt, &s3manager.UploadInput{
+	f, err := os.Open(file.Name())
+	if err != nil {
+		return err
+	}
+
+	_, err = uploader.UploadWithContext(ctxt, &s3manager.UploadInput{
 		Bucket: aws.String(a.bucket),
 		Key:    aws.String(s3FilePath),
 
-		Body: in,
+		Body: f,
 	})
 	if err != nil {
 		return err
 	}
-	in.Close()
+	f.Close()
 
-	err = <-errorChannel
 	return err
 }
 
@@ -235,7 +240,34 @@ func (a *AWSSession) DownloadFile(s3FilePath string, localFile string) error {
 }
 
 func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDirectory string) error {
-	in, out := io.Pipe()
+	file, err := ioutil.TempFile("", "fyne-cross-s3")
+	if err != nil {
+		return err
+	}
+	defer os.Remove(file.Name())
+
+	a.m.Lock()
+	ctxt, cancel := context.WithCancel(context.Background())
+	a.cancel = cancel
+	a.m.Unlock()
+	defer a.Cancel()
+
+	downloader := s3manager.NewDownloader(a.s)
+	downloader.Concurrency = 1
+
+	_, err = downloader.DownloadWithContext(ctxt, fakeWriterAt{file}, &s3.GetObjectInput{
+		Bucket: aws.String(a.bucket),
+		Key:    aws.String(s3FilePath),
+	})
+	file.Close()
+	if err != nil {
+		return err
+	}
+
+	in, err := os.Open(file.Name())
+	if err != nil {
+		return err
+	}
 
 	extension := strings.ToLower(filepath.Ext(s3FilePath))
 
@@ -271,50 +303,23 @@ func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDir
 		return fmt.Errorf("unknown extension for %v", s3FilePath)
 	}
 
-	errorChannel := make(chan error)
-
-	go func() {
-		var err error
-		for {
-			f, err := compression.Read()
-			if err != nil {
-				break
-			}
-
-			err = uncompressFile(localRootDirectory, f)
-			if err != nil {
-				break
-			}
-		}
-
-		compression.Close()
+	for {
+		f, err := compression.Read()
 		if err == io.EOF {
-			err = nil
+			break
+		}
+		if err != nil {
+			return err
 		}
 
-		errorChannel <- err
-	}()
-
-	downloader := s3manager.NewDownloader(a.s)
-	downloader.Concurrency = 1
-
-	a.m.Lock()
-	ctxt, cancel := context.WithCancel(context.Background())
-	a.cancel = cancel
-	a.m.Unlock()
-	defer a.Cancel()
-
-	_, err := downloader.DownloadWithContext(ctxt, fakeWriterAt{out}, &s3.GetObjectInput{
-		Bucket: aws.String(a.bucket),
-		Key:    aws.String(s3FilePath),
-	})
-	out.Close()
-	if err != nil {
-		return err
+		err = uncompressFile(localRootDirectory, f)
+		if err != nil {
+			return err
+		}
 	}
 
-	err = <-errorChannel
-	return err
+	in.Close()
+	return nil
 
 }
 
