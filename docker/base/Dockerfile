@@ -1,4 +1,4 @@
-ARG GO_VERSION=1.18.4
+ARG GO_VERSION=1.18.6
 # fyne stable branch
 ARG FYNE_VERSION=v2.2.3
 
