@@ -113,10 +113,12 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 	extension := strings.ToLower(filepath.Ext(s3FilePath))
 
 	var compression archiver.Writer
-	var enc *zstd.Encoder
+	var wg sync.WaitGroup
+	var closer io.Closer
 
 	switch extension {
 	case ".xz":
+
 		compression = archiver.NewTarXz()
 		err := compression.Create(file)
 		if err != nil {
@@ -124,6 +126,7 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 		}
 	case ".zstd":
 		inZstd, outTar := io.Pipe()
+		closer = outTar
 
 		compression = archiver.NewTar()
 		err := compression.Create(outTar)
@@ -131,14 +134,22 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 			return err
 		}
 
-		enc, err = zstd.NewWriter(file)
+		enc, err := zstd.NewWriter(file)
 		if err != nil {
 			return err
 		}
 
+		wg.Add(1)
+
 		go func() {
-			io.Copy(enc, inZstd)
+			_, err := io.Copy(enc, inZstd)
+			if err != nil {
+				log.Println(err)
+			}
+
 			inZstd.Close()
+			enc.Close()
+			wg.Done()
 		}()
 	default:
 		return fmt.Errorf("unknown extension for %v", s3FilePath)
@@ -189,6 +200,10 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 	}
 
 	compression.Close()
+	if closer != nil {
+		closer.Close()
+	}
+	wg.Wait()
 
 	uploader := s3manager.NewUploader(a.s)
 
