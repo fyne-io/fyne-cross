@@ -107,17 +107,12 @@ func newCommonFlags() (*CommonFlags, error) {
 	}
 
 	flags := &CommonFlags{}
+	kubernetesFlagSet(flagSet, flags)
 	flagSet.IntVar(&flags.AppBuild, "app-build", appBuild, "Build number, should be greater than 0 and incremented for each build")
 	flagSet.StringVar(&flags.AppID, "app-id", appID, "Application ID used for distribution")
 	flagSet.StringVar(&flags.AppVersion, "app-version", appVersion, "Version number in the form x, x.y or x.y.z semantic version")
 	flagSet.StringVar(&flags.CacheDir, "cache", cacheDir, "Directory used to share/cache sources and dependencies")
 	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")
-	flagSet.BoolVar(&flags.NoProjectUpload, "no-project-upload", false, "Will reuse the project data available in S3")
-	flagSet.BoolVar(&flags.NoResultDownload, "no-result-download", false, "Will not download the result of the compilation from S3 automatically")
-	flagSet.Var(&flags.Engine, "engine", "The container engine to use. Supported engines: [docker, podman, kubernetes]. Default to autodetect.")
-	flagSet.StringVar(&flags.Namespace, "namespace", "default", "The namespace the kubernetes engine will use to run the pods in. Imply the engine to be kubernetes.")
-	flagSet.StringVar(&flags.S3Path, "S3-path", "/", "The path to push and pull data for the Kubernetes backend")
-	flagSet.StringVar(&flags.SizeLimit, "size-limit", "2Gi", "The size limit of mounted filesystem inside the container. Honored by the kubernetes engine only.")
 	flagSet.Var(&flags.Env, "env", "List of additional env variables specified as KEY=VALUE")
 	flagSet.StringVar(&flags.Icon, "icon", defaultIcon, "Application icon used for distribution")
 	flagSet.StringVar(&flags.DockerImage, "image", "", "Custom docker image to use for build")
