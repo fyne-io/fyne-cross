@@ -19,6 +19,7 @@ import (
 	"github.com/aws/aws-sdk-go/service/s3"
 	"github.com/aws/aws-sdk-go/service/s3/s3manager"
 	"github.com/klauspost/compress/zstd"
+	"golang.org/x/sync/errgroup"
 
 	archiver "github.com/mholt/archiver/v3"
 )
@@ -113,7 +114,7 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 	extension := strings.ToLower(filepath.Ext(s3FilePath))
 
 	var compression archiver.Writer
-	var wg sync.WaitGroup
+	var eg errgroup.Group
 	var closer io.Closer
 
 	switch extension {
@@ -139,18 +140,16 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 			return err
 		}
 
-		wg.Add(1)
-
-		go func() {
+		eg.Go(func() error {
 			_, err := io.Copy(enc, inZstd)
 			if err != nil {
-				log.Println(err)
+				return err
 			}
 
 			inZstd.Close()
 			enc.Close()
-			wg.Done()
-		}()
+			return nil
+		})
 	default:
 		return fmt.Errorf("unknown extension for %v", s3FilePath)
 	}
@@ -203,7 +202,9 @@ func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath 
 	if closer != nil {
 		closer.Close()
 	}
-	wg.Wait()
+	if err := eg.Wait(); err != nil {
+		return err
+	}
 
 	uploader := s3manager.NewUploader(a.s)
 
@@ -287,6 +288,7 @@ func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDir
 	extension := strings.ToLower(filepath.Ext(s3FilePath))
 
 	var compression archiver.Reader
+	var eg errgroup.Group
 
 	switch extension {
 	case ".xz":
@@ -304,10 +306,11 @@ func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDir
 		}
 		defer dec.Close()
 
-		go func() {
+		eg.Go(func() error {
 			// Copy content...
-			io.Copy(outZstd, dec)
-		}()
+			_, err := io.Copy(outZstd, dec)
+			return err
+		})
 
 		compression = archiver.NewTar()
 		err = compression.Open(inTar, 0)
@@ -334,7 +337,7 @@ func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDir
 	}
 
 	in.Close()
-	return nil
+	return eg.Wait()
 
 }
 
