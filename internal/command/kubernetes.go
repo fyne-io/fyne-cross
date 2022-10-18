@@ -40,12 +40,11 @@ type kubernetesContainerEngine struct {
 var client *cloud.K8sClient
 
 func kubernetesFlagSet(flagSet *flag.FlagSet, flags *CommonFlags) {
-	flagSet.BoolVar(&flags.NoProjectUpload, "no-project-upload", false, "Will reuse the project data available in S3")
-	flagSet.BoolVar(&flags.NoResultDownload, "no-result-download", false, "Will not download the result of the compilation from S3 automatically")
-	flagSet.Var(&flags.Engine, "engine", "The container engine to use. Supported engines: [docker, podman, kubernetes]. Default to autodetect.")
-	flagSet.StringVar(&flags.Namespace, "namespace", "default", "The namespace the kubernetes engine will use to run the pods in. Imply the engine to be kubernetes.")
-	flagSet.StringVar(&flags.S3Path, "S3-path", "/", "The path to push and pull data for the Kubernetes backend")
-	flagSet.StringVar(&flags.SizeLimit, "size-limit", "2Gi", "The size limit of mounted filesystem inside the container. Honored by the kubernetes engine only.")
+	flagSet.BoolVar(&flags.NoProjectUpload, "no-project-upload", false, "Will reuse the project data available in S3, used by the kubernetes engine.")
+	flagSet.BoolVar(&flags.NoResultDownload, "no-result-download", false, "Will not download the result of the compilation from S3 automatically, used by the kubernetes engine.")
+	flagSet.StringVar(&flags.Namespace, "namespace", "default", "The namespace the kubernetes engine will use to run the pods in, used by and imply the kubernetes engine.")
+	flagSet.StringVar(&flags.S3Path, "S3-path", "/", "The path to push to and pull data from, used by the kubernetes engine.")
+	flagSet.StringVar(&flags.SizeLimit, "size-limit", "2Gi", "The size limit of mounted filesystem inside the container, used by the kubernetes engine.")
 }
 
 func checkKubernetesClient() (err error) {
