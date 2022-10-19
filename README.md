@@ -42,7 +42,8 @@ Supported targets are:
 
 For go >= 1.16:
 ```
-go install github.com/fyne-io/fyne-cross@latest
+git clone https://github.com/fyne-io/fyne-cross.git
+cd fyne-cross && go install
 ```
 
 For older go:
