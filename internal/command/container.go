@@ -252,7 +252,7 @@ func fyneCommand(command string, ctx Context, image containerImage) ([]string, e
 	return args, nil
 }
 
-// fynePackage package the application using the fyne cli tool
+// fynePackage packages the application using the fyne cli tool
 func fynePackage(ctx Context, image containerImage) error {
 	args, err := fyneCommand("package", ctx, image)
 	if err != nil {
