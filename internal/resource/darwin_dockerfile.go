@@ -2,7 +2,7 @@
 
 package resource
 
-const DockerfileDarwin = `ARG LLVM_VERSION=12
+const DockerfileDarwin = `ARG LLVM_VERSION=14
 ARG OSX_VERSION_MIN=10.12
 ARG OSX_CROSS_COMMIT="50e86ebca7d14372febd0af8cd098705049161b9"
 ARG FYNE_CROSS_VERSION=1.3
