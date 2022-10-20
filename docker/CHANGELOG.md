@@ -24,6 +24,10 @@ above.
 
 Example: `fyneio/fyne-cross:1.3-base-22.06.23`
 
+## Unreleased
+- Update Go to v1.18.7
+- darwin-image: update LLVM and clang to v14
+
 ## Release 22.07.13
 - Update Fyne CLI to v2.2.3
 - Update Go to v1.18.4

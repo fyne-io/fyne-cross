@@ -5,7 +5,8 @@
 ### Added
 
 - Add support for web target #92
-- Add CI job to build calculator app #104 
+- Add CI job to build calculator app #104
+- Add support to macOS 12.x and 13.x SDKs via darwin image (osxcross) #133
 
 ### Changed
 
