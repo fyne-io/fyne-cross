@@ -23,7 +23,11 @@ type Command interface {
 }
 
 type platformBuilder interface {
-	Build(image containerImage) (string, string, error) // Called to build each possible architecture/OS combination
+	Build(image containerImage) (string, error) // Called to build each possible architecture/OS combination
+}
+
+type closer interface {
+	close() error
 }
 
 func commonRun(defaultContext Context, images []containerImage, builder platformBuilder) error {
@@ -36,30 +40,39 @@ func commonRun(defaultContext Context, images []containerImage, builder platform
 		log.Infof("[i] Target: %s/%s", image.OS(), image.Architecture())
 		log.Debugf("%#v", image)
 
-		//
-		// prepare build
-		//
-		err = image.Prepare()
-		if err != nil {
-			return err
-		}
+		err = func() error {
+			defer image.(closer).close()
 
-		err = cleanTargetDirs(defaultContext, image)
-		if err != nil {
-			return err
-		}
+			//
+			// prepare build
+			//
+			if err := image.Prepare(); err != nil {
+				return err
+			}
 
-		err = goModInit(defaultContext, image)
-		if err != nil {
-			return err
-		}
+			err = cleanTargetDirs(defaultContext, image)
+			if err != nil {
+				return err
+			}
 
-		srcFile, packageName, err := builder.Build(image)
-		if err != nil {
-			return err
-		}
+			err = goModInit(defaultContext, image)
+			if err != nil {
+				return err
+			}
 
-		err = image.Finalize(srcFile, packageName)
+			packageName, err := builder.Build(image)
+			if err != nil {
+				return err
+			}
+
+			err = image.Finalize(packageName)
+			if err != nil {
+				return err
+			}
+
+			return nil
+		}()
+
 		if err != nil {
 			return err
 		}
@@ -88,19 +101,19 @@ Use "fyne-cross <command> -help" for more information about a command.
 func cleanTargetDirs(ctx Context, image containerImage) error {
 
 	dirs := map[string]string{
-		"bin":  volume.JoinPathHost(ctx.BinDirHost(), image.ID()),
-		"dist": volume.JoinPathHost(ctx.DistDirHost(), image.ID()),
-		"temp": volume.JoinPathHost(ctx.TmpDirHost(), image.ID()),
+		"bin":  volume.JoinPathContainer(ctx.BinDirContainer(), image.ID()),
+		"dist": volume.JoinPathHost(ctx.DistDirContainer(), image.ID()),
+		"temp": volume.JoinPathHost(ctx.TmpDirContainer(), image.ID()),
 	}
 
 	log.Infof("[i] Cleaning target directories...")
 	for k, v := range dirs {
-		err := os.RemoveAll(v)
+		err := image.Run(ctx.Volume, options{}, []string{"rm", "-rf", v})
 		if err != nil {
 			return fmt.Errorf("could not clean the %q dir %s: %v", k, v, err)
 		}
 
-		err = os.MkdirAll(v, 0755)
+		err = image.Run(ctx.Volume, options{}, []string{"mkdir", "-p", v})
 		if err != nil {
 			return fmt.Errorf("could not create the %q dir %s: %v", k, v, err)
 		}
@@ -113,23 +126,19 @@ func cleanTargetDirs(ctx Context, image containerImage) error {
 
 // prepareIcon prepares the icon for packaging
 func prepareIcon(ctx Context, image containerImage) error {
+	if !ctx.NoProjectUpload {
+		if _, err := os.Stat(ctx.Icon); os.IsNotExist(err) {
+			if ctx.Icon != icon.Default {
+				return fmt.Errorf("icon not found at %q", ctx.Icon)
+			}
 
-	if _, err := os.Stat(ctx.Icon); os.IsNotExist(err) {
-		defaultIcon, err := volume.DefaultIconHost()
-		if err != nil {
-			return err
+			log.Infof("[!] Default icon not found at %q", ctx.Icon)
+			err = ioutil.WriteFile(volume.JoinPathContainer(ctx.WorkDirHost(), ctx.Icon), icon.FyneLogo, 0644)
+			if err != nil {
+				return fmt.Errorf("could not create the temporary icon: %s", err)
+			}
+			log.Infof("[✓] Created a placeholder icon using Fyne logo for testing purpose")
 		}
-
-		if ctx.Icon != defaultIcon {
-			return fmt.Errorf("icon not found at %q", ctx.Icon)
-		}
-
-		log.Infof("[!] Default icon not found at %q", ctx.Icon)
-		err = ioutil.WriteFile(ctx.Icon, icon.FyneLogo, 0644)
-		if err != nil {
-			return fmt.Errorf("could not create the temporary icon: %s", err)
-		}
-		log.Infof("[✓] Created a placeholder icon using Fyne logo for testing purpose")
 	}
 
 	if image.OS() == "windows" {
@@ -142,7 +151,7 @@ func prepareIcon(ctx Context, image containerImage) error {
 		return nil
 	}
 
-	err := volume.Copy(ctx.Icon, volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), icon.Default))
+	err := image.Run(ctx.Volume, options{}, []string{"cp", volume.JoinPathContainer(ctx.WorkDirContainer(), ctx.Icon), volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default)})
 	if err != nil {
 		return fmt.Errorf("could not copy the icon to temp folder: %v", err)
 	}

@@ -55,8 +55,8 @@ func Test_makeWindowsContext(t *testing.T) {
 						id:   "windows-amd64",
 						env:  map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
 						mount: []containerMountPoint{
-							{vol.WorkDirHost(), vol.WorkDirContainer()},
-							{vol.CacheDirHost(), vol.CacheDirContainer()},
+							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
+							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: windowsImage,
 					},
@@ -91,8 +91,8 @@ func Test_makeWindowsContext(t *testing.T) {
 						id:   "windows-386",
 						env:  map[string]string{"GOOS": "windows", "GOARCH": "386", "CC": "i686-w64-mingw32-gcc"},
 						mount: []containerMountPoint{
-							{vol.WorkDirHost(), vol.WorkDirContainer()},
-							{vol.CacheDirHost(), vol.CacheDirContainer()},
+							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
+							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: windowsImage,
 					},
@@ -128,8 +128,8 @@ func Test_makeWindowsContext(t *testing.T) {
 						id:   "windows-amd64",
 						env:  map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
 						mount: []containerMountPoint{
-							{vol.WorkDirHost(), vol.WorkDirContainer()},
-							{vol.CacheDirHost(), vol.CacheDirContainer()},
+							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
+							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: windowsImage,
 					},
@@ -165,8 +165,8 @@ func Test_makeWindowsContext(t *testing.T) {
 						id:   "windows-amd64",
 						env:  map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
 						mount: []containerMountPoint{
-							{vol.WorkDirHost(), vol.WorkDirContainer()},
-							{vol.CacheDirHost(), vol.CacheDirContainer()},
+							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
+							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
 						},
 						DockerImage: "test",
 					},

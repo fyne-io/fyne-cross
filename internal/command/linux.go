@@ -5,7 +5,6 @@ import (
 	"runtime"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
-	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
 const (
@@ -70,13 +69,18 @@ func (cmd *linux) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *linux) Build(image containerImage) (string, string, error) {
+func (cmd *linux) Build(image containerImage) (string, error) {
+	err := prepareIcon(cmd.defaultContext, image)
+	if err != nil {
+		return "", err
+	}
+
 	//
 	// build
 	//
-	err := goBuild(cmd.defaultContext, image)
+	err = goBuild(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	//
@@ -86,20 +90,11 @@ func (cmd *linux) Build(image containerImage) (string, string, error) {
 
 	packageName := fmt.Sprintf("%s.tar.xz", cmd.defaultContext.Name)
 
-	err = prepareIcon(cmd.defaultContext, image)
-	if err != nil {
-		return "", "", err
-	}
-
 	err = fynePackage(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
-
-	// move the dist package into the "dist" folder
-	srcFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.ID(), packageName)
-
-	return srcFile, packageName, nil
+	return packageName, nil
 }
 
 // Usage displays the command usage
@@ -145,7 +140,10 @@ func (cmd *linux) setupContainerImages(flags *linuxFlags, args []string) error {
 	}
 
 	cmd.defaultContext = ctx
-	runner := newContainerEngine(ctx)
+	runner, err := newContainerEngine(ctx)
+	if err != nil {
+		return err
+	}
 
 	for _, arch := range targetArch {
 		var image containerImage

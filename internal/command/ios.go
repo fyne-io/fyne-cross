@@ -67,10 +67,10 @@ func (cmd *iOS) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *iOS) Build(image containerImage) (string, string, error) {
+func (cmd *iOS) Build(image containerImage) (string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	log.Info("[i] Packaging app...")
@@ -87,13 +87,17 @@ func (cmd *iOS) Build(image containerImage) (string, string, error) {
 	}
 
 	if err != nil {
-		return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 
-	// move the dist package into the "dist" folder
-	srcFile := volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), packageName)
+	// move the dist package into the expected tmp/$ID/packageName location in the container
+	image.Run(cmd.defaultContext.Volume, options{}, []string{
+		"mv",
+		volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
+		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+	})
 
-	return srcFile, packageName, nil
+	return packageName, nil
 }
 
 // Usage displays the command usage
@@ -148,7 +152,10 @@ func (cmd *iOS) setupContainerImages(flags *iosFlags, args []string) error {
 	}
 
 	cmd.defaultContext = ctx
-	runner := newContainerEngine(ctx)
+	runner, err := newContainerEngine(ctx)
+	if err != nil {
+		return err
+	}
 
 	cmd.Images = append(cmd.Images, runner.createContainerImage("", iosOS, overrideDockerImage(flags.CommonFlags, iosImage)))
 

@@ -70,6 +70,8 @@ func (cmd *darwin) Parse(args []string) error {
 	// flags used only in release mode
 	flagSet.StringVar(&flags.Category, "category", "", "The category of the app for store listing")
 
+	flagSet.StringVar(&flags.MacOSXVersionMin, "macosx-version-min", "unset", "Specify the minimum version that the SDK you used to create the Darwin image support")
+
 	flagAppID := flagSet.Lookup("app-id")
 	flagAppID.Usage = fmt.Sprintf("%s [required]", flagAppID.Usage)
 
@@ -81,10 +83,10 @@ func (cmd *darwin) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *darwin) Build(image containerImage) (string, string, error) {
+func (cmd *darwin) Build(image containerImage) (string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	//
@@ -93,43 +95,53 @@ func (cmd *darwin) Build(image containerImage) (string, string, error) {
 	log.Info("[i] Packaging app...")
 
 	var packageName string
-	var srcFile string
 	if cmd.defaultContext.Release {
 		if runtime.GOOS != darwinOS {
-			return "", "", fmt.Errorf("darwin release build is supported only on darwin hosts")
+			return "", fmt.Errorf("darwin release build is supported only on darwin hosts")
 		}
 
 		packageName = fmt.Sprintf("%s.pkg", cmd.defaultContext.Name)
-		srcFile = volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), packageName)
 
 		err = fyneReleaseHost(cmd.defaultContext, image)
 		if err != nil {
-			return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
+
+		// move the dist package into the expected tmp/$ID/packageName location in the container
+		image.Run(cmd.defaultContext.Volume, options{}, []string{
+			"mv",
+			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+		})
 	} else if cmd.localBuild {
 		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
-		srcFile = volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), packageName)
 
 		err = fynePackageHost(cmd.defaultContext, image)
 		if err != nil {
-			return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
+
+		// move the dist package into the expected tmp/$ID/packageName location in the container
+		image.Run(cmd.defaultContext.Volume, options{}, []string{
+			"mv",
+			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+		})
 	} else {
 		err = goBuild(cmd.defaultContext, image)
 		if err != nil {
-			return "", "", err
+			return "", err
 		}
 
 		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
-		srcFile = volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.ID(), packageName)
 
 		err = fynePackage(cmd.defaultContext, image)
 		if err != nil {
-			return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 	}
 
-	return srcFile, packageName, nil
+	return packageName, nil
 }
 
 // Usage displays the command usage
@@ -163,6 +175,9 @@ type darwinFlags struct {
 
 	// TargetArch represents a list of target architecture to build on separated by comma
 	TargetArch *targetArchFlag
+
+	// Specify MacOSX minimum version
+	MacOSXVersionMin string
 }
 
 // setupContainerImages returns the command context for a darwin target
@@ -184,7 +199,10 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 	ctx.Category = flags.Category
 
 	cmd.defaultContext = ctx
-	runner := newContainerEngine(ctx)
+	runner, err := newContainerEngine(ctx)
+	if err != nil {
+		return err
+	}
 
 	for _, arch := range targetArch {
 		var image containerImage
@@ -194,14 +212,26 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 			image = runner.createContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
 			image.SetEnv("GOARCH", "amd64")
 			image.SetEnv("CC", "o64-clang")
-			image.SetEnv("CGO_CFLAGS", "-mmacosx-version-min=10.12")
-			image.SetEnv("CGO_LDFLAGS", "-mmacosx-version-min=10.12")
+
+			if flags.MacOSXVersionMin == "unset" {
+				flags.MacOSXVersionMin = "10.12"
+			}
+			if flags.MacOSXVersionMin != "" {
+				image.SetEnv("CGO_CFLAGS", fmt.Sprintf("-mmacosx-version-min=%s", flags.MacOSXVersionMin))
+				image.SetEnv("CGO_LDFLAGS", fmt.Sprintf("-mmacosx-version-min=%s", flags.MacOSXVersionMin))
+			}
 		case ArchArm64:
 			image = runner.createContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
 			image.SetEnv("GOARCH", "arm64")
 			image.SetEnv("CC", "oa64-clang")
-			image.SetEnv("CGO_CFLAGS", "-mmacosx-version-min=11.1")
-			image.SetEnv("CGO_LDFLAGS", "-fuse-ld=lld -mmacosx-version-min=11.1")
+
+			if flags.MacOSXVersionMin == "unset" {
+				flags.MacOSXVersionMin = "11.1"
+			}
+			if flags.MacOSXVersionMin != "" {
+				image.SetEnv("CGO_CFLAGS", fmt.Sprintf("-mmacosx-version-min=%s", flags.MacOSXVersionMin))
+				image.SetEnv("CGO_LDFLAGS", fmt.Sprintf("-fuse-ld=lld -mmacosx-version-min=%s", flags.MacOSXVersionMin))
+			}
 		}
 		image.SetEnv("GOOS", "darwin")
 

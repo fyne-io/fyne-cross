@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os"
 	"path"
-	"path/filepath"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
@@ -73,7 +72,7 @@ func (cmd *android) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *android) Build(image containerImage) (string, string, error) {
+func (cmd *android) Build(image containerImage) (string, error) {
 	//
 	// package
 	//
@@ -83,7 +82,7 @@ func (cmd *android) Build(image containerImage) (string, string, error) {
 
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	if cmd.defaultContext.Release {
@@ -92,7 +91,7 @@ func (cmd *android) Build(image containerImage) (string, string, error) {
 		err = fynePackage(cmd.defaultContext, image)
 	}
 	if err != nil {
-		return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 
 	// move the dist package into the "dist" folder
@@ -101,20 +100,22 @@ func (cmd *android) Build(image containerImage) (string, string, error) {
 	// https://github.com/fyne-io/fyne/blob/v1.4.0/cmd/fyne/internal/mobile/build_androidapp.go#L297
 	// To avoid to duplicate the fyne tool sanitize logic here, the location of
 	// the dist package to move will be detected using a matching pattern
-	apkFilePattern := volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), cmd.defaultContext.Package, "*.apk")
-	apks, err := filepath.Glob(apkFilePattern)
-	if err != nil {
-		return "", "", fmt.Errorf("could not find any apk file matching %q: %v", apkFilePattern, err)
-	}
-	if apks == nil {
-		return "", "", fmt.Errorf("could not find any apk file matching %q", apkFilePattern)
-	}
-	if len(apks) > 1 {
-		return "", "", fmt.Errorf("multiple apk files matching %q: %v. Please remove and build again", apkFilePattern, apks)
-	}
-	srcFile := apks[0]
+	command := fmt.Sprintf("mv %s %q",
+		volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), cmd.defaultContext.Package, "*.apk"),
+		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+	)
 
-	return srcFile, packageName, nil
+	// move the dist package into the expected tmp/$ID/packageName location in the container
+	// We use the shell to do the globbing and copy the file
+	err = image.Run(cmd.defaultContext.Volume, options{}, []string{
+		"sh", "-c", command,
+	})
+
+	if err != nil {
+		return "", fmt.Errorf("could not retrieve the packaged apk")
+	}
+
+	return packageName, nil
 }
 
 // Usage displays the command usage
@@ -170,7 +171,10 @@ func (cmd *android) setupContainerImages(flags *androidFlags, args []string) err
 	}
 
 	cmd.defaultContext = ctx
-	runner := newContainerEngine(ctx)
+	runner, err := newContainerEngine(ctx)
+	if err != nil {
+		return err
+	}
 
 	for _, arch := range targetArch {
 		// By default, the fyne cli tool builds a fat APK for all supported
@@ -183,9 +187,10 @@ func (cmd *android) setupContainerImages(flags *androidFlags, args []string) err
 			return fmt.Errorf("keystore location must be relative to the project root: %s", ctx.Volume.WorkDirHost())
 		}
 
-		_, err = os.Stat(volume.JoinPathHost(ctx.Volume.WorkDirHost(), flags.Keystore))
-		if err != nil {
-			return fmt.Errorf("keystore location must be under the project root: %s", ctx.Volume.WorkDirHost())
+		if !ctx.NoProjectUpload {
+			if _, err := os.Stat(volume.JoinPathHost(ctx.Volume.WorkDirHost(), flags.Keystore)); err != nil {
+				return fmt.Errorf("keystore location must be under the project root: %s", ctx.Volume.WorkDirHost())
+			}
 		}
 
 		cmd.defaultContext.Keystore = volume.JoinPathContainer(cmd.defaultContext.Volume.WorkDirContainer(), flags.Keystore)

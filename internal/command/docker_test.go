@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"github.com/fyne-io/fyne-cross/internal/volume"
+	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"golang.org/x/sys/execabs"
 )
@@ -123,16 +124,17 @@ func TestCmdEngineDocker(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runner := newContainerEngine(tt.args.context)
+			runner, err := newContainerEngine(tt.args.context)
+			assert.Nil(t, err)
 			image := runner.createContainerImage("", "", tt.args.image)
 
-			cmd := image.Cmd(tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()
+			cmd := image.(*localContainerImage).cmd(tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()
 			want := tt.want
 			if runtime.GOOS == "windows" {
 				want = tt.wantWindows
 			}
 			if cmd != want {
-				t.Errorf("Cmd()\ngot :%v\nwant:%v", cmd, want)
+				t.Errorf("cmd()\ngot :%v\nwant:%v", cmd, want)
 			}
 		})
 	}
@@ -253,13 +255,14 @@ func TestCmdEnginePodman(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			runner := newContainerEngine(tt.args.context)
+			runner, err := newContainerEngine(tt.args.context)
+			assert.Nil(t, err)
 			image := runner.createContainerImage("", "", tt.args.image)
 
-			cmd := image.Cmd(tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()
+			cmd := image.(*localContainerImage).cmd(tt.args.vol, tt.args.opts, tt.args.cmdArgs).String()
 			want := tt.want
 			if cmd != want {
-				t.Errorf("Cmd()\ngot :%v\nwant:%v", cmd, want)
+				t.Errorf("cmd()\ngot :%v\nwant:%v", cmd, want)
 			}
 		})
 	}
