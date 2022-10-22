@@ -28,7 +28,7 @@ type localContainerEngine struct {
 	cacheEnabled bool
 }
 
-func newLocalContainerEngine(context Context) containerEngine {
+func newLocalContainerEngine(context Context) (containerEngine, error) {
 	return &localContainerEngine{
 		baseEngine: baseEngine{
 			env:  context.Env,
@@ -38,7 +38,7 @@ func newLocalContainerEngine(context Context) containerEngine {
 		engine:       &context.Engine,
 		pull:         context.Pull,
 		cacheEnabled: context.CacheEnabled,
-	}
+	}, nil
 }
 
 type localContainerImage struct {
@@ -48,6 +48,7 @@ type localContainerImage struct {
 }
 
 var _ containerEngine = (*localContainerEngine)(nil)
+var _ closer = (*localContainerImage)(nil)
 
 func (r *localContainerEngine) createContainerImage(arch Architecture, OS string, image string) containerImage {
 	ret := r.createContainerImageInternal(arch, OS, image, func(base baseContainerImage) containerImage {
@@ -59,10 +60,14 @@ func (r *localContainerEngine) createContainerImage(arch Architecture, OS string
 
 	// mount the cache dir if cache is enabled
 	if r.cacheEnabled {
-		ret.SetMount(r.vol.CacheDirHost(), r.vol.CacheDirContainer())
+		ret.SetMount("cache", r.vol.CacheDirHost(), r.vol.CacheDirContainer())
 	}
 
 	return ret
+}
+
+func (*localContainerImage) close() error {
+	return nil
 }
 
 func AppendEnv(args []string, environs map[string]string, quoteNeeded bool) []string {
@@ -83,7 +88,7 @@ func (i *localContainerImage) Engine() containerEngine {
 }
 
 // Cmd returns a command to run in a new container for the specified image
-func (i *localContainerImage) Cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd {
+func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd {
 
 	// define workdir
 	w := vol.WorkDirContainer()
@@ -143,7 +148,7 @@ func (i *localContainerImage) Cmd(vol volume.Volume, opts options, cmdArgs []str
 
 // Run runs a command in a new container for the specified image
 func (i *localContainerImage) Run(vol volume.Volume, opts options, cmdArgs []string) error {
-	cmd := i.Cmd(vol, opts, cmdArgs)
+	cmd := i.cmd(vol, opts, cmdArgs)
 	log.Debug(cmd)
 	return cmd.Run()
 }
@@ -177,7 +182,9 @@ func (i *localContainerImage) Prepare() error {
 	return nil
 }
 
-func (i *localContainerImage) Finalize(srcFile string, packageName string) error {
+func (i *localContainerImage) Finalize(packageName string) error {
+	// move the dist package into the "dist" folder
+	srcPath := volume.JoinPathHost(i.runner.vol.TmpDirHost(), i.ID(), packageName)
 	distFile := volume.JoinPathHost(i.runner.vol.DistDirHost(), i.ID(), packageName)
 
 	// If packageName is empty, we are copying an entire directory directly in the DistDirHost directory
@@ -188,12 +195,12 @@ func (i *localContainerImage) Finalize(srcFile string, packageName string) error
 		}
 	}
 
-	err := os.Rename(srcFile, distFile)
+	err := os.Rename(srcPath, distFile)
 	if err != nil {
 		return err
 	}
 
-	log.Infof("[✓] Package: %s", distFile)
+	log.Infof("[✓] Package: %q", distFile)
 
 	return nil
 }

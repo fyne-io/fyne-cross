@@ -12,8 +12,6 @@ import (
 	"path"
 	"path/filepath"
 	"strings"
-
-	"github.com/fyne-io/fyne-cross/internal/icon"
 )
 
 const (
@@ -47,15 +45,6 @@ func DefaultCacheDirHost() (string, error) {
 		return "", fmt.Errorf("cannot get the path for the system cache directory on the host %s", err)
 	}
 	return JoinPathHost(userCacheDir, fyneCrossPrefix), nil
-}
-
-// DefaultIconHost returns the default icon path on the host
-func DefaultIconHost() (string, error) {
-	wd, err := DefaultWorkDirHost()
-	if err != nil {
-		return "", err
-	}
-	return JoinPathHost(wd, icon.Default), nil
 }
 
 // DefaultWorkDirHost returns the default work dir on the host

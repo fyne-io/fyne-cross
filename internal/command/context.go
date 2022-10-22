@@ -39,21 +39,27 @@ type Context struct {
 	// Volume holds the mounted volumes between host and containers
 	volume.Volume
 
-	Engine  Engine            // Engine is the container engine to use
-	Env     map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
-	LdFlags []string          // LdFlags defines the ldflags to use
-	Tags    []string          // Tags defines the tags to use
+	Engine    Engine            // Engine is the container engine to use
+	Namespace string            // Namespace used by Kubernetes engine to run its pod in
+	S3Path    string            // Project base directory to use to push and pull data from S3
+	SizeLimit string            // Container mount point size limits honored by Kubernetes only
+	Env       map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
+	LdFlags   []string          // LdFlags defines the ldflags to use
+	Tags      []string          // Tags defines the tags to use
 
-	AppBuild     string // Build number
-	AppID        string // AppID is the appID to use for distribution
-	AppVersion   string // AppVersion is the version number in the form x, x.y or x.y.z semantic version
-	CacheEnabled bool   // CacheEnabled if true enable go build cache
-	Icon         string // Icon is the optional icon in png format to use for distribution
-	Name         string // Name is the application name
-	Package      string // Package is the package to build named by the import path as per 'go build'
-	Release      bool   // Enable release mode. If true, prepares an application for public distribution
-	StripDebug   bool   // StripDebug if true, strips binary output
-	Pull         bool   // Pull if true attempts to pull a newer version of the docker image
+	AppBuild         string // Build number
+	AppID            string // AppID is the appID to use for distribution
+	AppVersion       string // AppVersion is the version number in the form x, x.y or x.y.z semantic version
+	CacheEnabled     bool   // CacheEnabled if true enable go build cache
+	Icon             string // Icon is the optional icon in png format to use for distribution
+	Name             string // Name is the application name
+	Package          string // Package is the package to build named by the import path as per 'go build'
+	Release          bool   // Enable release mode. If true, prepares an application for public distribution
+	StripDebug       bool   // StripDebug if true, strips binary output
+	Debug            bool   // Debug if true enable debug log
+	Pull             bool   // Pull if true attempts to pull a newer version of the docker image
+	NoProjectUpload  bool   // NoProjectUpload if true, the build will be done with the artifact already stored on S3
+	NoResultDownload bool   // NoResultDownload if true, the result of the build will be left on S3 and not downloaded locally
 
 	// Release context
 	Category     string //Category represents the category of the app for store listing [macOS]
@@ -96,27 +102,40 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 
 	engine := flags.Engine.Engine
 	if (engine == Engine{}) {
-		// attempt to autodetect
-		engine, err = MakeEngine(autodetectEngine)
-		if err != nil {
-			return Context{}, err
+		if flags.Namespace != "" && flags.Namespace != "default" {
+			engine, err = MakeEngine(kubernetesEngine)
+			if err != nil {
+				return Context{}, err
+			}
+		} else {
+			// attempt to autodetect
+			engine, err = MakeEngine(autodetectEngine)
+			if err != nil {
+				return Context{}, err
+			}
 		}
 	}
 
 	// set context based on command-line flags
 	ctx := Context{
-		AppID:        flags.AppID,
-		AppVersion:   flags.AppVersion,
-		CacheEnabled: !flags.NoCache,
-		Engine:       engine,
-		Env:          make(map[string]string),
-		Tags:         flags.Tags,
-		Icon:         flags.Icon,
-		Name:         flags.Name,
-		StripDebug:   !flags.NoStripDebug,
-		Volume:       vol,
-		Pull:         flags.Pull,
-		Release:      flags.Release,
+		AppID:            flags.AppID,
+		AppVersion:       flags.AppVersion,
+		CacheEnabled:     !flags.NoCache,
+		NoProjectUpload:  flags.NoProjectUpload,
+		NoResultDownload: flags.NoResultDownload,
+		Engine:           engine,
+		Namespace:        flags.Namespace,
+		S3Path:           flags.S3Path,
+		SizeLimit:        flags.SizeLimit,
+		Env:              make(map[string]string),
+		Tags:             flags.Tags,
+		Icon:             flags.Icon,
+		Name:             flags.Name,
+		StripDebug:       !flags.NoStripDebug,
+		Debug:            flags.Debug,
+		Volume:           vol,
+		Pull:             flags.Pull,
+		Release:          flags.Release,
 	}
 
 	if flags.AppBuild <= 0 {

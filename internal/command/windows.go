@@ -81,21 +81,21 @@ func (cmd *windows) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *windows) Build(image containerImage) (string, string, error) {
+func (cmd *windows) Build(image containerImage) (string, error) {
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	// Release mode
 	if cmd.defaultContext.Release {
 		if runtime.GOOS != windowsOS {
-			return "", "", fmt.Errorf("windows release build is supported only on windows hosts")
+			return "", fmt.Errorf("windows release build is supported only on windows hosts")
 		}
 
 		err = fyneReleaseHost(cmd.defaultContext, image)
 		if err != nil {
-			return "", "", fmt.Errorf("could not package the Fyne app: %v", err)
+			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 
 		packageName := cmd.defaultContext.Name + ".appx"
@@ -103,15 +103,20 @@ func (cmd *windows) Build(image containerImage) (string, string, error) {
 			packageName = cmd.defaultContext.Name[:pos] + ".appx"
 		}
 
-		// move the dist package into the "dist" folder
-		srcFile := volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), packageName)
-		return srcFile, packageName, nil
+		// move the dist package into the expected tmp/$ID/packageName location in the container
+		image.Run(cmd.defaultContext.Volume, options{}, []string{
+			"mv",
+			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+		})
+
+		return packageName, nil
 	}
 
 	// Build mode
 	windres, err := WindowsResource(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	//
@@ -119,7 +124,7 @@ func (cmd *windows) Build(image containerImage) (string, string, error) {
 	//
 	err = goBuild(cmd.defaultContext, image)
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
 	//
@@ -134,15 +139,15 @@ func (cmd *windows) Build(image containerImage) (string, string, error) {
 	packageName := cmd.defaultContext.Name + ".zip"
 
 	// create a zip archive from the compiled binary under the "bin" folder
-	// and place it under the "dist" folder
-	srcFile := volume.JoinPathHost(cmd.defaultContext.BinDirHost(), image.ID(), cmd.defaultContext.Name)
-	tmpFile := volume.JoinPathHost(cmd.defaultContext.TmpDirHost(), image.ID(), packageName)
-	err = volume.Zip(srcFile, tmpFile)
+	// and place it under the tmp folder
+	err = image.Run(cmd.defaultContext.Volume, options{WorkDir: volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID())}, []string{
+		"zip", "-r", volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName), cmd.defaultContext.Name,
+	})
 	if err != nil {
-		return "", "", err
+		return "", err
 	}
 
-	return tmpFile, packageName, nil
+	return packageName, nil
 }
 
 // Usage displays the command usage
@@ -206,7 +211,10 @@ func (cmd *windows) setupContainerImages(flags *windowsFlags, args []string) err
 	}
 
 	cmd.defaultContext = ctx
-	runner := newContainerEngine(ctx)
+	runner, err := newContainerEngine(ctx)
+	if err != nil {
+		return err
+	}
 
 	for _, arch := range targetArch {
 		image := runner.createContainerImage(arch, windowsOS, overrideDockerImage(flags.CommonFlags, windowsImage))

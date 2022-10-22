@@ -9,7 +9,6 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
-	"golang.org/x/sys/execabs"
 )
 
 const (
@@ -33,10 +32,9 @@ type baseEngine struct {
 }
 
 type containerImage interface {
-	Cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd
 	Run(vol volume.Volume, opts options, cmdArgs []string) error
 	Prepare() error
-	Finalize(srcFile string, packageName string) error
+	Finalize(packageName string) error
 
 	Architecture() Architecture
 	OS() string
@@ -44,7 +42,7 @@ type containerImage interface {
 	Target() string
 	Env(string) (string, bool)
 	SetEnv(string, string)
-	SetMount(string, string)
+	SetMount(string, string, string)
 	AppendTag(string)
 	Tags() []string
 
@@ -52,6 +50,7 @@ type containerImage interface {
 }
 
 type containerMountPoint struct {
+	name        string
 	localHost   string
 	inContainer string
 }
@@ -68,11 +67,14 @@ type baseContainerImage struct {
 	DockerImage string // DockerImage defines the docker image used to build
 }
 
-func newContainerEngine(context Context) containerEngine {
+func newContainerEngine(context Context) (containerEngine, error) {
 	if context.Engine.IsDocker() || context.Engine.IsPodman() {
 		return newLocalContainerEngine(context)
 	}
-	return nil
+	if context.Engine.IsKubernetes() {
+		return newKubernetesContainerRunner(context)
+	}
+	return nil, fmt.Errorf("unknown engine: '%s'", context.Engine)
 }
 
 var debugEnable bool
@@ -93,7 +95,7 @@ func (a *baseEngine) createContainerImageInternal(arch Architecture, OS string, 
 	ret := fn(baseContainerImage{arch: arch, os: OS, id: ID, DockerImage: image, env: make(map[string]string), tags: a.tags})
 
 	// mount the working dir
-	ret.SetMount(a.vol.WorkDirHost(), a.vol.WorkDirContainer())
+	ret.SetMount("project", a.vol.WorkDirHost(), a.vol.WorkDirContainer())
 
 	return ret
 }
@@ -128,8 +130,8 @@ func (a *baseContainerImage) SetEnv(key string, value string) {
 	a.env[key] = value
 }
 
-func (a *baseContainerImage) SetMount(local string, inContainer string) {
-	a.mount = append(a.mount, containerMountPoint{localHost: local, inContainer: inContainer})
+func (a *baseContainerImage) SetMount(name string, local string, inContainer string) {
+	a.mount = append(a.mount, containerMountPoint{name: name, localHost: local, inContainer: inContainer})
 }
 
 func (a *baseContainerImage) AppendTag(tag string) {
@@ -142,6 +144,9 @@ func (a *baseContainerImage) Tags() []string {
 
 // goModInit ensure a go.mod exists. If not try to generates a temporary one
 func goModInit(ctx Context, image containerImage) error {
+	if ctx.NoProjectUpload {
+		return nil
+	}
 
 	goModPath := volume.JoinPathHost(ctx.WorkDirHost(), "go.mod")
 	log.Infof("[i] Checking for go.mod: %s", goModPath)

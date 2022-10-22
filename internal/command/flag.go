@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/metadata"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
@@ -30,6 +31,12 @@ type CommonFlags struct {
 	DockerImage string
 	// Engine is the container engine to use
 	Engine engineFlag
+	// Namespace used by Kubernetes engine to run its pod in
+	Namespace string
+	// Base S3 directory to push and pull data from
+	S3Path string
+	// Container mount point size limits honored by Kubernetes only
+	SizeLimit string
 	// Env is the list of custom env variable to set. Specified as "KEY=VALUE"
 	Env envFlag
 	// Icon represents the application icon used for distribution
@@ -40,6 +47,10 @@ type CommonFlags struct {
 	Tags tagsFlag
 	// NoCache if true will not use the go build cache
 	NoCache bool
+	// NoProjectUpload if true, the build will be done with the artifact already stored on S3
+	NoProjectUpload bool
+	// NoResultDownload if true, it will leave the result of the build on S3 and won't download it locally (engine: kubernetes)
+	NoResultDownload bool
 	// NoStripDebug if true will not strip debug information from binaries
 	NoStripDebug bool
 	// Name represents the application name
@@ -71,11 +82,7 @@ func newCommonFlags() (*CommonFlags, error) {
 		return nil, err
 	}
 
-	defaultIcon, err := volume.DefaultIconHost()
-	if err != nil {
-		return nil, err
-	}
-
+	defaultIcon := icon.Default
 	appID := ""
 	appVersion := "1.0"
 	appBuild := 1
@@ -100,12 +107,13 @@ func newCommonFlags() (*CommonFlags, error) {
 	}
 
 	flags := &CommonFlags{}
+	kubernetesFlagSet(flagSet, flags)
 	flagSet.IntVar(&flags.AppBuild, "app-build", appBuild, "Build number, should be greater than 0 and incremented for each build")
 	flagSet.StringVar(&flags.AppID, "app-id", appID, "Application ID used for distribution")
 	flagSet.StringVar(&flags.AppVersion, "app-version", appVersion, "Version number in the form x, x.y or x.y.z semantic version")
 	flagSet.StringVar(&flags.CacheDir, "cache", cacheDir, "Directory used to share/cache sources and dependencies")
 	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")
-	flagSet.Var(&flags.Engine, "engine", "The container engine to use. Supported engines: [docker, podman]. Default to autodetect.")
+	flagSet.Var(&flags.Engine, "engine", "The container engine to use. Supported engines: [docker, podman, kubernetes]. Default to autodetect.")
 	flagSet.Var(&flags.Env, "env", "List of additional env variables specified as KEY=VALUE")
 	flagSet.StringVar(&flags.Icon, "icon", defaultIcon, "Application icon used for distribution")
 	flagSet.StringVar(&flags.DockerImage, "image", "", "Custom docker image to use for build")

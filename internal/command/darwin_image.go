@@ -15,6 +15,7 @@ import (
 
 // DarwinImage builds the darwin docker image
 type DarwinImage struct {
+	pull       bool
 	sdkPath    string
 	sdkVersion string
 	engineFlag
@@ -35,6 +36,7 @@ func (cmd *DarwinImage) Parse(args []string) error {
 	flagSet.StringVar(&cmd.sdkPath, "xcode-path", "", "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.5.dmg)")
 	flagSet.StringVar(&cmd.sdkVersion, "sdk-version", "", "SDK version to use. Default to automatic detection")
 	flagSet.Var(&cmd.engineFlag, "engine", "The container engine to use. Supported engines: [docker, podman]. Default to autodetect.")
+	flagSet.BoolVar(&cmd.pull, "pull", true, "Attempt to pull a newer version of the docker base image")
 
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
@@ -103,8 +105,20 @@ func (cmd *DarwinImage) Run() error {
 	}
 	log.Info("[i] macOS SDK: ", ver)
 
+	// build the docker/podmad command arguments
+	// Example: "build --build-arg SDK_VERSION=[VER] -t docker.io/fyneio/fyne-cross:1.3-darwin [--pull] ."
+	args := []string{
+		"build",
+		"--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion),
+		"-t", darwinImage,
+	}
+	if cmd.pull {
+		args = append(args, "--pull")
+	}
+	args = append(args, ".")
+
 	// run the command from the host
-	dockerCmd := execabs.Command(engine.Binary, "build", "--pull", "--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")
+	dockerCmd := execabs.Command(engine.Binary, args...)
 	dockerCmd.Dir = workDir
 	dockerCmd.Stdout = os.Stdout
 	dockerCmd.Stderr = os.Stderr

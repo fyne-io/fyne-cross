@@ -42,7 +42,14 @@ Supported targets are:
 
 For go >= 1.16:
 ```
-go install github.com/fyne-io/fyne-cross@latest
+git clone https://github.com/fyne-io/fyne-cross.git
+cd fyne-cross && go install
+```
+
+To install a fyne-cross with kubernetes engine:
+```
+git clone https://github.com/fyne-io/fyne-cross.git
+cd fyne-cross && go install -tags k8s
 ```
 
 For older go:

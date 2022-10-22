@@ -13,9 +13,6 @@ base-llvm: base
 android: base
 	@$(RUNNER) build --build-arg FYNE_CROSS_VERSION=${FYNE_CROSS_VERSION} -f ${CURDIR}/docker/android/Dockerfile -t fyneio/fyne-cross:${FYNE_CROSS_VERSION}-android .
 
-darwin: base-llvm
-	@$(RUNNER) build --build-arg FYNE_CROSS_VERSION=${FYNE_CROSS_VERSION} -f ${CURDIR}/docker/darwin/Dockerfile -t fyneio/fyne-cross:${FYNE_CROSS_VERSION}-darwin .
-
 base-freebsd: base-llvm
 	@$(RUNNER) build --build-arg FYNE_CROSS_VERSION=${FYNE_CROSS_VERSION} -f ${CURDIR}/docker/base-freebsd/Dockerfile -t fyneio/fyne-cross:${FYNE_CROSS_VERSION}-base-freebsd .
 
