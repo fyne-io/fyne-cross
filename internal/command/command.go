@@ -102,8 +102,8 @@ func cleanTargetDirs(ctx Context, image containerImage) error {
 
 	dirs := map[string]string{
 		"bin":  volume.JoinPathContainer(ctx.BinDirContainer(), image.ID()),
-		"dist": volume.JoinPathHost(ctx.DistDirContainer(), image.ID()),
-		"temp": volume.JoinPathHost(ctx.TmpDirContainer(), image.ID()),
+		"dist": volume.JoinPathContainer(ctx.DistDirContainer(), image.ID()),
+		"temp": volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID()),
 	}
 
 	log.Infof("[i] Cleaning target directories...")
