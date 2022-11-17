@@ -315,7 +315,7 @@ func calculateExeName(sourceDir, os string) string {
 		}
 	}
 
-	if os == "windows" {
+	if os == windowsOS {
 		exeName = exeName + ".exe"
 	}
 
