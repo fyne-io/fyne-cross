@@ -299,6 +299,7 @@ func fynePackage(ctx Context, image containerImage) error {
 	return nil
 }
 
+// calculateExeName is ported from the fyne base code to ensure darwin binary naming is consistent between fyne-cross and fyne package
 func calculateExeName(sourceDir, os string) string {
 	exeName := filepath.Base(sourceDir)
 	/* #nosec */
