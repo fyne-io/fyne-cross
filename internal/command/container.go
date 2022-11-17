@@ -2,6 +2,7 @@ package command
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -9,6 +10,8 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
+	"golang.org/x/mod/modfile"
+	"golang.org/x/mod/module"
 )
 
 const (
@@ -202,7 +205,12 @@ func goBuild(ctx Context, image containerImage) error {
 	}
 
 	// set output folder to fyne-cross/bin/<target>
-	output := volume.JoinPathContainer(ctx.Volume.BinDirContainer(), image.ID(), ctx.Name)
+	binaryName := ctx.Name
+	if image.OS() == darwinOS {
+		// replicate how fyne package names the binary
+		binaryName = calculateExeName(volume.JoinPathHost(ctx.WorkDirHost()), image.OS())
+	}
+	output := volume.JoinPathContainer(ctx.Volume.BinDirContainer(), image.ID(), binaryName)
 
 	args = append(args, "-o", output)
 
@@ -270,7 +278,13 @@ func fynePackage(ctx Context, image containerImage) error {
 	// linux, darwin and freebsd targets are built by fyne-cross
 	// in these cases fyne tool is used only to package the app specifying the executable flag
 	if image.OS() == linuxOS || image.OS() == darwinOS || image.OS() == freebsdOS {
-		args = append(args, "-executable", volume.JoinPathContainer(ctx.BinDirContainer(), image.ID(), ctx.Name))
+		binaryName := ctx.Name
+		if image.OS() == darwinOS {
+			// replicate how fyne package names the binary
+			binaryName = calculateExeName(volume.JoinPathHost(ctx.WorkDirHost()), image.OS())
+		}
+
+		args = append(args, "-executable", volume.JoinPathContainer(ctx.BinDirContainer(), image.ID(), binaryName))
 		workDir = volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID())
 	}
 
@@ -283,6 +297,29 @@ func fynePackage(ctx Context, image containerImage) error {
 		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 	return nil
+}
+
+// calculateExeName is ported from the fyne base code to ensure darwin binary naming is consistent between fyne-cross and fyne package
+func calculateExeName(sourceDir, os string) string {
+	exeName := filepath.Base(sourceDir)
+	/* #nosec */
+	if data, err := ioutil.ReadFile(filepath.Join(sourceDir, "go.mod")); err == nil {
+		modulePath := modfile.ModulePath(data)
+		moduleName, _, ok := module.SplitPathVersion(modulePath)
+		if ok {
+			paths := strings.Split(moduleName, "/")
+			name := paths[len(paths)-1]
+			if name != "" {
+				exeName = name
+			}
+		}
+	}
+
+	if os == windowsOS {
+		exeName = exeName + ".exe"
+	}
+
+	return exeName
 }
 
 // fyneRelease package and release the application using the fyne cli tool
