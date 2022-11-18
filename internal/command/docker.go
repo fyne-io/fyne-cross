@@ -107,8 +107,10 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 
 	// handle settings related to engine
 	if i.runner.engine.IsPodman() {
-		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
+		args = append(args, "--userns", "keep-id", "-e", "use_podman=1", "--arch=amd64")
 	} else {
+		args = append(args, "--platform", "linux/amd64")
+
 		// docker: pass current user id to handle mount permissions on linux and MacOS
 		if runtime.GOOS != "windows" {
 			u, err := user.Current()
