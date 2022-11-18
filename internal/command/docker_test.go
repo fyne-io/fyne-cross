@@ -159,7 +159,7 @@ func TestCmdEnginePodman(t *testing.T) {
 	}
 
 	dockerImage := "docker.io/fyneio/fyne-cross"
-	podmanFlags := "--userns keep-id -e use_podman=1"
+	podmanFlags := "--userns keep-id -e use_podman=1 --arch=amd64"
 
 	type args struct {
 		context Context
