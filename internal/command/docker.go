@@ -101,8 +101,14 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 		"-w", w, // set workdir
 	}
 
+	mountFormat := "%s:%s:z"
+	if runtime.GOOS == darwinOS && runtime.GOARCH == string(ArchArm64) {
+		// When running on darwin with a Arm64, we relly on going through a VM setup that doesn't allow the :z
+		mountFormat = "%s:%s"
+	}
+
 	for _, mountPoint := range i.mount {
-		args = append(args, "-v", fmt.Sprintf("%s:%s:z", mountPoint.localHost, mountPoint.inContainer))
+		args = append(args, "-v", fmt.Sprintf(mountFormat, mountPoint.localHost, mountPoint.inContainer))
 	}
 
 	// handle settings related to engine
