@@ -111,11 +111,17 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 		args = append(args, "-v", fmt.Sprintf(mountFormat, mountPoint.localHost, mountPoint.inContainer))
 	}
 
+	arch := "amd64"
+	if runtime.GOARCH == "arm64" {
+		// If we are running on arm64, we should have arm64 image to avoid using emulation
+		arch = runtime.GOARCH
+	}
+
 	// handle settings related to engine
 	if i.runner.engine.IsPodman() {
-		args = append(args, "--userns", "keep-id", "-e", "use_podman=1", "--arch=amd64")
+		args = append(args, "--userns", "keep-id", "-e", "use_podman=1", "--arch="+arch)
 	} else {
-		args = append(args, "--platform", "linux/amd64")
+		args = append(args, "--platform", "linux/"+arch)
 
 		// docker: pass current user id to handle mount permissions on linux and MacOS
 		if runtime.GOOS != "windows" {
