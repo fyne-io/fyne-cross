@@ -214,6 +214,7 @@ func fynePackageHost(ctx Context, image containerImage) error {
 	fyneCmd.Dir = ctx.WorkDirHost()
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
+	fyneCmd.Env = image.AllEnv()
 
 	if debugging() {
 		log.Debug(fyneCmd)

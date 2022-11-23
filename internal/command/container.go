@@ -45,6 +45,7 @@ type containerImage interface {
 	Target() string
 	Env(string) (string, bool)
 	SetEnv(string, string)
+	AllEnv() []string
 	SetMount(string, string, string)
 	AppendTag(string)
 	Tags() []string
@@ -131,6 +132,15 @@ func (a *baseContainerImage) Env(key string) (v string, ok bool) {
 
 func (a *baseContainerImage) SetEnv(key string, value string) {
 	a.env[key] = value
+}
+
+func (a *baseContainerImage) AllEnv() []string {
+	r := []string{}
+
+	for key, value := range a.env {
+		r = append(r, key+"="+value)
+	}
+	return r
 }
 
 func (a *baseContainerImage) SetMount(name string, local string, inContainer string) {
