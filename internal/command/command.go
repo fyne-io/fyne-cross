@@ -211,6 +211,8 @@ func fynePackageHost(ctx Context, image containerImage) error {
 
 	// when using local build, do not assume what CC is available and rely on os.Env("CC") is necessary
 	image.UnsetEnv("CC")
+	image.UnsetEnv("CGO_CFLAGS")
+	image.UnsetEnv("CGO_LDFLAGS")
 
 	// run the command from the host
 	fyneCmd := execabs.Command(fyne, args...)
@@ -285,6 +287,8 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 
 	// when using local build, do not assume what CC is available and rely on os.Env("CC") is necessary
 	image.UnsetEnv("CC")
+	image.UnsetEnv("CGO_CFLAGS")
+	image.UnsetEnv("CGO_LDFLAGS")
 
 	// run the command from the host
 	fyneCmd := execabs.Command(fyne, args...)
