@@ -283,11 +283,15 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 		}
 	}
 
+	// when using local build, do not assume what CC is available and rely on os.Env("CC") is necessary
+	image.UnsetEnv("CC")
+
 	// run the command from the host
 	fyneCmd := execabs.Command(fyne, args...)
 	fyneCmd.Dir = ctx.WorkDirHost()
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
+	fyneCmd.Env = append(os.Environ(), image.AllEnv()...)
 
 	if debugging() {
 		log.Debug(fyneCmd)
