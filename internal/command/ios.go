@@ -151,6 +151,9 @@ func (cmd *iOS) setupContainerImages(flags *iosFlags, args []string) error {
 		return fmt.Errorf("appID is mandatory for %s", iosImage)
 	}
 
+	ctx.Certificate = flags.Certificate
+	ctx.Profile = flags.Profile
+
 	cmd.defaultContext = ctx
 	runner, err := newContainerEngine(ctx)
 	if err != nil {
@@ -158,9 +161,6 @@ func (cmd *iOS) setupContainerImages(flags *iosFlags, args []string) error {
 	}
 
 	cmd.Images = append(cmd.Images, runner.createContainerImage("", iosOS, overrideDockerImage(flags.CommonFlags, iosImage)))
-
-	ctx.Certificate = flags.Certificate
-	ctx.Profile = flags.Profile
 
 	return nil
 }
