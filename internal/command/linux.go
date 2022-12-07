@@ -11,10 +11,10 @@ const (
 	// linuxOS it the linux OS name
 	linuxOS = "linux"
 	// linuxImage is the fyne-cross image for the Linux OS
-	linuxImageAmd64 = "docker.io/fyneio/fyne-cross:1.3-base"
-	linuxImage386   = "docker.io/fyneio/fyne-cross:1.3-linux-386"
-	linuxImageArm64 = "docker.io/fyneio/fyne-cross:1.3-linux-arm64"
-	linuxImageArm   = "docker.io/fyneio/fyne-cross:1.3-linux-arm"
+	linuxImageAmd64 = "docker.io/fyneio/fyne-cross-images:1.0.0-linux"
+	linuxImage386   = "docker.io/fyneio/fyne-cross-images:1.0.0-linux"
+	linuxImageArm64 = "docker.io/fyneio/fyne-cross-images:1.0.0-linux"
+	linuxImageArm   = "docker.io/fyneio/fyne-cross-images:1.0.0-linux"
 )
 
 var (
@@ -152,21 +152,21 @@ func (cmd *linux) setupContainerImages(flags *linuxFlags, args []string) error {
 		case ArchAmd64:
 			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageAmd64))
 			image.SetEnv("GOARCH", "amd64")
-			image.SetEnv("CC", "gcc")
+			image.SetEnv("CC", "zig cc -target x86_64-linux-gnu -isystem /usr/include -L/usr/lib/x86_64-linux-gnu")
 		case Arch386:
 			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImage386))
 			image.SetEnv("GOARCH", "386")
-			image.SetEnv("CC", "i686-linux-gnu-gcc")
+			image.SetEnv("CC", "zig cc -target i386-linux-gnu -isystem /usr/include -L/usr/lib/i386-linux-gnu")
 		case ArchArm:
 			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm))
 			image.SetEnv("GOARCH", "arm")
-			image.SetEnv("CC", "arm-linux-gnueabihf-gcc")
 			image.SetEnv("GOARM", "7")
+			image.SetEnv("CC", "zig cc -target arm-linux-gnueabihf -isystem /usr/include -L/usr/lib/arm-linux-gnueabihf")
 			image.AppendTag("gles")
 		case ArchArm64:
 			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm64))
 			image.SetEnv("GOARCH", "arm64")
-			image.SetEnv("CC", "aarch64-linux-gnu-gcc")
+			image.SetEnv("CC", "zig cc -target aarch64-linux-gnu -isystem /usr/include -L/usr/lib/aarch64-linux-gnu")
 			image.AppendTag("gles")
 		}
 
