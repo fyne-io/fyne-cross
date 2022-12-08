@@ -17,8 +17,6 @@ import (
 const (
 	// fyneBin is the path of the fyne binary into the docker image
 	fyneBin = "/usr/local/bin/fyne"
-	// gowindresBin is the path of the gowindres binary into the docker image
-	gowindresBin = "/usr/local/bin/gowindres"
 )
 
 type containerEngine interface {
@@ -381,35 +379,4 @@ func fyneRelease(ctx Context, image containerImage) error {
 		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 	return nil
-}
-
-// WindowsResource create a windows resource under the project root
-// that will be automatically linked by compliler during the build
-func WindowsResource(ctx Context, image containerImage) (string, error) {
-	args := []string{
-		gowindresBin,
-		"-arch", image.Architecture().String(),
-		"-output", ctx.Name,
-		"-workdir", volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID()),
-	}
-
-	runOpts := options{
-		WorkDir: volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID()),
-	}
-
-	err := image.Run(ctx.Volume, runOpts, args)
-	if err != nil {
-		return "", fmt.Errorf("could not package the Fyne app: %v", err)
-	}
-
-	// copy the windows resource under the package root
-	// it will be automatically linked by compiler during build
-	windres := ctx.Name + ".syso"
-	out := filepath.Join(ctx.Package, windres)
-	err = volume.Copy(volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), windres), volume.JoinPathHost(ctx.WorkDirHost(), out))
-	if err != nil {
-		return "", fmt.Errorf("could not copy windows resource under the package root: %v", err)
-	}
-
-	return out, nil
 }
