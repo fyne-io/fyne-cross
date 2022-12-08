@@ -156,7 +156,7 @@ func (cmd *linux) setupContainerImages(flags *linuxFlags, args []string) error {
 		case Arch386:
 			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImage386))
 			image.SetEnv("GOARCH", "386")
-			image.SetEnv("CC", "zig cc -target i386-linux-gnu -isystem /usr/include -L/usr/lib/i386-linux-gnu")
+			image.SetEnv("CC", "zig cc -target x86-linux-gnu -isystem /usr/include -L/usr/lib/i386-linux-gnu")
 		case ArchArm:
 			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm))
 			image.SetEnv("GOARCH", "arm")
