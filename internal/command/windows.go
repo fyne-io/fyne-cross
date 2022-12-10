@@ -24,7 +24,7 @@ const (
 
 var (
 	// windowsArchSupported defines the supported target architectures on windows
-	windowsArchSupported = []Architecture{ArchAmd64, Arch386}
+	windowsArchSupported = []Architecture{ArchAmd64, ArchArm64, Arch386}
 )
 
 // Windows build and package the fyne app for the windows OS
@@ -240,6 +240,9 @@ func (cmd *windows) setupContainerImages(flags *windowsFlags, args []string) err
 		case Arch386:
 			image.SetEnv("GOARCH", "386")
 			image.SetEnv("CC", "zig cc -target x86-windows-gnu -Wdeprecated-non-prototype")
+		case ArchArm64:
+			image.SetEnv("GOARCH", "arm64")
+			image.SetEnv("CC", "zig cc -target aarch64-windows-gnu -Wdeprecated-non-prototype")
 		}
 
 		cmd.Images = append(cmd.Images, image)
