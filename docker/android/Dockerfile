@@ -9,6 +9,7 @@ ENV ANDROID_SDK_BUILD_TOOLS_VERSION 30.0.3
 ENV ANDROID_SDK_BUILD_TOOLS_BIN ${ANDROID_HOME}/build-tools/${ANDROID_SDK_BUILD_TOOLS_VERSION}
 ENV ANDROID_SDK_PLATFORM 30
 ENV ANDROID_NDK_BIN ${ANDROID_HOME}/ndk-bundle/toolchains/llvm/prebuilt/linux-x86_64/bin
+ENV BUNDLETOOL_VERSION 1.11.2
 
 ENV PATH=${PATH}:${JAVA_HOME}/bin:${ANDROID_NDK_BIN}:${ANDROID_SDK_BUILD_TOOLS_BIN}
 
@@ -32,3 +33,8 @@ RUN yes | ${ANDROID_HOME}/cmdline-tools/latest/bin/sdkmanager \
 	"ndk-bundle" \
 	"platforms;android-${ANDROID_SDK_PLATFORM}" \
 	"platform-tools"
+
+RUN wget -O /usr/local/bin/bundletool.jar "https://github.com/google/bundletool/releases/download/${BUNDLETOOL_VERSION}/bundletool-all-${BUNDLETOOL_VERSION}.jar"
+
+COPY docker/android/bundletool /usr/local/bin
+RUN chmod +x /usr/local/bin/bundletool

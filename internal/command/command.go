@@ -203,6 +203,16 @@ func fynePackageHost(ctx Context, image containerImage) error {
 		args = append(args, "-appID", ctx.AppID)
 	}
 
+	// ios packaging require certificate and profile for running on devices
+	if image.OS() == iosOS {
+		if ctx.Certificate != "" {
+			args = append(args, "-certificate", ctx.Certificate)
+		}
+		if ctx.Profile != "" {
+			args = append(args, "-profile", ctx.Profile)
+		}
+	}
+
 	// add tags to command, if any
 	tags := ctx.Tags
 	if len(tags) > 0 {
