@@ -12,7 +12,7 @@ const (
 	// iosOS it the ios OS name
 	iosOS = "ios"
 	// iosImage is the fyne-cross image for the iOS OS
-	iosImage = "docker.io/fyneio/fyne-cross:1.3-base"
+	iosImage = "fyneio/fyne-cross:1.3-base"
 )
 
 // IOS build and package the fyne app for the ios OS
