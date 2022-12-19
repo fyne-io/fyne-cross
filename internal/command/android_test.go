@@ -21,11 +21,10 @@ func Test_makeAndroidContext(t *testing.T) {
 		args  []string
 	}
 	tests := []struct {
-		name        string
-		args        args
-		wantContext Context
-		wantImages  []containerImage
-		wantErr     bool
+		name    string
+		args    args
+		want    []Context
+		wantErr bool
 	}{
 		{
 			name: "keystore path must be relative to project root",
@@ -39,9 +38,8 @@ func Test_makeAndroidContext(t *testing.T) {
 					TargetArch: &targetArchFlag{string(ArchMultiple)},
 				},
 			},
-			wantContext: Context{},
-			wantImages:  []containerImage{},
-			wantErr:     true,
+			want:    []Context{},
+			wantErr: true,
 		},
 		{
 			name: "keystore path does not exist",
@@ -55,9 +53,8 @@ func Test_makeAndroidContext(t *testing.T) {
 					TargetArch: &targetArchFlag{string(ArchMultiple)},
 				},
 			},
-			wantContext: Context{},
-			wantImages:  []containerImage{},
-			wantErr:     true,
+			want:    []Context{},
+			wantErr: true,
 		},
 		{
 			name: "default",
@@ -71,30 +68,21 @@ func Test_makeAndroidContext(t *testing.T) {
 					TargetArch: &targetArchFlag{string(ArchMultiple)},
 				},
 			},
-			wantContext: Context{
-				AppBuild:     "1",
-				AppID:        "com.example.test",
-				Volume:       vol,
-				CacheEnabled: true,
-				StripDebug:   true,
-				Package:      ".",
-				Keystore:     "/app/testdata/my.keystore",
-				Engine:       engine,
-				Env:          map[string]string{},
-			},
-			wantImages: []containerImage{
-				&localContainerImage{
-					baseContainerImage: baseContainerImage{
-						arch: ArchMultiple,
-						os:   androidOS,
-						id:   androidOS,
-						env:  map[string]string{},
-						mount: []containerMountPoint{
-							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
-							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
-						},
-						DockerImage: androidImage,
-					},
+			want: []Context{
+				{
+					AppBuild:     "1",
+					AppID:        "com.example.test",
+					ID:           androidOS,
+					OS:           androidOS,
+					Architecture: ArchMultiple,
+					DockerImage:  androidImage,
+					Volume:       vol,
+					CacheEnabled: true,
+					StripDebug:   true,
+					Package:      ".",
+					Keystore:     "/app/testdata/my.keystore",
+					Engine:       engine,
+					Env:          map[string]string{},
 				},
 			},
 			wantErr: false,
@@ -111,30 +99,21 @@ func Test_makeAndroidContext(t *testing.T) {
 					TargetArch: &targetArchFlag{string(ArchMultiple)},
 				},
 			},
-			wantContext: Context{
-				AppBuild:     "1",
-				AppID:        "com.example.test",
-				Volume:       vol,
-				CacheEnabled: true,
-				StripDebug:   true,
-				Package:      ".",
-				Keystore:     "/app/testdata/my.keystore",
-				Engine:       engine,
-				Env:          map[string]string{},
-			},
-			wantImages: []containerImage{
-				&localContainerImage{
-					baseContainerImage: baseContainerImage{
-						arch: ArchMultiple,
-						os:   androidOS,
-						id:   androidOS,
-						env:  map[string]string{},
-						mount: []containerMountPoint{
-							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
-							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
-						},
-						DockerImage: androidImage,
-					},
+			want: []Context{
+				{
+					AppBuild:     "1",
+					AppID:        "com.example.test",
+					ID:           androidOS,
+					OS:           androidOS,
+					Architecture: ArchMultiple,
+					DockerImage:  androidImage,
+					Volume:       vol,
+					CacheEnabled: true,
+					StripDebug:   true,
+					Package:      ".",
+					Keystore:     "/app/testdata/my.keystore",
+					Engine:       engine,
+					Env:          map[string]string{},
 				},
 			},
 			wantErr: false,
@@ -150,29 +129,20 @@ func Test_makeAndroidContext(t *testing.T) {
 					TargetArch: &targetArchFlag{string(ArchMultiple)},
 				},
 			},
-			wantContext: Context{},
-			wantImages:  []containerImage{},
-			wantErr:     true,
+			want:    []Context{},
+			wantErr: true,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			android := NewAndroidCommand()
-
-			err := android.setupContainerImages(tt.args.flags, tt.args.args)
+			ctx, err := makeAndroidContext(tt.args.flags, tt.args.args)
 
 			if tt.wantErr {
 				require.NotNil(t, err)
 				return
 			}
 			require.Nil(t, err)
-			assert.Equal(t, tt.wantContext, android.defaultContext)
-
-			for index := range android.Images {
-				android.Images[index].(*localContainerImage).runner = nil
-			}
-
-			assert.Equal(t, tt.wantImages, android.Images)
+			assert.Equal(t, tt.want, ctx)
 		})
 	}
 }

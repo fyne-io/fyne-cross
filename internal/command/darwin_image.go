@@ -106,7 +106,7 @@ func (cmd *DarwinImage) Run() error {
 	log.Info("[i] macOS SDK: ", ver)
 
 	// build the docker/podmad command arguments
-	// Example: "build --build-arg SDK_VERSION=[VER] -t docker.io/fyneio/fyne-cross:1.3-darwin [--pull] ."
+	// Example: "build --build-arg SDK_VERSION=[VER] -t fyneio/fyne-cross:1.3-darwin [--pull] ."
 	args := []string{
 		"build",
 		"--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion),
