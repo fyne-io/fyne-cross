@@ -11,8 +11,11 @@ import (
 const (
 	// webOS it the ios OS name
 	webOS = "web"
+)
+
+var (
 	// webImage is the fyne-cross image for the web
-	webImage = "docker.io/fyneio/fyne-cross:1.3-web"
+	webImage = "fyneio/fyne-cross:1.3-web"
 )
 
 // Web build and package the fyne app for the web
@@ -153,6 +156,11 @@ func makeWebContext(flags *webFlags, args []string) (Context, error) {
 
 	ctx.OS = webOS
 	ctx.ID = webOS
+
+	// set docker registry for default images
+	if flags.DockerRegistry != "" {
+		webImage = fmt.Sprintf("%s/%s", flags.DockerRegistry, webImage)
+	}
 
 	// set context based on command-line flags
 	if flags.DockerImage == "" {

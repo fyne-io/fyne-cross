@@ -13,13 +13,13 @@ import (
 const (
 	// androidOS is the android OS name
 	androidOS = "android"
-	// androidImage is the fyne-cross image for the Android OS
-	androidImage = "docker.io/fyneio/fyne-cross:1.3-android"
 )
 
 var (
 	// androidArchSupported defines the supported target architectures for the android OS
 	androidArchSupported = []Architecture{ArchMultiple, ArchAmd64, Arch386, ArchArm, ArchArm64}
+	// androidImage is the fyne-cross image for the Android OS
+	androidImage = "fyneio/fyne-cross:1.3-android"
 )
 
 // Android build and package the fyne app for the android OS
@@ -232,6 +232,11 @@ func makeAndroidContext(flags *androidFlags, args []string) ([]Context, error) {
 		ctx.Keystore = volume.JoinPathContainer(ctx.Volume.WorkDirContainer(), flags.Keystore)
 		ctx.KeystorePass = flags.KeystorePass
 		ctx.KeyPass = flags.KeyPass
+
+		// set docker registry for default images
+		if flags.DockerRegistry != "" {
+			androidImage = fmt.Sprintf("%s/%s", flags.DockerRegistry, androidImage)
+		}
 
 		// set context based on command-line flags
 		if flags.DockerImage == "" {

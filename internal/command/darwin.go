@@ -20,7 +20,7 @@ var (
 	// darwinArchSupported defines the supported target architectures on darwin
 	darwinArchSupported = []Architecture{ArchAmd64, ArchArm64}
 	// darwinImage is the fyne-cross image for the Darwin OS
-	darwinImage = "docker.io/fyneio/fyne-cross:1.3-darwin"
+	darwinImage = "fyneio/fyne-cross:1.3-darwin"
 )
 
 // Darwin build and package the fyne app for the darwin OS
@@ -241,6 +241,11 @@ func darwinContext(flags *darwinFlags, args []string) ([]Context, error) {
 			ctx.Env["CC"] = "oa64-clang"
 			ctx.Env["CGO_CFLAGS"] = "-mmacosx-version-min=11.1"
 			ctx.Env["CGO_LDFLAGS"] = "-fuse-ld=lld -mmacosx-version-min=11.1"
+		}
+
+		// set docker registry for default images
+		if flags.DockerRegistry != "" {
+			darwinImage = fmt.Sprintf("%s/%s", flags.DockerRegistry, darwinImage)
 		}
 
 		// set context based on command-line flags

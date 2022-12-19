@@ -14,9 +14,9 @@ const (
 	// freebsdOS it the freebsd OS name
 	freebsdOS = "freebsd"
 	// freebsdImageAmd64 is the fyne-cross image for the FreeBSD OS amd64 arch
-	freebsdImageAmd64 = "docker.io/fyneio/fyne-cross:1.3-freebsd-amd64"
+	freebsdImageAmd64 = "fyneio/fyne-cross:1.3-freebsd-amd64"
 	// freebsdImageArm64 is the fyne-cross image for the FreeBSD OS arm64 arch
-	freebsdImageArm64 = "docker.io/fyneio/fyne-cross:1.3-freebsd-arm64"
+	freebsdImageArm64 = "fyneio/fyne-cross:1.3-freebsd-arm64"
 )
 
 var (
@@ -206,6 +206,11 @@ func freebsdContext(flags *freebsdFlags, args []string) ([]Context, error) {
 				ctx.Env["CGO_LDFLAGS"] = "-fuse-ld=lld"
 			}
 			ctx.Env["CC"] = "aarch64-unknown-freebsd12-clang"
+		}
+
+		// set docker registry for default images
+		if flags.DockerRegistry != "" {
+			defaultDockerImage = fmt.Sprintf("%s/%s", flags.DockerRegistry, defaultDockerImage)
 		}
 
 		// set context based on command-line flags

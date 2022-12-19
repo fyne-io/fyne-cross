@@ -14,13 +14,13 @@ import (
 const (
 	// windowsOS it the windows OS name
 	windowsOS = "windows"
-	// windowsImage is the fyne-cross image for the Windows OS
-	windowsImage = "docker.io/fyneio/fyne-cross:1.3-windows"
 )
 
 var (
 	// windowsArchSupported defines the supported target architectures on windows
 	windowsArchSupported = []Architecture{ArchAmd64, Arch386}
+	// windowsImage is the fyne-cross image for the Windows OS
+	windowsImage = "fyneio/fyne-cross:1.3-windows"
 )
 
 // Windows build and package the fyne app for the windows OS
@@ -260,6 +260,11 @@ func makeWindowsContext(flags *windowsFlags, args []string) ([]Context, error) {
 
 		if !flags.Console {
 			ctx.LdFlags = append(ctx.LdFlags, "-H=windowsgui")
+		}
+
+		// set docker registry for default images
+		if flags.DockerRegistry != "" {
+			windowsImage = fmt.Sprintf("%s/%s", flags.DockerRegistry, windowsImage)
 		}
 
 		if flags.DockerImage == "" {

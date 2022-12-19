@@ -14,10 +14,10 @@ const (
 	// linuxOS it the linux OS name
 	linuxOS = "linux"
 	// linuxImage is the fyne-cross image for the Linux OS
-	linuxImageAmd64 = "docker.io/fyneio/fyne-cross:1.3-base"
-	linuxImage386   = "docker.io/fyneio/fyne-cross:1.3-linux-386"
-	linuxImageArm64 = "docker.io/fyneio/fyne-cross:1.3-linux-arm64"
-	linuxImageArm   = "docker.io/fyneio/fyne-cross:1.3-linux-arm"
+	linuxImageAmd64 = "fyneio/fyne-cross:1.3-base"
+	linuxImage386   = "fyneio/fyne-cross:1.3-linux-386"
+	linuxImageArm64 = "fyneio/fyne-cross:1.3-linux-arm64"
+	linuxImageArm   = "fyneio/fyne-cross:1.3-linux-arm"
 )
 
 var (
@@ -213,6 +213,11 @@ func linuxContext(flags *linuxFlags, args []string) ([]Context, error) {
 			ctx.Env["GOARCH"] = "arm64"
 			ctx.Env["CC"] = "aarch64-linux-gnu-gcc"
 			ctx.Tags = append(ctx.Tags, "gles")
+		}
+
+		// set docker registry for default images
+		if flags.DockerRegistry != "" {
+			defaultDockerImage = fmt.Sprintf("%s/%s", flags.DockerRegistry, defaultDockerImage)
 		}
 
 		// set context based on command-line flags

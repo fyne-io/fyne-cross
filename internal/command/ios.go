@@ -13,8 +13,11 @@ import (
 const (
 	// iosOS it the ios OS name
 	iosOS = "ios"
+)
+
+var (
 	// iosImage is the fyne-cross image for the iOS OS
-	iosImage = "docker.io/fyneio/fyne-cross:1.3-base"
+	iosImage = "fyneio/fyne-cross:1.3-base"
 )
 
 // IOS build and package the fyne app for the ios OS
@@ -184,6 +187,11 @@ func makeIOSContext(flags *iosFlags, args []string) (Context, error) {
 	ctx.ID = iosOS
 	ctx.Certificate = flags.Certificate
 	ctx.Profile = flags.Profile
+
+	// set docker registry for default images
+	if flags.DockerRegistry != "" {
+		iosImage = fmt.Sprintf("%s/%s", flags.DockerRegistry, iosImage)
+	}
 
 	// set context based on command-line flags
 	if flags.DockerImage == "" {

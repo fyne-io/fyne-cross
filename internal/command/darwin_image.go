@@ -15,8 +15,9 @@ import (
 
 // DarwinImage builds the darwin docker image
 type DarwinImage struct {
-	sdkPath    string
-	sdkVersion string
+	sdkPath        string
+	sdkVersion     string
+	dockerRegistry string
 	engineFlag
 }
 
@@ -34,6 +35,7 @@ func (cmd *DarwinImage) Description() string {
 func (cmd *DarwinImage) Parse(args []string) error {
 	flagSet.StringVar(&cmd.sdkPath, "xcode-path", "", "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.5.dmg)")
 	flagSet.StringVar(&cmd.sdkVersion, "sdk-version", "", "SDK version to use. Default to automatic detection")
+	flagSet.StringVar(&cmd.dockerRegistry, "docker-registry", "docker.io", "registry to be used instead of dockerhub.")
 	flagSet.Var(&cmd.engineFlag, "engine", "The container engine to use. Supported engines: [docker, podman]. Default to autodetect.")
 
 	flagSet.Usage = cmd.Usage
@@ -103,8 +105,13 @@ func (cmd *DarwinImage) Run() error {
 	}
 	log.Info("[i] macOS SDK: ", ver)
 
+	// set docker registry for default images
+	if cmd.dockerRegistry != "" && !strings.HasPrefix(darwinImage, cmd.dockerRegistry) {
+		darwinImage = fmt.Sprintf("%s/%s", cmd.dockerRegistry, darwinImage)
+	}
+
 	// run the command from the host
-	dockerCmd := execabs.Command(engine.Binary, "build", "--pull", "--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "-t", darwinImage, ".")
+	dockerCmd := execabs.Command(engine.Binary, "build", "--pull", "--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion), "--build-arg", fmt.Sprintf("DOCKER_REGISTRY=%s", cmd.dockerRegistry), "-t", darwinImage, ".")
 	dockerCmd.Dir = workDir
 	dockerCmd.Stdout = os.Stdout
 	dockerCmd.Stderr = os.Stderr
