@@ -15,9 +15,10 @@ import (
 
 // DarwinImage builds the darwin docker image
 type DarwinImage struct {
-	pull       bool
-	sdkPath    string
-	sdkVersion string
+	pull           bool
+	sdkPath        string
+	sdkVersion     string
+	dockerRegistry string
 	engineFlag
 }
 
@@ -37,6 +38,7 @@ func (cmd *DarwinImage) Parse(args []string) error {
 	flagSet.StringVar(&cmd.sdkVersion, "sdk-version", "", "SDK version to use. Default to automatic detection")
 	flagSet.Var(&cmd.engineFlag, "engine", "The container engine to use. Supported engines: [docker, podman]. Default to autodetect.")
 	flagSet.BoolVar(&cmd.pull, "pull", true, "Attempt to pull a newer version of the docker base image")
+	flagSet.StringVar(&cmd.dockerRegistry, "docker-registry", "docker.io", "Docker registry to be used instead of dockerhub")
 
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
@@ -110,6 +112,7 @@ func (cmd *DarwinImage) Run() error {
 	args := []string{
 		"build",
 		"--build-arg", fmt.Sprintf("SDK_VERSION=%s", cmd.sdkVersion),
+		"--build-arg", fmt.Sprintf("DOCKER_REGISTRY=%s", cmd.dockerRegistry),
 		"-t", darwinImage,
 	}
 	if cmd.pull {
