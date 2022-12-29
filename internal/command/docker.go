@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -89,7 +90,6 @@ func (i *localContainerImage) Engine() containerEngine {
 
 // Cmd returns a command to run in a new container for the specified image
 func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd {
-
 	// define workdir
 	w := vol.WorkDirContainer()
 	if opts.WorkDir != "" {
@@ -120,6 +120,14 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 					cmdArgs = append([]string{"-q"}, cmdArgs...)
 				}
 			}
+		}
+	}
+
+	// detect ssh-agent socket for private repositories access
+	if sshAuthSock := os.Getenv("SSH_AUTH_SOCK"); sshAuthSock != "" {
+		if realSshAuthSock, err := filepath.EvalSymlinks(sshAuthSock); err == nil {
+			args = append(args, "-v", fmt.Sprintf("%s:/tmp/ssh-agent", realSshAuthSock))
+			args = append(args, "-e", "SSH_AUTH_SOCK=/tmp/ssh-agent")
 		}
 	}
 
