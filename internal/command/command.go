@@ -141,16 +141,6 @@ func prepareIcon(ctx Context, image containerImage) error {
 		}
 	}
 
-	if image.OS() == "windows" {
-		// convert the png icon to ico format and store under the temp directory
-		icoIcon := volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), ctx.Name+".ico")
-		err := icon.ConvertPngToIco(ctx.Icon, icoIcon)
-		if err != nil {
-			return fmt.Errorf("could not create the windows ico: %v", err)
-		}
-		return nil
-	}
-
 	err := image.Run(ctx.Volume, options{}, []string{"cp", volume.JoinPathContainer(ctx.WorkDirContainer(), ctx.Icon), volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default)})
 	if err != nil {
 		return fmt.Errorf("could not copy the icon to temp folder: %v", err)
