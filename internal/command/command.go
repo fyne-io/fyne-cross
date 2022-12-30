@@ -8,7 +8,6 @@ import (
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
-	"github.com/fyne-io/fyne-cross/internal/metadata"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 	"golang.org/x/sys/execabs"
 )
@@ -31,16 +30,11 @@ type closer interface {
 }
 
 func commonRun(defaultContext Context, images []containerImage, builder platformBuilder) error {
-	err := bumpFyneAppBuild(defaultContext)
-	if err != nil {
-		log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
-	}
-
 	for _, image := range images {
 		log.Infof("[i] Target: %s/%s", image.OS(), image.Architecture())
 		log.Debugf("%#v", image)
 
-		err = func() error {
+		err := func() error {
 			defer image.(closer).close()
 
 			//
@@ -50,7 +44,7 @@ func commonRun(defaultContext Context, images []containerImage, builder platform
 				return err
 			}
 
-			err = cleanTargetDirs(defaultContext, image)
+			err := cleanTargetDirs(defaultContext, image)
 			if err != nil {
 				return err
 			}
@@ -294,15 +288,4 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 	return nil
-}
-
-// bumpFyneAppBuild increments the BuildID into the FyneApp.toml, if any,
-// to behave like the fyne CLI tool
-func bumpFyneAppBuild(ctx Context) error {
-	data, err := metadata.LoadStandard(ctx.Volume.WorkDirHost())
-	if err != nil {
-		return nil // no metadata to update
-	}
-	data.Details.Build++
-	return metadata.SaveStandard(data, ctx.Volume.WorkDirHost())
 }
