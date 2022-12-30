@@ -228,7 +228,7 @@ func goBuild(ctx Context, image containerImage) error {
 		return err
 	}
 
-	log.Infof("[✓] Binary: %s", volume.JoinPathHost(ctx.BinDirHost(), image.ID(), ctx.Name))
+	log.Infof("[✓] Binary: %s", volume.JoinPathHost(ctx.BinDirHost(), image.ID(), binaryName))
 	return nil
 }
 
