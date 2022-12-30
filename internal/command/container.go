@@ -13,8 +13,6 @@ import (
 const (
 	// fyneBin is the path of the fyne binary into the docker image
 	fyneBin = "/usr/local/bin/fyne"
-	// gowindresBin is the path of the gowindres binary into the docker image
-	gowindresBin = "/usr/local/bin/gowindres"
 )
 
 type containerEngine interface {
