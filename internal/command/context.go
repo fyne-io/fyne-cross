@@ -53,6 +53,7 @@ type Context struct {
 	CacheEnabled     bool   // CacheEnabled if true enable go build cache
 	Icon             string // Icon is the optional icon in png format to use for distribution
 	Name             string // Name is the application name
+	ExecutableName   string // ExecutableName is the name of the executable to be generated
 	Package          string // Package is the package to build named by the import path as per 'go build'
 	Release          bool   // Enable release mode. If true, prepares an application for public distribution
 	StripDebug       bool   // StripDebug if true, strips binary output
@@ -136,6 +137,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		Tags:             flags.Tags,
 		Icon:             flags.Icon,
 		Name:             flags.Name,
+		ExecutableName:   flags.ExecutableName,
 		StripDebug:       !flags.NoStripDebug,
 		Debug:            flags.Debug,
 		Volume:           vol,

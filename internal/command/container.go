@@ -1,6 +1,7 @@
 package command
 
 import (
+	"errors"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -205,8 +206,15 @@ func goBuild(ctx Context, image containerImage) error {
 	}
 
 	// set output folder to fyne-cross/bin/<target>
-	binaryName := ctx.Name
+	binaryName := ctx.ExecutableName
+	if binaryName == "" {
+		binaryName = ctx.Name
+	}
 	if image.OS() == darwinOS {
+		if ctx.Engine.Name == kubernetesEngine && ctx.ExecutableName == "" {
+			return errors.New("executable name is required for darwinOS on kubernetes engine (use --executable-name)")
+		}
+
 		// replicate how fyne package names the binary
 		binaryName = calculateExeName(volume.JoinPathHost(ctx.WorkDirHost()), image.OS())
 	}

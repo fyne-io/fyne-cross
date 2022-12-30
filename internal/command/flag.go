@@ -55,6 +55,8 @@ type CommonFlags struct {
 	NoStripDebug bool
 	// Name represents the application name
 	Name string
+	// ExecutableName represents the name of the executable
+	ExecutableName string
 	// Release represents if the package should be prepared for release (disable debug etc)
 	Release bool
 	// RootDir represents the project root directory
@@ -123,6 +125,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.Var(&flags.Tags, "tags", "List of additional build tags separated by comma")
 	flagSet.BoolVar(&flags.NoStripDebug, "no-strip-debug", false, "Do not strip debug information from binaries")
 	flagSet.StringVar(&flags.Name, "name", name, "The name of the application")
+	flagSet.StringVar(&flags.ExecutableName, "executable-name", name, "The name of the executable")
 	flagSet.StringVar(&flags.Name, "output", name, "Named output file. Deprecated in favour of 'name'")
 	flagSet.BoolVar(&flags.Release, "release", false, "Release mode. Prepares the application for public distribution")
 	flagSet.StringVar(&flags.RootDir, "dir", rootDir, "Fyne app root directory")
