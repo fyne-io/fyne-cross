@@ -101,14 +101,28 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 		"-w", w, // set workdir
 	}
 
+	mountFormat := "%s:%s:z"
+	if runtime.GOOS == darwinOS && runtime.GOARCH == string(ArchArm64) {
+		// When running on darwin with a Arm64, we rely on going through a VM setup that doesn't allow the :z
+		mountFormat = "%s:%s"
+	}
+
 	for _, mountPoint := range i.mount {
-		args = append(args, "-v", fmt.Sprintf("%s:%s:z", mountPoint.localHost, mountPoint.inContainer))
+		args = append(args, "-v", fmt.Sprintf(mountFormat, mountPoint.localHost, mountPoint.inContainer))
+	}
+
+	arch := "amd64"
+	if runtime.GOARCH == "arm64" {
+		// If we are running on arm64, we should have arm64 image to avoid using emulation
+		arch = runtime.GOARCH
 	}
 
 	// handle settings related to engine
 	if i.runner.engine.IsPodman() {
-		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
+		args = append(args, "--userns", "keep-id", "-e", "use_podman=1", "--arch="+arch)
 	} else {
+		args = append(args, "--platform", "linux/"+arch)
+
 		// docker: pass current user id to handle mount permissions on linux and MacOS
 		if runtime.GOOS != "windows" {
 			u, err := user.Current()
