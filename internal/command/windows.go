@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"os"
 	"runtime"
 	"strings"
 
@@ -113,39 +112,37 @@ func (cmd *windows) Build(image containerImage) (string, error) {
 		return packageName, nil
 	}
 
-	// Build mode
-	windres, err := WindowsResource(cmd.defaultContext, image)
-	if err != nil {
-		return "", err
-	}
-
-	//
-	// build
-	//
-	err = goBuild(cmd.defaultContext, image)
-	if err != nil {
-		return "", err
-	}
-
 	//
 	// package
 	//
-
 	log.Info("[i] Packaging app...")
-
-	// remove the windres file under the project root
-	os.Remove(volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), windres))
-
 	packageName := cmd.defaultContext.Name + ".zip"
+
+	// Build mode
+	err = fynePackage(cmd.defaultContext, image)
+	if err != nil {
+		return "", err
+	}
+
+	executableName := cmd.defaultContext.Name + ".exe"
+	if pos := strings.LastIndex(cmd.defaultContext.Name, ".exe"); pos > 0 {
+		executableName = cmd.defaultContext.Name
+	}
 
 	// create a zip archive from the compiled binary under the "bin" folder
 	// and place it under the tmp folder
-	err = image.Run(cmd.defaultContext.Volume, options{WorkDir: volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID())}, []string{
-		"zip", "-r", volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName), cmd.defaultContext.Name,
+	err = image.Run(cmd.defaultContext.Volume, options{}, []string{
+		"zip", volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName), executableName,
 	})
 	if err != nil {
 		return "", err
 	}
+
+	image.Run(cmd.defaultContext.Volume, options{}, []string{
+		"mv",
+		executableName,
+		volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID(), executableName),
+	})
 
 	return packageName, nil
 }

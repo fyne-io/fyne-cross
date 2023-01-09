@@ -2,23 +2,17 @@ package command
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
-	"path/filepath"
 	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
-	"golang.org/x/mod/modfile"
-	"golang.org/x/mod/module"
 )
 
 const (
 	// fyneBin is the path of the fyne binary into the docker image
 	fyneBin = "/usr/local/bin/fyne"
-	// gowindresBin is the path of the gowindres binary into the docker image
-	gowindresBin = "/usr/local/bin/gowindres"
 )
 
 type containerEngine interface {
@@ -184,69 +178,6 @@ func goModInit(ctx Context, image containerImage) error {
 	return nil
 }
 
-// goBuild run the go build command in the container
-func goBuild(ctx Context, image containerImage) error {
-	log.Infof("[i] Building binary...")
-	// add go build command
-	args := []string{"go", "build", "-trimpath"}
-
-	// Strip debug information
-	if ctx.StripDebug {
-		// ensure that CGO_LDFLAGS is not overwritten as they can be passed
-		// by the --env argument
-		if v, ok := image.Env("CGO_LDFLAGS"); ok {
-			// append the ldflags after the existing CGO_LDFLAGS
-			image.SetEnv("CGO_LDFLAGS", strings.Trim(v, "\"")+" -w -s")
-		} else {
-			// create the CGO_LDFLAGS environment variable and add the strip debug flags
-			image.SetEnv("CGO_LDFLAGS", "-w -s")
-		}
-	}
-
-	ldflags := ctx.LdFlags
-	// honour the GOFLAGS env variable adding to existing ones
-	if v, ok := image.Env("GOFLAGS"); ok {
-		ldflags = append(ldflags, v)
-	}
-
-	if len(ldflags) > 0 {
-		args = append(args, "-ldflags", strings.Join(ldflags, " "))
-	}
-
-	// add tags to command, if any
-	tags := image.Tags()
-	if len(tags) > 0 {
-		args = append(args, "-tags", strings.Join(tags, ","))
-	}
-
-	// set output folder to fyne-cross/bin/<target>
-	binaryName := ctx.Name
-	if image.OS() == darwinOS {
-		// replicate how fyne package names the binary
-		binaryName = calculateExeName(volume.JoinPathHost(ctx.WorkDirHost()), image.OS())
-	}
-	output := volume.JoinPathContainer(ctx.Volume.BinDirContainer(), image.ID(), binaryName)
-
-	args = append(args, "-o", output)
-
-	// enable debug mode
-	if debugging() {
-		args = append(args, "-v")
-	}
-
-	//add package
-	args = append(args, ctx.Package)
-
-	err := image.Run(ctx.Volume, options{}, args)
-
-	if err != nil {
-		return err
-	}
-
-	log.Infof("[✓] Binary: %s", volume.JoinPathHost(ctx.BinDirHost(), image.ID(), ctx.Name))
-	return nil
-}
-
 func fyneCommand(command string, ctx Context, image containerImage) ([]string, error) {
 	if debugging() {
 		err := image.Run(ctx.Volume, options{}, []string{fyneBin, "version"})
@@ -294,18 +225,7 @@ func fynePackage(ctx Context, image containerImage) error {
 		workDir = volume.JoinPathContainer(workDir, ctx.Package)
 	}
 
-	// linux, darwin and freebsd targets are built by fyne-cross
-	// in these cases fyne tool is used only to package the app specifying the executable flag
-	if image.OS() == linuxOS || image.OS() == darwinOS || image.OS() == freebsdOS {
-		binaryName := ctx.Name
-		if image.OS() == darwinOS {
-			// replicate how fyne package names the binary
-			binaryName = calculateExeName(volume.JoinPathHost(ctx.WorkDirHost()), image.OS())
-		}
-
-		args = append(args, "-executable", volume.JoinPathContainer(ctx.BinDirContainer(), image.ID(), binaryName))
-		workDir = volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID())
-	} else if ctx.StripDebug {
+	if ctx.StripDebug {
 		args = append(args, "-release")
 	}
 
@@ -318,29 +238,6 @@ func fynePackage(ctx Context, image containerImage) error {
 		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 	return nil
-}
-
-// calculateExeName is ported from the fyne base code to ensure darwin binary naming is consistent between fyne-cross and fyne package
-func calculateExeName(sourceDir, os string) string {
-	exeName := filepath.Base(sourceDir)
-	/* #nosec */
-	if data, err := ioutil.ReadFile(filepath.Join(sourceDir, "go.mod")); err == nil {
-		modulePath := modfile.ModulePath(data)
-		moduleName, _, ok := module.SplitPathVersion(modulePath)
-		if ok {
-			paths := strings.Split(moduleName, "/")
-			name := paths[len(paths)-1]
-			if name != "" {
-				exeName = name
-			}
-		}
-	}
-
-	if os == windowsOS {
-		exeName = exeName + ".exe"
-	}
-
-	return exeName
 }
 
 // fyneRelease package and release the application using the fyne cli tool
@@ -396,35 +293,4 @@ func fyneRelease(ctx Context, image containerImage) error {
 		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 	return nil
-}
-
-// WindowsResource create a windows resource under the project root
-// that will be automatically linked by compliler during the build
-func WindowsResource(ctx Context, image containerImage) (string, error) {
-	args := []string{
-		gowindresBin,
-		"-arch", image.Architecture().String(),
-		"-output", ctx.Name,
-		"-workdir", volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID()),
-	}
-
-	runOpts := options{
-		WorkDir: volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID()),
-	}
-
-	err := image.Run(ctx.Volume, runOpts, args)
-	if err != nil {
-		return "", fmt.Errorf("could not package the Fyne app: %v", err)
-	}
-
-	// copy the windows resource under the package root
-	// it will be automatically linked by compiler during build
-	windres := ctx.Name + ".syso"
-	out := filepath.Join(ctx.Package, windres)
-	err = volume.Copy(volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), windres), volume.JoinPathHost(ctx.WorkDirHost(), out))
-	if err != nil {
-		return "", fmt.Errorf("could not copy windows resource under the package root: %v", err)
-	}
-
-	return out, nil
 }
