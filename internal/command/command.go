@@ -121,7 +121,12 @@ func cleanTargetDirs(ctx Context, image containerImage) error {
 // prepareIcon prepares the icon for packaging
 func prepareIcon(ctx Context, image containerImage) error {
 	if !ctx.NoProjectUpload {
-		if _, err := os.Stat(ctx.Icon); os.IsNotExist(err) {
+		iconPath := ctx.Icon
+		if ctx.Icon[0] != os.PathSeparator {
+			iconPath = volume.JoinPathContainer(ctx.WorkDirHost(), ctx.Icon)
+		}
+
+		if _, err := os.Stat(iconPath); os.IsNotExist(err) {
 			if ctx.Icon != icon.Default {
 				return fmt.Errorf("icon not found at %q", ctx.Icon)
 			}
