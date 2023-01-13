@@ -195,6 +195,7 @@ func fyneCommand(command string, ctx Context, image containerImage) ([]string, e
 		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default),
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
+		"-src", ctx.Package,
 	}
 
 	// add appID to command, if any
