@@ -19,7 +19,7 @@ const (
 	// windowsOS it the windows OS name
 	windowsOS = "windows"
 	// windowsImage is the fyne-cross image for the Windows OS
-	windowsImage = "docker.io/fyneio/fyne-cross-images:windows"
+	windowsImage = "fyneio/fyne-cross-images:windows"
 )
 
 var (

@@ -11,10 +11,10 @@ const (
 	// linuxOS it the linux OS name
 	linuxOS = "linux"
 	// linuxImage is the fyne-cross image for the Linux OS
-	linuxImageAmd64 = "docker.io/fyneio/fyne-cross-images:linux"
-	linuxImage386   = "docker.io/fyneio/fyne-cross-images:linux"
-	linuxImageArm64 = "docker.io/fyneio/fyne-cross-images:linux"
-	linuxImageArm   = "docker.io/fyneio/fyne-cross-images:linux"
+	linuxImageAmd64 = "fyneio/fyne-cross-images:linux"
+	linuxImage386   = "fyneio/fyne-cross-images:linux"
+	linuxImageArm64 = "fyneio/fyne-cross-images:linux"
+	linuxImageArm   = "fyneio/fyne-cross-images:linux"
 )
 
 var (
