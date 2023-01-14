@@ -102,7 +102,7 @@ func (cmd *freeBSD) Build(image containerImage) (string, error) {
 		options{WorkDir: volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID())},
 		[]string{"tar", "-xf",
 			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
-			"usr/local/bin"})
+			"--strip-components=3", "usr/local/bin"})
 
 	return packageName, nil
 }
