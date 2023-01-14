@@ -173,6 +173,10 @@ func goBuild(ctx Context, image containerImage) error {
 	// add go build command
 	args := []string{"go", "build", "-trimpath"}
 
+	if ctx.BuildMode != "" {
+		args = append(args, fmt.Sprintf("-buildmode=%s", ctx.BuildMode))
+	}
+
 	// Strip debug information
 	if ctx.StripDebug {
 		// ensure that CGO_LDFLAGS is not overwritten as they can be passed
