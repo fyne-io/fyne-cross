@@ -97,6 +97,13 @@ func (cmd *freeBSD) Build(image containerImage) (string, error) {
 		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
 	})
 
+	// Extract the resulting executable from the tarball
+	image.Run(cmd.defaultContext.Volume,
+		options{WorkDir: volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID())},
+		[]string{"tar", "-xf",
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+			"usr/local/bin"})
+
 	return packageName, nil
 }
 
