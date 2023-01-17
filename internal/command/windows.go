@@ -104,9 +104,9 @@ func (cmd *windows) Build(image containerImage) (string, error) {
 
 		// move the dist package into the expected tmp/$ID/packageName location in the container
 		image.Run(cmd.defaultContext.Volume, options{}, []string{
-			"mv",
-			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
-			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+			"sh", "-c", fmt.Sprintf("mv %q %q",
+				volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), "*.appx"),
+				volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName)),
 		})
 
 		return packageName, nil
@@ -132,7 +132,9 @@ func (cmd *windows) Build(image containerImage) (string, error) {
 	// create a zip archive from the compiled binary under the "bin" folder
 	// and place it under the tmp folder
 	err = image.Run(cmd.defaultContext.Volume, options{}, []string{
-		"zip", volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName), executableName,
+		"sh", "-c", fmt.Sprintf("zip %q %q",
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), "*.exe"),
+			executableName),
 	})
 	if err != nil {
 		return "", err
