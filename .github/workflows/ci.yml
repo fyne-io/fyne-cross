@@ -153,7 +153,7 @@ jobs:
             -debug -no-cache \
             -name calculator${{ matrix.target.ext }}
 
-  build:
+  buildPackage:
     name: "Build Fyneterm (${{ matrix.target.os }}, ${{ matrix.go-version }})"
     runs-on: ${{ matrix.target.host || 'ubuntu-latest' }}
     env:
