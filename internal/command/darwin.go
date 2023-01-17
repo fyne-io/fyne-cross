@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"runtime"
-	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
@@ -134,11 +133,10 @@ func (cmd *darwin) Build(image containerImage) (string, error) {
 	// copy the binary into the expected bin/$ID/packageName location in the container
 	image.Run(cmd.defaultContext.Volume, options{},
 		[]string{
-			"sh", "-c", strings.Join([]string{
-				"cp",
+			"sh", "-c", fmt.Sprintf("cp %q %q",
 				volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName, "Contents", "MacOS", "*"),
 				volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID()),
-			}, " "),
+			),
 		})
 
 	return packageName, nil
