@@ -133,8 +133,8 @@ func (cmd *darwin) Build(image containerImage) (string, error) {
 	// copy the binary into the expected bin/$ID/packageName location in the container
 	image.Run(cmd.defaultContext.Volume, options{},
 		[]string{
-			"sh", "-c", fmt.Sprintf("cp %q %q",
-				volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName, "Contents", "MacOS", "*"),
+			"sh", "-c", fmt.Sprintf("cp %q/* %q",
+				volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName, "Contents", "MacOS"),
 				volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID()),
 			),
 		})
