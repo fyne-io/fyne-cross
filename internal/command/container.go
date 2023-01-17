@@ -186,8 +186,13 @@ func fyneCommandContainer(command string, ctx Context, image containerImage) ([]
 	}
 
 	icon := volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default)
+	args := fyneCommand(fyneBin, command, icon, ctx, image)
 
-	return fyneCommand(fyneBin, command, icon, ctx, image), nil
+	if ctx.Package != "." && image.OS() != androidOS {
+		args = append(args, "-src", ctx.Package)
+	}
+
+	return args, nil
 }
 
 // fynePackage packages the application using the fyne cli tool

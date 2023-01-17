@@ -176,10 +176,6 @@ func fyneCommand(binary, command, icon string, ctx Context, image containerImage
 		"-appVersion", ctx.AppVersion,
 	}
 
-	if ctx.Package != "." && image.OS() != androidOS {
-		args = append(args, "-src", ctx.Package)
-	}
-
 	// add appID to command, if any
 	if ctx.AppID != "" {
 		args = append(args, "-appID", ctx.AppID)
