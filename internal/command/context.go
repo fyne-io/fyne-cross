@@ -44,7 +44,6 @@ type Context struct {
 	S3Path    string            // Project base directory to use to push and pull data from S3
 	SizeLimit string            // Container mount point size limits honored by Kubernetes only
 	Env       map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
-	LdFlags   []string          // LdFlags defines the ldflags to use
 	Tags      []string          // Tags defines the tags to use
 
 	AppBuild         string // Build number
@@ -168,7 +167,15 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 	}
 
 	if len(flags.Ldflags) > 0 {
-		ctx.LdFlags = append(ctx.LdFlags, flags.Ldflags)
+		goflags := ""
+		for _, ldflags := range strings.Fields(flags.Ldflags) {
+			goflags += "-ldflags=" + ldflags + " "
+		}
+		if v, ok := ctx.Env["GOFLAGS"]; ok {
+			ctx.Env["GOFLAGS"] = strings.TrimSpace(v + " " + goflags)
+		} else {
+			ctx.Env["GOFLAGS"] = strings.TrimSpace(goflags)
+		}
 	}
 
 	if flags.Silent {

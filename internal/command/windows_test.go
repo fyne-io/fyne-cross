@@ -88,7 +88,11 @@ func Test_makeWindowsContext(t *testing.T) {
 						arch: "386",
 						os:   "windows",
 						id:   "windows-386",
-						env:  map[string]string{"GOOS": "windows", "GOARCH": "386", "CC": "i686-w64-mingw32-gcc"},
+						env: map[string]string{
+							"GOOS":   "windows",
+							"GOARCH": "386",
+							"CC":     "i686-w64-mingw32-gcc",
+						},
 						mount: []containerMountPoint{
 							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
 							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
@@ -116,8 +120,9 @@ func Test_makeWindowsContext(t *testing.T) {
 				StripDebug:   true,
 				Package:      ".",
 				Engine:       engine,
-				Env:          map[string]string{},
-				LdFlags:      []string{"-X main.version=1.2.3"},
+				Env: map[string]string{
+					"GOFLAGS": "-ldflags=-X -ldflags=main.version=1.2.3",
+				},
 			},
 			wantImages: []containerImage{
 				&localContainerImage{
@@ -125,7 +130,11 @@ func Test_makeWindowsContext(t *testing.T) {
 						arch: "amd64",
 						os:   "windows",
 						id:   "windows-amd64",
-						env:  map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
+						env: map[string]string{
+							"GOOS":   "windows",
+							"GOARCH": "amd64",
+							"CC":     "x86_64-w64-mingw32-gcc",
+						},
 						mount: []containerMountPoint{
 							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
 							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
@@ -161,7 +170,11 @@ func Test_makeWindowsContext(t *testing.T) {
 						arch: "amd64",
 						os:   "windows",
 						id:   "windows-amd64",
-						env:  map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
+						env: map[string]string{
+							"GOOS":   "windows",
+							"GOARCH": "amd64",
+							"CC":     "x86_64-w64-mingw32-gcc",
+						},
 						mount: []containerMountPoint{
 							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
 							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
