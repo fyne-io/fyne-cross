@@ -220,6 +220,10 @@ func fynePackageHost(ctx Context, image containerImage) error {
 	workDir := ctx.WorkDirHost()
 	if image.OS() == iosOS {
 		workDir = volume.JoinPathHost(workDir, ctx.Package)
+	} else {
+		if ctx.Package != "." {
+			args = append(args, "-src", ctx.Package)
+		}
 	}
 
 	// when using local build, do not assume what CC is available and rely on os.Env("CC") is necessary
@@ -263,6 +267,9 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 		if ctx.Category != "" {
 			args = append(args, "-category", ctx.Category)
 		}
+		if ctx.Package != "." {
+			args = append(args, "-src", ctx.Package)
+		}
 	case iosOS:
 		workDir = volume.JoinPathHost(workDir, ctx.Package)
 		if ctx.Certificate != "" {
@@ -280,6 +287,9 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 		}
 		if ctx.Password != "" {
 			args = append(args, "-password", ctx.Password)
+		}
+		if ctx.Package != "." {
+			args = append(args, "-src", ctx.Package)
 		}
 	}
 
