@@ -164,28 +164,46 @@ func checkFyneBinHost(ctx Context) (string, error) {
 	return fyne, nil
 }
 
-// fynePackageHost package the application using the fyne cli tool from the host
-// Note: at the moment this is used only for the ios builds
-func fynePackageHost(ctx Context, image containerImage) error {
-
-	fyne, err := checkFyneBinHost(ctx)
-	if err != nil {
-		return err
-	}
+func fyneCommand(binary, command, icon string, ctx Context, image containerImage) []string {
+	target := image.Target()
 
 	args := []string{
-		"package",
-		"-os", image.OS(),
+		binary, command,
+		"-os", target,
 		"-name", ctx.Name,
-		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), image.ID(), icon.Default),
+		"-icon", icon,
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
+	}
+
+	if ctx.Package != "." && image.OS() != androidOS {
+		args = append(args, "-src", ctx.Package)
 	}
 
 	// add appID to command, if any
 	if ctx.AppID != "" {
 		args = append(args, "-appID", ctx.AppID)
 	}
+
+	// add tags to command, if any
+	tags := image.Tags()
+	if len(tags) > 0 {
+		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
+	}
+
+	return args
+}
+
+// fynePackageHost package the application using the fyne cli tool from the host
+// Note: at the moment this is used only for the ios builds
+func fynePackageHost(ctx Context, image containerImage) error {
+	fyne, err := checkFyneBinHost(ctx)
+	if err != nil {
+		return err
+	}
+
+	icon := volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), icon.Default)
+	args := fyneCommand(fyne, "package", icon, ctx, image)
 
 	// ios packaging require certificate and profile for running on devices
 	if image.OS() == iosOS {
@@ -197,19 +215,13 @@ func fynePackageHost(ctx Context, image containerImage) error {
 		}
 	}
 
-	// add tags to command, if any
-	tags := ctx.Tags
-	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
-	}
-
 	// when using local build, do not assume what CC is available and rely on os.Env("CC") is necessary
 	image.UnsetEnv("CC")
 	image.UnsetEnv("CGO_CFLAGS")
 	image.UnsetEnv("CGO_LDFLAGS")
 
 	// run the command from the host
-	fyneCmd := execabs.Command(fyne, args...)
+	fyneCmd := execabs.Command(args[0], args[1:]...)
 	fyneCmd.Dir = ctx.WorkDirHost()
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
@@ -229,31 +241,13 @@ func fynePackageHost(ctx Context, image containerImage) error {
 // fyneReleaseHost package and release the application using the fyne cli tool from the host
 // Note: at the moment this is used only for the ios and windows builds
 func fyneReleaseHost(ctx Context, image containerImage) error {
-
 	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {
 		return err
 	}
 
-	args := []string{
-		"release",
-		"-os", image.OS(),
-		"-name", ctx.Name,
-		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), image.ID(), icon.Default),
-		"-appBuild", ctx.AppBuild,
-		"-appVersion", ctx.AppVersion,
-	}
-
-	// add appID to command, if any
-	if ctx.AppID != "" {
-		args = append(args, "-appID", ctx.AppID)
-	}
-
-	// add tags to command, if any
-	tags := ctx.Tags
-	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
-	}
+	icon := volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), icon.Default)
+	args := fyneCommand(fyne, "release", icon, ctx, image)
 
 	switch image.OS() {
 	case darwinOS:
@@ -285,7 +279,7 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 	image.UnsetEnv("CGO_LDFLAGS")
 
 	// run the command from the host
-	fyneCmd := execabs.Command(fyne, args...)
+	fyneCmd := execabs.Command(args[0], args[1:]...)
 	fyneCmd.Dir = ctx.WorkDirHost()
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr

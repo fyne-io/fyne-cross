@@ -3,7 +3,6 @@ package command
 import (
 	"fmt"
 	"os"
-	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -178,7 +177,7 @@ func goModInit(ctx Context, image containerImage) error {
 	return nil
 }
 
-func fyneCommand(command string, ctx Context, image containerImage) ([]string, error) {
+func fyneCommandContainer(command string, ctx Context, image containerImage) ([]string, error) {
 	if debugging() {
 		err := image.Run(ctx.Volume, options{}, []string{fyneBin, "version"})
 		if err != nil {
@@ -186,38 +185,14 @@ func fyneCommand(command string, ctx Context, image containerImage) ([]string, e
 		}
 	}
 
-	target := image.Target()
+	icon := volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default)
 
-	args := []string{
-		fyneBin, command,
-		"-os", target,
-		"-name", ctx.Name,
-		"-icon", volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default),
-		"-appBuild", ctx.AppBuild,
-		"-appVersion", ctx.AppVersion,
-	}
-
-	if ctx.Package != "." && image.OS() != androidOS {
-		args = append(args, "-src", ctx.Package)
-	}
-
-	// add appID to command, if any
-	if ctx.AppID != "" {
-		args = append(args, "-appID", ctx.AppID)
-	}
-
-	// add tags to command, if any
-	tags := image.Tags()
-	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
-	}
-
-	return args, nil
+	return fyneCommand(fyneBin, command, icon, ctx, image), nil
 }
 
 // fynePackage packages the application using the fyne cli tool
 func fynePackage(ctx Context, image containerImage) error {
-	args, err := fyneCommand("package", ctx, image)
+	args, err := fyneCommandContainer("package", ctx, image)
 	if err != nil {
 		return err
 	}
@@ -247,7 +222,7 @@ func fynePackage(ctx Context, image containerImage) error {
 // fyneRelease package and release the application using the fyne cli tool
 // Note: at the moment this is used only for the android builds
 func fyneRelease(ctx Context, image containerImage) error {
-	args, err := fyneCommand("release", ctx, image)
+	args, err := fyneCommandContainer("release", ctx, image)
 	if err != nil {
 		return err
 	}
