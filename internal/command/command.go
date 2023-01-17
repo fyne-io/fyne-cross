@@ -211,6 +211,11 @@ func fynePackageHost(ctx Context, image containerImage) error {
 		}
 	}
 
+	workDir := ctx.WorkDirHost()
+	if image.OS() == iosOS {
+		workDir = volume.JoinPathHost(workDir, ctx.Package)
+	}
+
 	// when using local build, do not assume what CC is available and rely on os.Env("CC") is necessary
 	image.UnsetEnv("CC")
 	image.UnsetEnv("CGO_CFLAGS")
@@ -218,7 +223,7 @@ func fynePackageHost(ctx Context, image containerImage) error {
 
 	// run the command from the host
 	fyneCmd := execabs.Command(args[0], args[1:]...)
-	fyneCmd.Dir = ctx.WorkDirHost()
+	fyneCmd.Dir = workDir
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
 	fyneCmd.Env = append(os.Environ(), image.AllEnv()...)
@@ -245,12 +250,15 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 	icon := volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), icon.Default)
 	args := fyneCommand(fyne, "release", icon, ctx, image)
 
+	workDir := ctx.WorkDirContainer()
+
 	switch image.OS() {
 	case darwinOS:
 		if ctx.Category != "" {
 			args = append(args, "-category", ctx.Category)
 		}
 	case iosOS:
+		workDir = volume.JoinPathHost(workDir, ctx.Package)
 		if ctx.Certificate != "" {
 			args = append(args, "-certificate", ctx.Certificate)
 		}
@@ -276,7 +284,7 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 
 	// run the command from the host
 	fyneCmd := execabs.Command(args[0], args[1:]...)
-	fyneCmd.Dir = ctx.WorkDirHost()
+	fyneCmd.Dir = workDir
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
 	fyneCmd.Env = append(os.Environ(), image.AllEnv()...)
