@@ -90,7 +90,12 @@ func (a *baseEngine) createContainerImageInternal(arch Architecture, OS string, 
 		ID = fmt.Sprintf("%s-%s", OS, arch)
 	}
 
-	ret := fn(baseContainerImage{arch: arch, os: OS, id: ID, DockerImage: image, env: make(map[string]string), tags: a.tags})
+	env := make(map[string]string)
+	for k, v := range a.env {
+		env[k] = v
+	}
+
+	ret := fn(baseContainerImage{arch: arch, os: OS, id: ID, DockerImage: image, env: env, tags: a.tags})
 
 	// mount the working dir
 	ret.SetMount("project", a.vol.WorkDirHost(), a.vol.WorkDirContainer())
