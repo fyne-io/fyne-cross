@@ -197,7 +197,7 @@ func fyneCommand(command string, ctx Context, image containerImage) ([]string, e
 		"-appVersion", ctx.AppVersion,
 	}
 
-	if ctx.Package != "." {
+	if ctx.Package != "." && image.OS() != androidOS {
 		args = append(args, "-src", ctx.Package)
 	}
 
