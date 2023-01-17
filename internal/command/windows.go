@@ -205,10 +205,6 @@ func (cmd *windows) setupContainerImages(flags *windowsFlags, args []string) err
 	ctx.Developer = flags.Developer
 	ctx.Password = flags.Password
 
-	if !flags.Console {
-		ctx.LdFlags = append(ctx.LdFlags, "-H=windowsgui")
-	}
-
 	cmd.defaultContext = ctx
 	runner, err := newContainerEngine(ctx)
 	if err != nil {
