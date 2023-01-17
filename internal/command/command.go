@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
@@ -121,13 +122,18 @@ func cleanTargetDirs(ctx Context, image containerImage) error {
 // prepareIcon prepares the icon for packaging
 func prepareIcon(ctx Context, image containerImage) error {
 	if !ctx.NoProjectUpload {
-		if _, err := os.Stat(ctx.Icon); os.IsNotExist(err) {
+		iconPath := ctx.Icon
+		if !filepath.IsAbs(ctx.Icon) {
+			iconPath = volume.JoinPathHost(ctx.WorkDirHost(), ctx.Icon)
+		}
+
+		if _, err := os.Stat(iconPath); os.IsNotExist(err) {
 			if ctx.Icon != icon.Default {
 				return fmt.Errorf("icon not found at %q", ctx.Icon)
 			}
 
 			log.Infof("[!] Default icon not found at %q", ctx.Icon)
-			err = ioutil.WriteFile(volume.JoinPathContainer(ctx.WorkDirHost(), ctx.Icon), icon.FyneLogo, 0644)
+			err = ioutil.WriteFile(volume.JoinPathHost(ctx.WorkDirHost(), ctx.Icon), icon.FyneLogo, 0644)
 			if err != nil {
 				return fmt.Errorf("could not create the temporary icon: %s", err)
 			}
