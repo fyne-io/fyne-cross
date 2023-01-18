@@ -260,7 +260,7 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 	icon := volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), icon.Default)
 	args := fyneCommand(fyne, "release", icon, ctx, image)
 
-	workDir := ctx.WorkDirContainer()
+	workDir := ctx.WorkDirHost()
 
 	switch image.OS() {
 	case darwinOS:
