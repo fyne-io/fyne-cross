@@ -132,9 +132,9 @@ func (cmd *windows) Build(image containerImage) (string, error) {
 	// create a zip archive from the compiled binary under the "bin" folder
 	// and place it under the tmp folder
 	err = image.Run(cmd.defaultContext.Volume, options{}, []string{
-		"sh", "-c", fmt.Sprintf("zip %q %q/*.exe",
-			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
-			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), cmd.defaultContext.Package)),
+		"sh", "-c", fmt.Sprintf("cd %q && zip %q *.exe",
+			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), cmd.defaultContext.Package),
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName)),
 	})
 	if err != nil {
 		return "", err
