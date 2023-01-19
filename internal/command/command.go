@@ -231,6 +231,10 @@ func fynePackageHost(ctx Context, image containerImage) error {
 	image.UnsetEnv("CGO_CFLAGS")
 	image.UnsetEnv("CGO_LDFLAGS")
 
+	if ctx.CacheDirHost() != "" {
+		image.SetEnv("GOCACHE", ctx.CacheDirHost())
+	}
+
 	// run the command from the host
 	fyneCmd := execabs.Command(args[0], args[1:]...)
 	fyneCmd.Dir = workDir
@@ -297,6 +301,10 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 	image.UnsetEnv("CC")
 	image.UnsetEnv("CGO_CFLAGS")
 	image.UnsetEnv("CGO_LDFLAGS")
+
+	if ctx.CacheDirHost() != "" {
+		image.SetEnv("GOCACHE", ctx.CacheDirHost())
+	}
 
 	// run the command from the host
 	fyneCmd := execabs.Command(args[0], args[1:]...)
