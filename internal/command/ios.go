@@ -92,9 +92,9 @@ func (cmd *iOS) Build(image containerImage) (string, error) {
 
 	// move the dist package into the expected tmp/$ID/packageName location in the container
 	image.Run(cmd.defaultContext.Volume, options{}, []string{
-		"mv",
-		volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
-		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+		"sh", "-c", fmt.Sprintf("mv %q/*.ipa %q",
+			cmd.defaultContext.WorkDirContainer(),
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName)),
 	})
 
 	return packageName, nil
