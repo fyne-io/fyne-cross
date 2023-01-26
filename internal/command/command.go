@@ -354,5 +354,5 @@ func searchLocalResult(path string) (string, error) {
 	if newest == "" {
 		return "", fmt.Errorf("could not find the ipa file")
 	}
-	return newest, nil
+	return filepath.Base(newest), nil
 }
