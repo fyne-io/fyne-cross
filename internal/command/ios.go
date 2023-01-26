@@ -78,12 +78,10 @@ func (cmd *iOS) Build(image containerImage) (string, error) {
 	var packageName string
 	if cmd.defaultContext.Release {
 		// Release mode
-		packageName = fmt.Sprintf("%s.ipa", cmd.defaultContext.Name)
-		err = fyneReleaseHost(cmd.defaultContext, image)
+		packageName, err = fyneReleaseHost(cmd.defaultContext, image)
 	} else {
 		// Build mode
-		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
-		err = fynePackageHost(cmd.defaultContext, image)
+		packageName, err = fynePackageHost(cmd.defaultContext, image)
 	}
 
 	if err != nil {

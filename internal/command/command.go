@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -198,10 +199,10 @@ func fyneCommand(binary, command, icon string, ctx Context, image containerImage
 
 // fynePackageHost package the application using the fyne cli tool from the host
 // Note: at the moment this is used only for the ios builds
-func fynePackageHost(ctx Context, image containerImage) error {
+func fynePackageHost(ctx Context, image containerImage) (string, error) {
 	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	icon := volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), icon.Default)
@@ -248,17 +249,18 @@ func fynePackageHost(ctx Context, image containerImage) error {
 
 	err = fyneCmd.Run()
 	if err != nil {
-		return fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
-	return nil
+
+	return searchLocalResult(volume.JoinPathHost(workDir, "*.app"))
 }
 
 // fyneReleaseHost package and release the application using the fyne cli tool from the host
 // Note: at the moment this is used only for the ios and windows builds
-func fyneReleaseHost(ctx Context, image containerImage) error {
+func fyneReleaseHost(ctx Context, image containerImage) (string, error) {
 	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {
-		return err
+		return "", err
 	}
 
 	icon := volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), icon.Default)
@@ -266,6 +268,7 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 
 	workDir := ctx.WorkDirHost()
 
+	ext := ""
 	switch image.OS() {
 	case darwinOS:
 		if ctx.Category != "" {
@@ -274,6 +277,7 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 		if ctx.Package != "." {
 			args = append(args, "-src", ctx.Package)
 		}
+		ext = ".pkg"
 	case iosOS:
 		workDir = volume.JoinPathHost(workDir, ctx.Package)
 		if ctx.Certificate != "" {
@@ -282,6 +286,7 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 		if ctx.Profile != "" {
 			args = append(args, "-profile", ctx.Profile)
 		}
+		ext = ".ipa"
 	case windowsOS:
 		if ctx.Certificate != "" {
 			args = append(args, "-certificate", ctx.Certificate)
@@ -295,6 +300,7 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 		if ctx.Package != "." {
 			args = append(args, "-src", ctx.Package)
 		}
+		ext = ".appx"
 	}
 
 	// when using local build, do not assume what CC is available and rely on os.Env("CC") is necessary
@@ -319,7 +325,34 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 
 	err = fyneCmd.Run()
 	if err != nil {
-		return fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
-	return nil
+	return searchLocalResult(volume.JoinPathHost(workDir, "*"+ext))
+}
+
+func searchLocalResult(path string) (string, error) {
+	matches, err := filepath.Glob(path)
+	if err != nil {
+		return "", fmt.Errorf("could not find the ipa file: %v", err)
+	}
+
+	// walk matches files to find the newest file
+	var newest string
+	var newestModTime time.Time
+	for _, match := range matches {
+		fi, err := os.Stat(match)
+		if err != nil {
+			continue
+		}
+
+		if fi.ModTime().After(newestModTime) {
+			newest = match
+			newestModTime = fi.ModTime()
+		}
+	}
+
+	if newest == "" {
+		return "", fmt.Errorf("could not find the ipa file")
+	}
+	return newest, nil
 }

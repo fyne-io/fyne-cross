@@ -92,14 +92,9 @@ func (cmd *windows) Build(image containerImage) (string, error) {
 			return "", fmt.Errorf("windows release build is supported only on windows hosts")
 		}
 
-		err = fyneReleaseHost(cmd.defaultContext, image)
+		packageName, err := fyneReleaseHost(cmd.defaultContext, image)
 		if err != nil {
 			return "", fmt.Errorf("could not package the Fyne app: %v", err)
-		}
-
-		packageName := cmd.defaultContext.Name + ".appx"
-		if pos := strings.LastIndex(cmd.defaultContext.Name, ".exe"); pos > 0 {
-			packageName = cmd.defaultContext.Name[:pos] + ".appx"
 		}
 
 		// move the dist package into the expected tmp/$ID/packageName location in the container

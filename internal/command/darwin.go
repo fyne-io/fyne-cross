@@ -100,17 +100,13 @@ func (cmd *darwin) Build(image containerImage) (string, error) {
 			return "", fmt.Errorf("darwin release build is supported only on darwin hosts")
 		}
 
-		packageName = fmt.Sprintf("%s.pkg", cmd.defaultContext.Name)
-
-		err = fyneReleaseHost(cmd.defaultContext, image)
+		packageName, err = fyneReleaseHost(cmd.defaultContext, image)
 		if err != nil {
 			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 
 	} else if cmd.localBuild {
-		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
-
-		err = fynePackageHost(cmd.defaultContext, image)
+		packageName, err = fynePackageHost(cmd.defaultContext, image)
 		if err != nil {
 			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
