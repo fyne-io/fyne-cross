@@ -333,7 +333,7 @@ func fyneReleaseHost(ctx Context, image containerImage) (string, error) {
 func searchLocalResult(path string) (string, error) {
 	matches, err := filepath.Glob(path)
 	if err != nil {
-		return "", fmt.Errorf("could not find the ipa file: %v", err)
+		return "", fmt.Errorf("could not find the file %v: %v", path, err)
 	}
 
 	// walk matches files to find the newest file
@@ -352,7 +352,7 @@ func searchLocalResult(path string) (string, error) {
 	}
 
 	if newest == "" {
-		return "", fmt.Errorf("could not find the ipa file")
+		return "", fmt.Errorf("could not find the file %v", path)
 	}
 	return filepath.Base(newest), nil
 }
