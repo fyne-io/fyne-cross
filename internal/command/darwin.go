@@ -245,7 +245,9 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 			image.SetEnv("GOARCH", "arm64")
 		}
 		zigCC := fmt.Sprintf("zig cc -v -target %s -isysroot /sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks", zigTarget)
+		zigCXX := fmt.Sprintf("zig c++ -v -target %s -isysroot /sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks", zigTarget)
 		image.SetEnv("CC", zigCC)
+		image.SetEnv("CXX", zigCXX)
 		image.SetEnv("CGO_LDFLAGS", "--sysroot /sdk -F/System/Library/Frameworks -L/usr/lib")
 		image.SetEnv("GOOS", "darwin")
 		image.SetMount("sdk", flags.MacOSXSDKPath, "/sdk")
