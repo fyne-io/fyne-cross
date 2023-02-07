@@ -86,7 +86,7 @@ func newCommonFlags() (*CommonFlags, error) {
 
 	defaultIcon := icon.Default
 	appID := ""
-	appVersion := "1.0"
+	appVersion := "1.0.0"
 	appBuild := 1
 
 	data, _ := metadata.LoadStandard(rootDir)
