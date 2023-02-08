@@ -154,6 +154,13 @@ func (cmd *freeBSD) setupContainerImages(flags *freebsdFlags, args []string) err
 			image.SetEnv("GOARCH", "amd64")
 			image.SetEnv("CC", "clang --sysroot=/freebsd --target=x86_64-unknown-freebsd12")
 			image.SetEnv("CXX", "clang++ --sysroot=/freebsd --target=x86_64-unknown-freebsd12")
+			if runtime.GOARCH == string(ArchArm64) {
+				if v, ok := ctx.Env["CGO_LDFLAGS"]; ok {
+					image.SetEnv("CGO_LDFLAGS", v+" -fuse-ld=lld")
+				} else {
+					image.SetEnv("CGO_LDFLAGS", "-fuse-ld=lld")
+				}
+			}
 		case ArchArm64:
 			image = runner.createContainerImage(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageArm64))
 			image.SetEnv("GOARCH", "arm64")
