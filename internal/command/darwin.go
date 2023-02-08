@@ -202,12 +202,14 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 		return errors.New("appID is mandatory")
 	}
 
-	if flags.MacOSXSDKPath == "unset" {
-		return errors.New("macOSX SDK path is mandatory")
-	}
+	if !cmd.localBuild {
+		if flags.MacOSXSDKPath == "unset" {
+			return errors.New("macOSX SDK path is mandatory")
+		}
 
-	if _, err := os.Stat(flags.MacOSXSDKPath); os.IsNotExist(err) {
-		return errors.New("macOSX SDK path does not exists")
+		if _, err := os.Stat(flags.MacOSXSDKPath); os.IsNotExist(err) {
+			return errors.New("macOSX SDK path does not exists")
+		}
 	}
 
 	ctx.Category = flags.Category
