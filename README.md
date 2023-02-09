@@ -90,6 +90,18 @@ The commands are:
 Use "fyne-cross <command> -help" for more information about a command.
 ```
 
+### Apple Arm Silicon special
+
+On Apple Arm64 architecture, the container have to run in a vm. This vm put some constraint on getting fyne-cross to work in that setup.
+
+## podman on Mac Mini M1
+
+You need to create a `podman machine` that has a short name as the access path on Mac can not be over 104 and that limit can be reached quickly when the machine name is to long. Additionally you need to specify in the machine the path that you might need during your build. An example of possible machine to use:
+
+```
+podman machine init --now machine --cpus=8 --memory=6096  -v /tmp:/tmp -v ${HOME}:${HOME}
+```
+
 ### Wildcards
 
 The `arch` flag support wildcards in case want to compile against all supported GOARCH for a specified GOOS

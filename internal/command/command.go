@@ -4,11 +4,11 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
-	"github.com/fyne-io/fyne-cross/internal/metadata"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 	"golang.org/x/sys/execabs"
 )
@@ -31,16 +31,11 @@ type closer interface {
 }
 
 func commonRun(defaultContext Context, images []containerImage, builder platformBuilder) error {
-	err := bumpFyneAppBuild(defaultContext)
-	if err != nil {
-		log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
-	}
-
 	for _, image := range images {
 		log.Infof("[i] Target: %s/%s", image.OS(), image.Architecture())
 		log.Debugf("%#v", image)
 
-		err = func() error {
+		err := func() error {
 			defer image.(closer).close()
 
 			//
@@ -50,7 +45,7 @@ func commonRun(defaultContext Context, images []containerImage, builder platform
 				return err
 			}
 
-			err = cleanTargetDirs(defaultContext, image)
+			err := cleanTargetDirs(defaultContext, image)
 			if err != nil {
 				return err
 			}
@@ -127,28 +122,23 @@ func cleanTargetDirs(ctx Context, image containerImage) error {
 // prepareIcon prepares the icon for packaging
 func prepareIcon(ctx Context, image containerImage) error {
 	if !ctx.NoProjectUpload {
-		if _, err := os.Stat(ctx.Icon); os.IsNotExist(err) {
+		iconPath := ctx.Icon
+		if !filepath.IsAbs(ctx.Icon) {
+			iconPath = volume.JoinPathHost(ctx.WorkDirHost(), ctx.Icon)
+		}
+
+		if _, err := os.Stat(iconPath); os.IsNotExist(err) {
 			if ctx.Icon != icon.Default {
 				return fmt.Errorf("icon not found at %q", ctx.Icon)
 			}
 
 			log.Infof("[!] Default icon not found at %q", ctx.Icon)
-			err = ioutil.WriteFile(volume.JoinPathContainer(ctx.WorkDirHost(), ctx.Icon), icon.FyneLogo, 0644)
+			err = ioutil.WriteFile(volume.JoinPathHost(ctx.WorkDirHost(), ctx.Icon), icon.FyneLogo, 0644)
 			if err != nil {
 				return fmt.Errorf("could not create the temporary icon: %s", err)
 			}
 			log.Infof("[✓] Created a placeholder icon using Fyne logo for testing purpose")
 		}
-	}
-
-	if image.OS() == "windows" {
-		// convert the png icon to ico format and store under the temp directory
-		icoIcon := volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), ctx.Name+".ico")
-		err := icon.ConvertPngToIco(ctx.Icon, icoIcon)
-		if err != nil {
-			return fmt.Errorf("could not create the windows ico: %v", err)
-		}
-		return nil
 	}
 
 	err := image.Run(ctx.Volume, options{}, []string{"cp", volume.JoinPathContainer(ctx.WorkDirContainer(), ctx.Icon), volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default)})
@@ -219,11 +209,17 @@ func fynePackageHost(ctx Context, image containerImage) error {
 		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
 	}
 
+	// when using local build, do not assume what CC is available and rely on os.Env("CC") is necessary
+	image.UnsetEnv("CC")
+	image.UnsetEnv("CGO_CFLAGS")
+	image.UnsetEnv("CGO_LDFLAGS")
+
 	// run the command from the host
 	fyneCmd := execabs.Command(fyne, args...)
 	fyneCmd.Dir = ctx.WorkDirHost()
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
+	fyneCmd.Env = append(os.Environ(), image.AllEnv()...)
 
 	if debugging() {
 		log.Debug(fyneCmd)
@@ -289,11 +285,17 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 		}
 	}
 
+	// when using local build, do not assume what CC is available and rely on os.Env("CC") is necessary
+	image.UnsetEnv("CC")
+	image.UnsetEnv("CGO_CFLAGS")
+	image.UnsetEnv("CGO_LDFLAGS")
+
 	// run the command from the host
 	fyneCmd := execabs.Command(fyne, args...)
 	fyneCmd.Dir = ctx.WorkDirHost()
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
+	fyneCmd.Env = append(os.Environ(), image.AllEnv()...)
 
 	if debugging() {
 		log.Debug(fyneCmd)
@@ -304,15 +306,4 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 		return fmt.Errorf("could not package the Fyne app: %v", err)
 	}
 	return nil
-}
-
-// bumpFyneAppBuild increments the BuildID into the FyneApp.toml, if any,
-// to behave like the fyne CLI tool
-func bumpFyneAppBuild(ctx Context) error {
-	data, err := metadata.LoadStandard(ctx.Volume.WorkDirHost())
-	if err != nil {
-		return nil // no metadata to update
-	}
-	data.Details.Build++
-	return metadata.SaveStandard(data, ctx.Volume.WorkDirHost())
 }

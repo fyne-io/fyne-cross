@@ -5,6 +5,7 @@ import (
 	"runtime"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
+	"github.com/fyne-io/fyne-cross/internal/volume"
 )
 
 const (
@@ -76,24 +77,27 @@ func (cmd *linux) Build(image containerImage) (string, error) {
 	}
 
 	//
-	// build
-	//
-	err = goBuild(cmd.defaultContext, image)
-	if err != nil {
-		return "", err
-	}
-
-	//
 	// package
 	//
 	log.Info("[i] Packaging app...")
-
 	packageName := fmt.Sprintf("%s.tar.xz", cmd.defaultContext.Name)
 
-	err = fynePackage(cmd.defaultContext, image)
+	if cmd.defaultContext.Release {
+		// Release mode
+		err = fyneRelease(cmd.defaultContext, image)
+	} else {
+		// Build mode
+		err = fynePackage(cmd.defaultContext, image)
+	}
 	if err != nil {
 		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
+	image.Run(cmd.defaultContext.Volume, options{}, []string{
+		"mv",
+		volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
+		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+	})
+
 	return packageName, nil
 }
 

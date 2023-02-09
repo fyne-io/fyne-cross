@@ -65,6 +65,8 @@ type CommonFlags struct {
 	Debug bool
 	// Pull attempts to pull a newer version of the docker image
 	Pull bool
+	// DockerRegistry changes the pull/push docker registry (defualt docker.io)
+	DockerRegistry string
 }
 
 // newCommonFlags defines all the flags for the shared options
@@ -84,7 +86,7 @@ func newCommonFlags() (*CommonFlags, error) {
 
 	defaultIcon := icon.Default
 	appID := ""
-	appVersion := "1.0"
+	appVersion := "1.0.0"
 	appBuild := 1
 
 	data, _ := metadata.LoadStandard(rootDir)
@@ -127,6 +129,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.BoolVar(&flags.Silent, "silent", false, "Silent mode")
 	flagSet.BoolVar(&flags.Debug, "debug", false, "Debug mode")
 	flagSet.BoolVar(&flags.Pull, "pull", false, "Attempt to pull a newer version of the docker image")
+	flagSet.StringVar(&flags.DockerRegistry, "docker-registry", "docker.io", "The docker registry to be used instead of dockerhub (only used with defualt docker images)")
 	return flags, nil
 }
 

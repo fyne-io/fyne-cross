@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"os/user"
+	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -89,7 +90,6 @@ func (i *localContainerImage) Engine() containerEngine {
 
 // Cmd returns a command to run in a new container for the specified image
 func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []string) *execabs.Cmd {
-
 	// define workdir
 	w := vol.WorkDirContainer()
 	if opts.WorkDir != "" {
@@ -101,14 +101,28 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 		"-w", w, // set workdir
 	}
 
+	mountFormat := "%s:%s:z"
+	if runtime.GOOS == darwinOS && runtime.GOARCH == string(ArchArm64) {
+		// When running on darwin with a Arm64, we rely on going through a VM setup that doesn't allow the :z
+		mountFormat = "%s:%s"
+	}
+
 	for _, mountPoint := range i.mount {
-		args = append(args, "-v", fmt.Sprintf("%s:%s:z", mountPoint.localHost, mountPoint.inContainer))
+		args = append(args, "-v", fmt.Sprintf(mountFormat, mountPoint.localHost, mountPoint.inContainer))
+	}
+
+	arch := "amd64"
+	if runtime.GOARCH == "arm64" {
+		// If we are running on arm64, we should have arm64 image to avoid using emulation
+		arch = runtime.GOARCH
 	}
 
 	// handle settings related to engine
 	if i.runner.engine.IsPodman() {
-		args = append(args, "--userns", "keep-id", "-e", "use_podman=1")
+		args = append(args, "--userns", "keep-id", "-e", "use_podman=1", "--arch="+arch)
 	} else {
+		args = append(args, "--platform", "linux/"+arch)
+
 		// docker: pass current user id to handle mount permissions on linux and MacOS
 		if runtime.GOOS != "windows" {
 			u, err := user.Current()
@@ -120,6 +134,14 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 					cmdArgs = append([]string{"-q"}, cmdArgs...)
 				}
 			}
+		}
+	}
+
+	// detect ssh-agent socket for private repositories access
+	if sshAuthSock := os.Getenv("SSH_AUTH_SOCK"); sshAuthSock != "" {
+		if realSshAuthSock, err := filepath.EvalSymlinks(sshAuthSock); err == nil {
+			args = append(args, "-v", fmt.Sprintf("%s:/tmp/ssh-agent", realSshAuthSock))
+			args = append(args, "-e", "SSH_AUTH_SOCK=/tmp/ssh-agent")
 		}
 	}
 

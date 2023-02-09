@@ -2,17 +2,11 @@ package command
 
 import (
 	"fmt"
-	goimage "image"
-	"os"
-	"path/filepath"
 	"runtime"
-	"strconv"
 	"strings"
 
-	ico "github.com/Kodeworks/golang-image-ico"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
-	"github.com/josephspurrier/goversioninfo"
 )
 
 const (
@@ -118,47 +112,37 @@ func (cmd *windows) Build(image containerImage) (string, error) {
 		return packageName, nil
 	}
 
-	// Build mode
-	log.Info("[i] Creating Windows resource...")
-	windres, err := makeWindowsResource(cmd.defaultContext, image)
-	if err != nil {
-		return "", err
-	}
-	log.Infof("[✓] Windows resource created: %s", windres)
-
-	//
-	// build
-	//
-	err = goBuild(cmd.defaultContext, image)
-	if err != nil {
-		return "", err
-	}
-
 	//
 	// package
 	//
-
 	log.Info("[i] Packaging app...")
+	packageName := cmd.defaultContext.Name + ".zip"
 
-	// remove the windres file under the project root
-	log.Info("[i] Removing Windows resource")
-	err = os.Remove(volume.JoinPathHost(cmd.defaultContext.WorkDirHost(), windres))
+	// Build mode
+	err = fynePackage(cmd.defaultContext, image)
 	if err != nil {
-		log.Infof("[✗] Unable to remove Windows resource: %s", err)
-	} else {
-		log.Infof("[✓] Windows resource removed")
+		return "", err
 	}
 
-	packageName := cmd.defaultContext.Name + ".zip"
+	executableName := cmd.defaultContext.Name + ".exe"
+	if pos := strings.LastIndex(cmd.defaultContext.Name, ".exe"); pos > 0 {
+		executableName = cmd.defaultContext.Name
+	}
 
 	// create a zip archive from the compiled binary under the "bin" folder
 	// and place it under the tmp folder
-	err = image.Run(cmd.defaultContext.Volume, options{WorkDir: volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID())}, []string{
-		"zip", "-r", volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName), cmd.defaultContext.Name,
+	err = image.Run(cmd.defaultContext.Volume, options{}, []string{
+		"zip", volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName), executableName,
 	})
 	if err != nil {
 		return "", err
 	}
+
+	image.Run(cmd.defaultContext.Volume, options{}, []string{
+		"mv",
+		executableName,
+		volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID(), executableName),
+	})
 
 	return packageName, nil
 }
@@ -252,105 +236,4 @@ func (cmd *windows) setupContainerImages(flags *windowsFlags, args []string) err
 	}
 
 	return nil
-}
-
-// makeWindowsResource create a windows resource under the project root
-// that will be automatically linked by compliler during the build
-func makeWindowsResource(ctx Context, image containerImage) (string, error) {
-
-	imgSrc, err := os.Open(ctx.Icon)
-	if err != nil {
-		return "", fmt.Errorf("failed to open icon source image: %w", err)
-	}
-	defer imgSrc.Close()
-	srcImg, _, err := goimage.Decode(imgSrc)
-	if err != nil {
-		return "", fmt.Errorf("failed to decode icon source image: %w", err)
-	}
-
-	icoPath := volume.JoinPathHost(ctx.TmpDirHost(), "icon.ico")
-	icoFile, err := os.Create(icoPath)
-	if err != nil {
-		return "", fmt.Errorf("failed to open icon ico file: %w", err)
-	}
-
-	err = ico.Encode(icoFile, srcImg)
-	if err != nil {
-		return "", fmt.Errorf("failed to encode icon: %w", err)
-	}
-
-	err = icoFile.Close()
-	if err != nil {
-		return "", fmt.Errorf("failed to close icon ico file: %w", err)
-	}
-
-	ver := ctx.AppVersion
-	ver_parts := strings.Split(ver, ".")
-	if len(ver_parts) > 3 {
-		fmt.Println("invalid version", ver)
-		os.Exit(1)
-	}
-
-	var major, minor, patch int
-	major, err = strconv.Atoi(ver_parts[0])
-	if err != nil {
-		fmt.Println("invalid major version", major)
-		os.Exit(1)
-	}
-
-	if len(ver_parts) >= 2 {
-		minor, err = strconv.Atoi(ver_parts[1])
-		if err != nil {
-			fmt.Println("invalid minor version", minor)
-			os.Exit(1)
-		}
-	}
-	if len(ver_parts) == 3 {
-		patch, err = strconv.Atoi(ver_parts[2])
-		if err != nil {
-			fmt.Println("invalid patch version", patch)
-			os.Exit(1)
-		}
-	}
-
-	build, err := strconv.Atoi(ctx.AppBuild)
-	if err != nil {
-		fmt.Println("invalid patch version", patch)
-		os.Exit(1)
-	}
-
-	fv := goversioninfo.FileVersion{
-		Major: major,
-		Minor: minor,
-		Patch: patch,
-		Build: build,
-	}
-
-	vi := &goversioninfo.VersionInfo{
-		IconPath: icoPath,
-		FixedFileInfo: goversioninfo.FixedFileInfo{
-			FileVersion:    fv,
-			ProductVersion: fv,
-		},
-		StringFileInfo: goversioninfo.StringFileInfo{
-			InternalName:     ctx.Name,
-			OriginalFilename: ctx.Name,
-			FileVersion:      ver + "." + ctx.AppBuild,
-			ProductName:      ctx.Name,
-			ProductVersion:   ver,
-		},
-	}
-
-	// Fill the structures with config data.
-	vi.Build()
-
-	// Write the data to a buffer.
-	vi.Walk()
-
-	// copy the windows resource under the package root
-	// it will be automatically linked by compiler during build
-	windres := ctx.Name + ".syso"
-	out := volume.JoinPathHost(ctx.WorkDirHost(), filepath.Join(ctx.Package, windres))
-	err = vi.WriteSyso(out, image.Architecture().String())
-	return windres, err
 }

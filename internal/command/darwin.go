@@ -110,12 +110,6 @@ func (cmd *darwin) Build(image containerImage) (string, error) {
 			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 
-		// move the dist package into the expected tmp/$ID/packageName location in the container
-		image.Run(cmd.defaultContext.Volume, options{}, []string{
-			"mv",
-			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
-			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
-		})
 	} else if cmd.localBuild {
 		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
 
@@ -123,19 +117,7 @@ func (cmd *darwin) Build(image containerImage) (string, error) {
 		if err != nil {
 			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
-
-		// move the dist package into the expected tmp/$ID/packageName location in the container
-		image.Run(cmd.defaultContext.Volume, options{}, []string{
-			"mv",
-			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
-			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
-		})
 	} else {
-		err = goBuild(cmd.defaultContext, image)
-		if err != nil {
-			return "", err
-		}
-
 		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
 
 		err = fynePackage(cmd.defaultContext, image)
@@ -143,6 +125,13 @@ func (cmd *darwin) Build(image containerImage) (string, error) {
 			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 	}
+
+	// move the dist package into the expected tmp/$ID/packageName location in the container
+	image.Run(cmd.defaultContext.Volume, options{}, []string{
+		"mv",
+		volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
+		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+	})
 
 	return packageName, nil
 }

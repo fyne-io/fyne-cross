@@ -93,6 +93,11 @@ func overrideDockerImage(flags *CommonFlags, image string) string {
 	if flags.DockerImage != "" {
 		return flags.DockerImage
 	}
+
+	if flags.DockerRegistry != "" {
+		return fmt.Sprintf("%s/%s", flags.DockerRegistry, image)
+	}
+
 	return image
 }
 
