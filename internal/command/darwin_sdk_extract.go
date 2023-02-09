@@ -3,6 +3,7 @@ package command
 import (
 	"errors"
 	"fmt"
+	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -77,7 +78,7 @@ func (cmd *DarwinSDKExtract) Run() error {
 	}
 
 	// mount the fyne-cross volume
-	workDir, err := os.MkdirTemp("", cmd.Name())
+	workDir, err := ioutil.TempDir("", cmd.Name())
 	if err != nil {
 		return err
 	}
