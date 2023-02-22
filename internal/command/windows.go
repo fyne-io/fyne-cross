@@ -13,12 +13,12 @@ const (
 	// windowsOS it the windows OS name
 	windowsOS = "windows"
 	// windowsImage is the fyne-cross image for the Windows OS
-	windowsImage = "fyneio/fyne-cross:1.3-windows"
+	windowsImage = "fyneio/fyne-cross-images:windows"
 )
 
 var (
 	// windowsArchSupported defines the supported target architectures on windows
-	windowsArchSupported = []Architecture{ArchAmd64, Arch386}
+	windowsArchSupported = []Architecture{ArchAmd64, ArchArm64, Arch386}
 )
 
 // Windows build and package the fyne app for the windows OS
@@ -220,10 +220,16 @@ func (cmd *windows) setupContainerImages(flags *windowsFlags, args []string) err
 		switch arch {
 		case ArchAmd64:
 			image.SetEnv("GOARCH", "amd64")
-			image.SetEnv("CC", "x86_64-w64-mingw32-gcc")
+			image.SetEnv("CC", "zig cc -target x86_64-windows-gnu -Wdeprecated-non-prototype")
+			image.SetEnv("CXX", "zig c++ -target x86_64-windows-gnu -Wdeprecated-non-prototype")
 		case Arch386:
 			image.SetEnv("GOARCH", "386")
-			image.SetEnv("CC", "i686-w64-mingw32-gcc")
+			image.SetEnv("CC", "zig cc -target x86-windows-gnu -Wdeprecated-non-prototype")
+			image.SetEnv("CXX", "zig c++ -target x86-windows-gnu -Wdeprecated-non-prototype")
+		case ArchArm64:
+			image.SetEnv("GOARCH", "arm64")
+			image.SetEnv("CC", "zig cc -target aarch64-windows-gnu -Wdeprecated-non-prototype")
+			image.SetEnv("CXX", "zig c++ -target aarch64-windows-gnu -Wdeprecated-non-prototype")
 		}
 
 		cmd.Images = append(cmd.Images, image)

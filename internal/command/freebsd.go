@@ -12,9 +12,9 @@ const (
 	// freebsdOS it the freebsd OS name
 	freebsdOS = "freebsd"
 	// freebsdImageAmd64 is the fyne-cross image for the FreeBSD OS amd64 arch
-	freebsdImageAmd64 = "fyneio/fyne-cross:1.3-freebsd-amd64"
+	freebsdImageAmd64 = "fyneio/fyne-cross-images:freebsd-amd64"
 	// freebsdImageArm64 is the fyne-cross image for the FreeBSD OS arm64 arch
-	freebsdImageArm64 = "fyneio/fyne-cross:1.3-freebsd-arm64"
+	freebsdImageArm64 = "fyneio/fyne-cross-images:freebsd-arm64"
 )
 
 var (
@@ -155,7 +155,15 @@ func (cmd *freeBSD) setupContainerImages(flags *freebsdFlags, args []string) err
 		case ArchAmd64:
 			image = runner.createContainerImage(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageAmd64))
 			image.SetEnv("GOARCH", "amd64")
-			image.SetEnv("CC", "x86_64-unknown-freebsd12-clang")
+			image.SetEnv("CC", "clang --sysroot=/freebsd --target=x86_64-unknown-freebsd12")
+			image.SetEnv("CXX", "clang++ --sysroot=/freebsd --target=x86_64-unknown-freebsd12")
+			if runtime.GOARCH == string(ArchArm64) {
+				if v, ok := ctx.Env["CGO_LDFLAGS"]; ok {
+					image.SetEnv("CGO_LDFLAGS", v+" -fuse-ld=lld")
+				} else {
+					image.SetEnv("CGO_LDFLAGS", "-fuse-ld=lld")
+				}
+			}
 		case ArchArm64:
 			image = runner.createContainerImage(arch, freebsdOS, overrideDockerImage(flags.CommonFlags, freebsdImageArm64))
 			image.SetEnv("GOARCH", "arm64")
@@ -164,7 +172,8 @@ func (cmd *freeBSD) setupContainerImages(flags *freebsdFlags, args []string) err
 			} else {
 				image.SetEnv("CGO_LDFLAGS", "-fuse-ld=lld")
 			}
-			image.SetEnv("CC", "aarch64-unknown-freebsd12-clang")
+			image.SetEnv("CC", "clang --sysroot=/freebsd --target=aarch64-unknown-freebsd12")
+			image.SetEnv("CXX", "clang++ --sysroot=/freebsd --target=aarch64-unknown-freebsd12")
 		}
 		image.SetEnv("GOOS", "freebsd")
 

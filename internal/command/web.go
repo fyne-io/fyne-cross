@@ -11,7 +11,7 @@ const (
 	// webOS it the ios OS name
 	webOS = "web"
 	// webImage is the fyne-cross image for the web
-	webImage = "fyneio/fyne-cross:1.3-web"
+	webImage = "fyneio/fyne-cross-images:web"
 )
 
 // web build and package the fyne app for the web

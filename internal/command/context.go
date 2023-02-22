@@ -61,6 +61,9 @@ type Context struct {
 	NoProjectUpload  bool   // NoProjectUpload if true, the build will be done with the artifact already stored on S3
 	NoResultDownload bool   // NoResultDownload if true, the result of the build will be left on S3 and not downloaded locally
 
+	//Build context
+	BuildMode string // The -buildmode argument to pass to go build
+
 	// Release context
 	Category     string //Category represents the category of the app for store listing [macOS]
 	Certificate  string //Certificate represents the name of the certificate to sign the build [iOS, Windows]
