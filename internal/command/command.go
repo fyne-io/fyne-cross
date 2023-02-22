@@ -263,7 +263,7 @@ func fynePackageHost(ctx Context, image containerImage) (string, error) {
 
 // fyneReleaseHost package and release the application using the fyne cli tool from the host
 // Note: at the moment this is used only for the ios and windows builds
-func fyneReleaseHost(ctx Context, image containerImage) error {
+func fyneReleaseHost(ctx Context, image containerImage) (string, error) {
 	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {
 		return "", err
