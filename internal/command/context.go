@@ -45,6 +45,7 @@ type Context struct {
 	SizeLimit string            // Container mount point size limits honored by Kubernetes only
 	Env       map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
 	Tags      []string          // Tags defines the tags to use
+	Metadata  map[string]string // Metadata contain custom metadata passed to fyne package
 
 	AppBuild         string // Build number
 	AppID            string // AppID is the appID to use for distribution
@@ -133,6 +134,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		SizeLimit:        flags.SizeLimit,
 		Env:              make(map[string]string),
 		Tags:             flags.Tags,
+		Metadata:         flags.Metadata.values,
 		Icon:             flags.Icon,
 		Name:             flags.Name,
 		StripDebug:       !flags.NoStripDebug,

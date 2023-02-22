@@ -194,6 +194,12 @@ func fyneCommand(binary, command, icon string, ctx Context, image containerImage
 		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
 	}
 
+	if ctx.Metadata != nil {
+		for key, value := range ctx.Metadata {
+			args = append(args, "-metadata", fmt.Sprintf("%s=%s", key, value))
+		}
+	}
+
 	return args
 }
 
@@ -257,7 +263,7 @@ func fynePackageHost(ctx Context, image containerImage) (string, error) {
 
 // fyneReleaseHost package and release the application using the fyne cli tool from the host
 // Note: at the moment this is used only for the ios and windows builds
-func fyneReleaseHost(ctx Context, image containerImage) (string, error) {
+func fyneReleaseHost(ctx Context, image containerImage) error {
 	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {
 		return "", err
