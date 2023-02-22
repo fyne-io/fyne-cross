@@ -3,6 +3,7 @@ package command
 import (
 	"errors"
 	"fmt"
+	"os"
 	"runtime"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -18,7 +19,7 @@ var (
 	// darwinArchSupported defines the supported target architectures on darwin
 	darwinArchSupported = []Architecture{ArchAmd64, ArchArm64}
 	// darwinImage is the fyne-cross image for the Darwin OS
-	darwinImage = "fyneio/fyne-cross:1.3-darwin"
+	darwinImage = "fyneio/fyne-cross-images:darwin"
 )
 
 // Darwin build and package the fyne app for the darwin OS
@@ -65,6 +66,8 @@ func (cmd *darwin) Parse(args []string) error {
 	// Add flags to use only on darwin host
 	if runtime.GOOS == darwinOS {
 		flagSet.BoolVar(&cmd.localBuild, "local", true, "If set uses the fyne CLI tool installed on the host in place of the docker images")
+	} else {
+		flagSet.StringVar(&flags.MacOSXSDKPath, "macosx-sdk-path", "unset", "Path to macOS SDK [required]")
 	}
 
 	// flags used only in release mode
@@ -172,6 +175,9 @@ type darwinFlags struct {
 
 	// Specify MacOSX minimum version
 	MacOSXVersionMin string
+
+	// MacOSXSDKPath represents the MacOSX SDK path on host
+	MacOSXSDKPath string
 }
 
 // setupContainerImages returns the command context for a darwin target
@@ -180,6 +186,8 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 	if err != nil {
 		return fmt.Errorf("could not make command context for %s OS: %s", darwinOS, err)
 	}
+
+	flags.Ldflags += " -s -w"
 
 	ctx, err := makeDefaultContext(flags.CommonFlags, args)
 	if err != nil {
@@ -190,7 +198,20 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 		return errors.New("appID is mandatory")
 	}
 
+	if !cmd.localBuild {
+		if flags.MacOSXSDKPath == "unset" {
+			return errors.New("macOSX SDK path is mandatory")
+		}
+
+		if _, err := os.Stat(flags.MacOSXSDKPath); os.IsNotExist(err) {
+			return errors.New("macOSX SDK path does not exists")
+		}
+	}
+
 	ctx.Category = flags.Category
+
+	// Following settings are needed to cross compile with zig 0.9.1
+	ctx.BuildMode = "pie"
 
 	cmd.defaultContext = ctx
 	runner, err := newContainerEngine(ctx)
@@ -200,34 +221,32 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 
 	for _, arch := range targetArch {
 		var image containerImage
-
+		var zigTarget string
 		switch arch {
 		case ArchAmd64:
+			minVer := "10.12"
+			if flags.MacOSXVersionMin != "unset" {
+				minVer = flags.MacOSXVersionMin
+			}
+			zigTarget = "x86_64-macos." + minVer
 			image = runner.createContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
 			image.SetEnv("GOARCH", "amd64")
-			image.SetEnv("CC", "o64-clang")
-
-			if flags.MacOSXVersionMin == "unset" {
-				flags.MacOSXVersionMin = "10.12"
-			}
-			if flags.MacOSXVersionMin != "" {
-				image.SetEnv("CGO_CFLAGS", fmt.Sprintf("-mmacosx-version-min=%s", flags.MacOSXVersionMin))
-				image.SetEnv("CGO_LDFLAGS", fmt.Sprintf("-mmacosx-version-min=%s", flags.MacOSXVersionMin))
-			}
 		case ArchArm64:
+			minVer := "11.1"
+			if flags.MacOSXVersionMin != "unset" {
+				minVer = flags.MacOSXVersionMin
+			}
+			zigTarget = "aarch64-macos." + minVer
 			image = runner.createContainerImage(arch, darwinOS, overrideDockerImage(flags.CommonFlags, darwinImage))
 			image.SetEnv("GOARCH", "arm64")
-			image.SetEnv("CC", "oa64-clang")
-
-			if flags.MacOSXVersionMin == "unset" {
-				flags.MacOSXVersionMin = "11.1"
-			}
-			if flags.MacOSXVersionMin != "" {
-				image.SetEnv("CGO_CFLAGS", fmt.Sprintf("-mmacosx-version-min=%s", flags.MacOSXVersionMin))
-				image.SetEnv("CGO_LDFLAGS", fmt.Sprintf("-fuse-ld=lld -mmacosx-version-min=%s", flags.MacOSXVersionMin))
-			}
 		}
+		zigCC := fmt.Sprintf("zig cc -v -target %s -isysroot /sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks", zigTarget)
+		zigCXX := fmt.Sprintf("zig c++ -v -target %s -isysroot /sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks", zigTarget)
+		image.SetEnv("CC", zigCC)
+		image.SetEnv("CXX", zigCXX)
+		image.SetEnv("CGO_LDFLAGS", "--sysroot /sdk -F/System/Library/Frameworks -L/usr/lib")
 		image.SetEnv("GOOS", "darwin")
+		image.SetMount("sdk", flags.MacOSXSDKPath, "/sdk")
 
 		cmd.Images = append(cmd.Images, image)
 	}

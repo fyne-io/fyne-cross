@@ -9,7 +9,7 @@ jobs:
     - name: Setup Go environment
       uses: actions/setup-go@v3
       with:
-        go-version: "1.18.x"
+        go-version: "1.19.x"
 
     - name: Install staticcheck
       run: go install honnef.co/go/tools/cmd/staticcheck@latest
@@ -87,17 +87,17 @@ jobs:
             ext: .exe
           - os: freebsd
           - os: android
-            args: -app-id calc.${GITHUB_SHA}
+            args: -app-id calc.sha${{ github.sha }}
           ## Not shared darwin image is available at the moment
           # - os: darwin
-          #  args: -app-id calc.${GITHUB_SHA}
+          #  args: -app-id calc.sha${{ github.sha }}
           #  host: macos-latest
           - os: web
           
           ## Currently not easily supported from GitHub actions.
           ## https://github.com/fyne-io/fyne-cross/pull/104#issuecomment-1099494308
           # - os: ios
-          #   args: -app-id calc.${GITHUB_SHA}
+          #   args: -app-id calc.sha${{ github.sha }}
           #   host: macos-latest
 
     steps:

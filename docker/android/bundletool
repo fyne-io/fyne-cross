@@ -1,3 +1,0 @@
-#!/bin/sh
-
-exec /usr/local/android_jdk8/bin/java -jar '/usr/local/bin/bundletool.jar' "$@"

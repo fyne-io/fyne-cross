@@ -52,7 +52,7 @@ func Test_makeWindowsContext(t *testing.T) {
 						arch: "amd64",
 						os:   "windows",
 						id:   "windows-amd64",
-						env:  map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "x86_64-w64-mingw32-gcc"},
+						env:  map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "zig cc -target x86_64-windows-gnu -Wdeprecated-non-prototype", "CXX": "zig c++ -target x86_64-windows-gnu -Wdeprecated-non-prototype"},
 						mount: []containerMountPoint{
 							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
 							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
@@ -88,11 +88,7 @@ func Test_makeWindowsContext(t *testing.T) {
 						arch: "386",
 						os:   "windows",
 						id:   "windows-386",
-						env: map[string]string{
-							"GOOS":   "windows",
-							"GOARCH": "386",
-							"CC":     "i686-w64-mingw32-gcc",
-						},
+						env:  map[string]string{"GOOS": "windows", "GOARCH": "386", "CC": "zig cc -target x86-windows-gnu -Wdeprecated-non-prototype", "CXX": "zig c++ -target x86-windows-gnu -Wdeprecated-non-prototype"},
 						mount: []containerMountPoint{
 							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
 							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
@@ -130,11 +126,7 @@ func Test_makeWindowsContext(t *testing.T) {
 						arch: "amd64",
 						os:   "windows",
 						id:   "windows-amd64",
-						env: map[string]string{
-							"GOOS":   "windows",
-							"GOARCH": "amd64",
-							"CC":     "x86_64-w64-mingw32-gcc",
-						},
+						env:  map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "zig cc -target x86_64-windows-gnu -Wdeprecated-non-prototype", "CXX": "zig c++ -target x86_64-windows-gnu -Wdeprecated-non-prototype"},
 						mount: []containerMountPoint{
 							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
 							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},
@@ -170,11 +162,7 @@ func Test_makeWindowsContext(t *testing.T) {
 						arch: "amd64",
 						os:   "windows",
 						id:   "windows-amd64",
-						env: map[string]string{
-							"GOOS":   "windows",
-							"GOARCH": "amd64",
-							"CC":     "x86_64-w64-mingw32-gcc",
-						},
+						env:  map[string]string{"GOOS": "windows", "GOARCH": "amd64", "CC": "zig cc -target x86_64-windows-gnu -Wdeprecated-non-prototype", "CXX": "zig c++ -target x86_64-windows-gnu -Wdeprecated-non-prototype"},
 						mount: []containerMountPoint{
 							{"project", vol.WorkDirHost(), vol.WorkDirContainer()},
 							{"cache", vol.CacheDirHost(), vol.CacheDirContainer()},

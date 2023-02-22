@@ -1,2 +1,0 @@
-#!/bin/sh
-exec clang --sysroot=/freebsd "$@" --target=x86_64-unknown-freebsd12
