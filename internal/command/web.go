@@ -79,7 +79,7 @@ func (cmd *web) Build(image containerImage) (string, error) {
 	}
 
 	// move the dist package into the "tmp" folder
-	srcFile := volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), cmd.defaultContext.Package, "web")
+	srcFile := volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), "web")
 	dstFile := volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID())
 	return "", image.Run(cmd.defaultContext.Volume, options{}, []string{"mv", srcFile, dstFile})
 }
