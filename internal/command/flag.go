@@ -45,6 +45,8 @@ type CommonFlags struct {
 	Ldflags string
 	// Additional build tags
 	Tags tagsFlag
+	// Metadata contain custom metadata passed to fyne package
+	Metadata multiFlags
 	// NoCache if true will not use the go build cache
 	NoCache bool
 	// NoProjectUpload if true, the build will be done with the artifact already stored on S3
@@ -121,6 +123,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.StringVar(&flags.DockerImage, "image", "", "Custom docker image to use for build")
 	flagSet.StringVar(&flags.Ldflags, "ldflags", "", "Additional flags to pass to the external linker")
 	flagSet.Var(&flags.Tags, "tags", "List of additional build tags separated by comma")
+	flagSet.Var(&flags.Metadata, "metadata", "Additional metadata `key=value` passed to fyne package")
 	flagSet.BoolVar(&flags.NoStripDebug, "no-strip-debug", false, "Do not strip debug information from binaries")
 	flagSet.StringVar(&flags.Name, "name", name, "The name of the application")
 	flagSet.StringVar(&flags.Name, "output", name, "Named output file. Deprecated in favour of 'name'")

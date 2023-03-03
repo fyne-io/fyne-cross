@@ -194,6 +194,12 @@ func fyneCommand(binary, command, icon string, ctx Context, image containerImage
 		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
 	}
 
+	if ctx.Metadata != nil {
+		for key, value := range ctx.Metadata {
+			args = append(args, "-metadata", fmt.Sprintf("%s=%s", key, value))
+		}
+	}
+
 	return args
 }
 
