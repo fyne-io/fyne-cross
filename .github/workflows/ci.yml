@@ -152,3 +152,85 @@ jobs:
             ${{ matrix.target.args }} \
             -debug -no-cache \
             -name calculator${{ matrix.target.ext }}
+
+  build-fyneterm:
+    name: "Build Fyneterm (${{ matrix.target.os }}, ${{ matrix.go-version }})"
+    runs-on: ${{ matrix.target.host || 'ubuntu-latest' }}
+    env:
+      GO111MODULE: on
+    strategy:
+      fail-fast: false
+      matrix:
+        # use max/min supported Go versions
+        go-version: ["1.18.x", "1.14.x"]
+        target:
+          - os: linux
+          - os: windows
+            ext: .exe
+          - os: freebsd
+          - os: android
+            args: -app-id calc.sha${{ github.sha }}
+          ## Not shared darwin image is available at the moment
+          # - os: darwin
+          #  args: -app-id calc.sha${{ github.sha }}
+          #  host: macos-latest
+          # - os: web
+          
+          ## Currently not easily supported from GitHub actions.
+          ## https://github.com/fyne-io/fyne-cross/pull/104#issuecomment-1099494308
+          # - os: ios
+          #   args: -app-id calc.sha${{ github.sha }}
+          #   host: macos-latest
+
+    steps:
+      - name: Setup Go environment
+        id: setup-go
+        uses: actions/setup-go@v3
+        with:
+          go-version: ${{ matrix.go-version }}
+
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          path: fyne-cross
+
+      - name: Checkout fyne-io/terminal
+        uses: actions/checkout@v2
+        with:
+          repository: fyne-io/terminal
+          path: terminal
+
+      - name: Cache build artifacts
+        uses: actions/cache@v2
+        with:
+          path: |
+            ~/go/pkg/mod
+            ~/.cache/go-build
+            ~/.cache/fyne-cross
+          key: ${{ runner.os }}-build-cache-${{ hashFiles('**/go.sum') }}
+
+      - name: Install Fyne-cross
+        working-directory: fyne-cross
+        run: go install
+
+        # attempt to use "go install" but fallback to "go get"
+      - name: Install Fyne
+        run: |
+          go install fyne.io/fyne/v2/cmd/fyne@latest ||
+          go get fyne.io/fyne/v2/cmd/fyne@latest
+
+      - name: Install Podman
+        if: ${{ runner.os == 'macos' }}
+        run: |
+          brew install podman
+          podman machine init
+          podman machine start
+
+      - name: Build
+        working-directory: terminal
+        run: |
+          fyne-cross \
+            ${{ matrix.target.os }} \
+            ${{ matrix.target.args }} \
+            -debug \
+            -name fyneterm${{ matrix.target.ext }} cmd/fyneterm

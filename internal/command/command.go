@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
@@ -170,20 +171,14 @@ func checkFyneBinHost(ctx Context) (string, error) {
 	return fyne, nil
 }
 
-// fynePackageHost package the application using the fyne cli tool from the host
-// Note: at the moment this is used only for the ios builds
-func fynePackageHost(ctx Context, image containerImage) error {
-
-	fyne, err := checkFyneBinHost(ctx)
-	if err != nil {
-		return err
-	}
+func fyneCommand(binary, command, icon string, ctx Context, image containerImage) []string {
+	target := image.Target()
 
 	args := []string{
-		"package",
-		"-os", image.OS(),
+		binary, command,
+		"-os", target,
 		"-name", ctx.Name,
-		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), image.ID(), icon.Default),
+		"-icon", icon,
 		"-appBuild", ctx.AppBuild,
 		"-appVersion", ctx.AppVersion,
 	}
@@ -192,6 +187,26 @@ func fynePackageHost(ctx Context, image containerImage) error {
 	if ctx.AppID != "" {
 		args = append(args, "-appID", ctx.AppID)
 	}
+
+	// add tags to command, if any
+	tags := image.Tags()
+	if len(tags) > 0 {
+		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
+	}
+
+	return args
+}
+
+// fynePackageHost package the application using the fyne cli tool from the host
+// Note: at the moment this is used only for the ios builds
+func fynePackageHost(ctx Context, image containerImage) (string, error) {
+	fyne, err := checkFyneBinHost(ctx)
+	if err != nil {
+		return "", err
+	}
+
+	icon := volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), icon.Default)
+	args := fyneCommand(fyne, "package", icon, ctx, image)
 
 	// ios packaging require certificate and profile for running on devices
 	if image.OS() == iosOS {
@@ -203,10 +218,13 @@ func fynePackageHost(ctx Context, image containerImage) error {
 		}
 	}
 
-	// add tags to command, if any
-	tags := ctx.Tags
-	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
+	workDir := ctx.WorkDirHost()
+	if image.OS() == iosOS {
+		workDir = volume.JoinPathHost(workDir, ctx.Package)
+	} else {
+		if ctx.Package != "." {
+			args = append(args, "-src", ctx.Package)
+		}
 	}
 
 	// when using local build, do not assume what CC is available and rely on os.Env("CC") is necessary
@@ -214,9 +232,13 @@ func fynePackageHost(ctx Context, image containerImage) error {
 	image.UnsetEnv("CGO_CFLAGS")
 	image.UnsetEnv("CGO_LDFLAGS")
 
+	if ctx.CacheDirHost() != "" {
+		image.SetEnv("GOCACHE", ctx.CacheDirHost())
+	}
+
 	// run the command from the host
-	fyneCmd := execabs.Command(fyne, args...)
-	fyneCmd.Dir = ctx.WorkDirHost()
+	fyneCmd := execabs.Command(args[0], args[1:]...)
+	fyneCmd.Dir = workDir
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
 	fyneCmd.Env = append(os.Environ(), image.AllEnv()...)
@@ -227,52 +249,44 @@ func fynePackageHost(ctx Context, image containerImage) error {
 
 	err = fyneCmd.Run()
 	if err != nil {
-		return fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
-	return nil
+
+	return searchLocalResult(volume.JoinPathHost(workDir, "*.app"))
 }
 
 // fyneReleaseHost package and release the application using the fyne cli tool from the host
 // Note: at the moment this is used only for the ios and windows builds
-func fyneReleaseHost(ctx Context, image containerImage) error {
-
+func fyneReleaseHost(ctx Context, image containerImage) (string, error) {
 	fyne, err := checkFyneBinHost(ctx)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	args := []string{
-		"release",
-		"-os", image.OS(),
-		"-name", ctx.Name,
-		"-icon", volume.JoinPathContainer(ctx.TmpDirHost(), image.ID(), icon.Default),
-		"-appBuild", ctx.AppBuild,
-		"-appVersion", ctx.AppVersion,
-	}
+	icon := volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), icon.Default)
+	args := fyneCommand(fyne, "release", icon, ctx, image)
 
-	// add appID to command, if any
-	if ctx.AppID != "" {
-		args = append(args, "-appID", ctx.AppID)
-	}
+	workDir := ctx.WorkDirHost()
 
-	// add tags to command, if any
-	tags := ctx.Tags
-	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
-	}
-
+	ext := ""
 	switch image.OS() {
 	case darwinOS:
 		if ctx.Category != "" {
 			args = append(args, "-category", ctx.Category)
 		}
+		if ctx.Package != "." {
+			args = append(args, "-src", ctx.Package)
+		}
+		ext = ".pkg"
 	case iosOS:
+		workDir = volume.JoinPathHost(workDir, ctx.Package)
 		if ctx.Certificate != "" {
 			args = append(args, "-certificate", ctx.Certificate)
 		}
 		if ctx.Profile != "" {
 			args = append(args, "-profile", ctx.Profile)
 		}
+		ext = ".ipa"
 	case windowsOS:
 		if ctx.Certificate != "" {
 			args = append(args, "-certificate", ctx.Certificate)
@@ -283,6 +297,10 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 		if ctx.Password != "" {
 			args = append(args, "-password", ctx.Password)
 		}
+		if ctx.Package != "." {
+			args = append(args, "-src", ctx.Package)
+		}
+		ext = ".appx"
 	}
 
 	// when using local build, do not assume what CC is available and rely on os.Env("CC") is necessary
@@ -290,9 +308,13 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 	image.UnsetEnv("CGO_CFLAGS")
 	image.UnsetEnv("CGO_LDFLAGS")
 
+	if ctx.CacheDirHost() != "" {
+		image.SetEnv("GOCACHE", ctx.CacheDirHost())
+	}
+
 	// run the command from the host
-	fyneCmd := execabs.Command(fyne, args...)
-	fyneCmd.Dir = ctx.WorkDirHost()
+	fyneCmd := execabs.Command(args[0], args[1:]...)
+	fyneCmd.Dir = workDir
 	fyneCmd.Stdout = os.Stdout
 	fyneCmd.Stderr = os.Stderr
 	fyneCmd.Env = append(os.Environ(), image.AllEnv()...)
@@ -303,7 +325,34 @@ func fyneReleaseHost(ctx Context, image containerImage) error {
 
 	err = fyneCmd.Run()
 	if err != nil {
-		return fmt.Errorf("could not package the Fyne app: %v", err)
+		return "", fmt.Errorf("could not package the Fyne app: %v", err)
 	}
-	return nil
+	return searchLocalResult(volume.JoinPathHost(workDir, "*"+ext))
+}
+
+func searchLocalResult(path string) (string, error) {
+	matches, err := filepath.Glob(path)
+	if err != nil {
+		return "", fmt.Errorf("could not find the file %v: %v", path, err)
+	}
+
+	// walk matches files to find the newest file
+	var newest string
+	var newestModTime time.Time
+	for _, match := range matches {
+		fi, err := os.Stat(match)
+		if err != nil {
+			continue
+		}
+
+		if fi.ModTime().After(newestModTime) {
+			newest = match
+			newestModTime = fi.ModTime()
+		}
+	}
+
+	if newest == "" {
+		return "", fmt.Errorf("could not find the file %v", path)
+	}
+	return filepath.Base(newest), nil
 }

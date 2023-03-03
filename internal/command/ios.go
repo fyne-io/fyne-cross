@@ -78,12 +78,10 @@ func (cmd *iOS) Build(image containerImage) (string, error) {
 	var packageName string
 	if cmd.defaultContext.Release {
 		// Release mode
-		packageName = fmt.Sprintf("%s.ipa", cmd.defaultContext.Name)
-		err = fyneReleaseHost(cmd.defaultContext, image)
+		packageName, err = fyneReleaseHost(cmd.defaultContext, image)
 	} else {
 		// Build mode
-		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
-		err = fynePackageHost(cmd.defaultContext, image)
+		packageName, err = fynePackageHost(cmd.defaultContext, image)
 	}
 
 	if err != nil {
@@ -92,9 +90,9 @@ func (cmd *iOS) Build(image containerImage) (string, error) {
 
 	// move the dist package into the expected tmp/$ID/packageName location in the container
 	image.Run(cmd.defaultContext.Volume, options{}, []string{
-		"mv",
-		volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
-		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+		"sh", "-c", fmt.Sprintf("mv %q/*.ipa %q",
+			cmd.defaultContext.WorkDirContainer(),
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName)),
 	})
 
 	return packageName, nil

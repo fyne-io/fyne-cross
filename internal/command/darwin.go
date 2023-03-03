@@ -103,17 +103,13 @@ func (cmd *darwin) Build(image containerImage) (string, error) {
 			return "", fmt.Errorf("darwin release build is supported only on darwin hosts")
 		}
 
-		packageName = fmt.Sprintf("%s.pkg", cmd.defaultContext.Name)
-
-		err = fyneReleaseHost(cmd.defaultContext, image)
+		packageName, err = fyneReleaseHost(cmd.defaultContext, image)
 		if err != nil {
 			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 
 	} else if cmd.localBuild {
-		packageName = fmt.Sprintf("%s.app", cmd.defaultContext.Name)
-
-		err = fynePackageHost(cmd.defaultContext, image)
+		packageName, err = fynePackageHost(cmd.defaultContext, image)
 		if err != nil {
 			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
@@ -132,6 +128,15 @@ func (cmd *darwin) Build(image containerImage) (string, error) {
 		volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
 		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
 	})
+
+	// copy the binary into the expected bin/$ID/packageName location in the container
+	image.Run(cmd.defaultContext.Volume, options{},
+		[]string{
+			"sh", "-c", fmt.Sprintf("cp %q/* %q",
+				volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName, "Contents", "MacOS"),
+				volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID()),
+			),
+		})
 
 	return packageName, nil
 }
@@ -182,6 +187,8 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 		return fmt.Errorf("could not make command context for %s OS: %s", darwinOS, err)
 	}
 
+	flags.Ldflags += " -s -w"
+
 	ctx, err := makeDefaultContext(flags.CommonFlags, args)
 	if err != nil {
 		return err
@@ -205,8 +212,6 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 
 	// Following settings are needed to cross compile with zig 0.9.1
 	ctx.BuildMode = "pie"
-	ctx.LdFlags = append(ctx.LdFlags, "-w")
-	ctx.LdFlags = append(ctx.LdFlags, "-s")
 
 	cmd.defaultContext = ctx
 	runner, err := newContainerEngine(ctx)

@@ -45,7 +45,6 @@ func Test_makeWindowsContext(t *testing.T) {
 				Package:      ".",
 				Engine:       engine,
 				Env:          map[string]string{},
-				LdFlags:      []string{"-H=windowsgui"},
 			},
 			wantImages: []containerImage{
 				&localContainerImage{
@@ -117,8 +116,9 @@ func Test_makeWindowsContext(t *testing.T) {
 				StripDebug:   true,
 				Package:      ".",
 				Engine:       engine,
-				Env:          map[string]string{},
-				LdFlags:      []string{"-X main.version=1.2.3", "-H=windowsgui"},
+				Env: map[string]string{
+					"GOFLAGS": "-ldflags=-X -ldflags=main.version=1.2.3",
+				},
 			},
 			wantImages: []containerImage{
 				&localContainerImage{
@@ -155,7 +155,6 @@ func Test_makeWindowsContext(t *testing.T) {
 				Package:      ".",
 				Engine:       engine,
 				Env:          map[string]string{},
-				LdFlags:      []string{"-H=windowsgui"},
 			},
 			wantImages: []containerImage{
 				&localContainerImage{

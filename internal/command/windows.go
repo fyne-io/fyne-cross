@@ -92,21 +92,16 @@ func (cmd *windows) Build(image containerImage) (string, error) {
 			return "", fmt.Errorf("windows release build is supported only on windows hosts")
 		}
 
-		err = fyneReleaseHost(cmd.defaultContext, image)
+		packageName, err := fyneReleaseHost(cmd.defaultContext, image)
 		if err != nil {
 			return "", fmt.Errorf("could not package the Fyne app: %v", err)
 		}
 
-		packageName := cmd.defaultContext.Name + ".appx"
-		if pos := strings.LastIndex(cmd.defaultContext.Name, ".exe"); pos > 0 {
-			packageName = cmd.defaultContext.Name[:pos] + ".appx"
-		}
-
 		// move the dist package into the expected tmp/$ID/packageName location in the container
 		image.Run(cmd.defaultContext.Volume, options{}, []string{
-			"mv",
-			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), packageName),
-			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
+			"sh", "-c", fmt.Sprintf("mv %q/*.appx %q",
+				cmd.defaultContext.WorkDirContainer(),
+				volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName)),
 		})
 
 		return packageName, nil
@@ -132,16 +127,18 @@ func (cmd *windows) Build(image containerImage) (string, error) {
 	// create a zip archive from the compiled binary under the "bin" folder
 	// and place it under the tmp folder
 	err = image.Run(cmd.defaultContext.Volume, options{}, []string{
-		"zip", volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName), executableName,
+		"sh", "-c", fmt.Sprintf("cd %q && zip %q *.exe",
+			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), cmd.defaultContext.Package),
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName)),
 	})
 	if err != nil {
 		return "", err
 	}
 
 	image.Run(cmd.defaultContext.Volume, options{}, []string{
-		"mv",
-		executableName,
-		volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID(), executableName),
+		"sh", "-c", fmt.Sprintf("mv %q/*.exe %q",
+			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), cmd.defaultContext.Package),
+			volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID(), executableName)),
 	})
 
 	return packageName, nil
@@ -202,10 +199,6 @@ func (cmd *windows) setupContainerImages(flags *windowsFlags, args []string) err
 	ctx.Certificate = flags.Certificate
 	ctx.Developer = flags.Developer
 	ctx.Password = flags.Password
-
-	if !flags.Console {
-		ctx.LdFlags = append(ctx.LdFlags, "-H=windowsgui")
-	}
 
 	cmd.defaultContext = ctx
 	runner, err := newContainerEngine(ctx)
