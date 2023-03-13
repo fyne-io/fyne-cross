@@ -32,6 +32,7 @@ Supported targets are:
 > - starting from v1.1.0:
 >   - cross-compile from NOT `darwin` (i.e. linux) to `darwin`: requires a copy of the macOS SDK on the host. The fyne-cross `darwin-sdk-extractor` command can be used to extract the SDK from the XCode CLI Tool file, see the [Extract the macOS SDK](#extract_macos_sdk) section below.
 >   - cross-compile from `darwin` to `darwin` by default will use under the hood the fyne CLI tool and requires Go and the macOS SDK installed on the host.
+> - starting from v1.4.0, Arm64 host are supported for all platform except Android.
 
 ## Requirements
 
@@ -45,7 +46,7 @@ For go >= 1.16:
 go install github.com/fyne-io/fyne-cross@latest
 ```
 
-To install a fyne-cross with kubernetes engine:
+To install a fyne-cross with kubernetes engine support:
 ```
 go install -tags k8s github.com/fyne-io/fyne-cross@latest
 ```
@@ -86,18 +87,6 @@ The commands are:
 	version       Print the fyne-cross version information
 
 Use "fyne-cross <command> -help" for more information about a command.
-```
-
-### Apple Arm Silicon special
-
-On Apple Arm64 architecture, the container have to run in a vm. This vm put some constraint on getting fyne-cross to work in that setup.
-
-## podman on Mac Mini M1
-
-You need to create a `podman machine` that has a short name as the access path on Mac can not be over 104 and that limit can be reached quickly when the machine name is to long. Additionally you need to specify in the machine the path that you might need during your build. An example of possible machine to use:
-
-```
-podman machine init --now machine --cpus=8 --memory=6096  -v /tmp:/tmp -v ${HOME}:${HOME}
 ```
 
 ### Wildcards
