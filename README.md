@@ -32,7 +32,7 @@ Supported targets are:
 > - starting from v1.1.0:
 >   - cross-compile from NOT `darwin` (i.e. linux) to `darwin`: requires a copy of the macOS SDK on the host. The fyne-cross `darwin-sdk-extractor` command can be used to extract the SDK from the XCode CLI Tool file, see the [Extract the macOS SDK](#extract_macos_sdk) section below.
 >   - cross-compile from `darwin` to `darwin` by default will use under the hood the fyne CLI tool and requires Go and the macOS SDK installed on the host.
-> - starting from v1.4.0, Arm64 host are supported for all platform except Android.
+> - starting from v1.4.0, Arm64 hosts are supported for all platforms except Android.
 
 ## Requirements
 
