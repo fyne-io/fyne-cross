@@ -165,11 +165,29 @@ jobs:
         go-version: ["1.18.x", "1.14.x"]
         target:
           - os: linux
+            arch: "amd64"
+          - os: linux
+            arch: "386"
+          - os: linux
+            arch: "arm"
+          - os: linux
+            arch: "arm64"
           - os: windows
             ext: .exe
+            arch: "amd64"
+          - os: windows
+            ext: .exe
+            arch: "386"
+          - os: windows
+            ext: .exe
+            arch: "arm64"
           - os: freebsd
+            arch: "amd64"
+          - os: freebsd
+            arch: "arm64"
           - os: android
             args: -app-id calc.sha${{ github.sha }}
+            arch: "multiple"
           ## Not shared darwin image is available at the moment
           # - os: darwin
           #  args: -app-id calc.sha${{ github.sha }}
@@ -232,5 +250,6 @@ jobs:
           fyne-cross \
             ${{ matrix.target.os }} \
             ${{ matrix.target.args }} \
+            -arch ${{ matrix.target.arch }} \
             -debug \
             -name fyneterm${{ matrix.target.ext }} cmd/fyneterm
