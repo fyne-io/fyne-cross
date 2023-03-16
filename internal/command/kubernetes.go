@@ -255,6 +255,8 @@ func (i *kubernetesContainerImage) Prepare() error {
 		download(i.runner.vol, i.runner.s3Path+"/"+mountPoint.name+"-"+i.ID()+".tar.zstd", mountPoint.inContainer)
 	}
 
+	log.Infof("Done preparing pods")
+
 	i.runner.currentImage = i
 
 	return nil
