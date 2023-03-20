@@ -15,6 +15,7 @@ func main() {
 	var bucket string
 	var akid string
 	var secret string
+	var debug bool
 
 	app := &cli.App{
 		Name:  "fyne-cross-s3",
@@ -53,6 +54,12 @@ func main() {
 				Usage:       "AWS Access Key ID to use to establish S3 connection",
 				Destination: &akid,
 			},
+			&cli.BoolFlag{
+				Name:        "debug",
+				Aliases:     []string{"d"},
+				Usage:       "Enable debug output",
+				Destination: &debug,
+			},
 		},
 		Commands: []*cli.Command{
 			{
@@ -61,6 +68,10 @@ func main() {
 				Action: func(c *cli.Context) error {
 					if c.Args().Len() != 2 {
 						return fmt.Errorf("directory to archive and destination should be specified")
+					}
+
+					if debug {
+						cloud.Log = log.Printf
 					}
 
 					log.Println("Connecting to AWS")
@@ -86,6 +97,10 @@ func main() {
 						return fmt.Errorf("file to upload and destination should be specified")
 					}
 
+					if debug {
+						cloud.Log = log.Printf
+					}
+
 					log.Println("Connecting to AWS")
 					aws, err := cloud.NewAWSSession(akid, secret, endpoint, region, bucket)
 					if err != nil {
@@ -109,6 +124,10 @@ func main() {
 						return fmt.Errorf("archive to download and destination should be specified")
 					}
 
+					if debug {
+						cloud.Log = log.Printf
+					}
+
 					log.Println("Connecting to AWS")
 					aws, err := cloud.NewAWSSession(akid, secret, endpoint, region, bucket)
 					if err != nil {
@@ -130,6 +149,10 @@ func main() {
 				Action: func(c *cli.Context) error {
 					if c.Args().Len() != 2 {
 						return fmt.Errorf("file to upload and destination should be specified")
+					}
+
+					if debug {
+						cloud.Log = log.Printf
 					}
 
 					log.Println("Connecting to AWS")
