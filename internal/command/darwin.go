@@ -75,8 +75,6 @@ func (cmd *darwin) Parse(args []string) error {
 
 	flagSet.StringVar(&flags.MacOSXVersionMin, "macosx-version-min", "unset", "Specify the minimum version that the SDK you used to create the Darwin image support")
 
-	flagSet.BoolVar(&flags.ContainerIncludeMacOSXSDK, "container-include-macosx-sdk", false, "If set the macOS SDK is expected to be present in the container")
-
 	flagAppID := flagSet.Lookup("app-id")
 	flagAppID.Usage = fmt.Sprintf("%s [required]", flagAppID.Usage)
 
@@ -180,9 +178,6 @@ type darwinFlags struct {
 
 	// MacOSXSDKPath represents the MacOSX SDK path on host
 	MacOSXSDKPath string
-
-	// IncludeMacOSXSDK represents if the MacOSX SDK is included in the container
-	ContainerIncludeMacOSXSDK bool
 }
 
 // setupContainerImages returns the command context for a darwin target
@@ -201,18 +196,6 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 
 	if ctx.AppID == "" {
 		return errors.New("appID is mandatory")
-	}
-
-	if !cmd.localBuild {
-		if !flags.ContainerIncludeMacOSXSDK {
-			if flags.MacOSXSDKPath == "unset" {
-				return errors.New("macOSX SDK path is mandatory")
-			}
-
-			if _, err := os.Stat(flags.MacOSXSDKPath); os.IsNotExist(err) {
-				return errors.New("macOSX SDK path does not exists")
-			}
-		}
 	}
 
 	ctx.Category = flags.Category
@@ -254,8 +237,18 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 		image.SetEnv("CGO_LDFLAGS", "--sysroot /sdk -F/System/Library/Frameworks -L/usr/lib")
 		image.SetEnv("GOOS", "darwin")
 
-		if !flags.ContainerIncludeMacOSXSDK {
-			image.SetMount("sdk", flags.MacOSXSDKPath, "/sdk")
+		if !cmd.localBuild {
+			if flags.MacOSXSDKPath == "unset" {
+				err := image.Run(ctx.Volume, options{}, []string{"sh", "-c", "ls /sdk/usr/include/stdlib.h  2>/dev/null >/dev/null"})
+				if err != nil {
+					return errors.New("macOSX SDK path is mandatory")
+				}
+			} else {
+				if _, err := os.Stat(flags.MacOSXSDKPath); os.IsNotExist(err) {
+					return errors.New("macOSX SDK path does not exists")
+				}
+				image.SetMount("sdk", flags.MacOSXSDKPath, "/sdk")
+			}
 		}
 
 		cmd.Images = append(cmd.Images, image)
