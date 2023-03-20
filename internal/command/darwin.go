@@ -239,6 +239,7 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 
 		if !cmd.localBuild {
 			if flags.MacOSXSDKPath == "unset" {
+				// This is checking if the provided container image has the macOSX SDK installed
 				err := image.Run(ctx.Volume, options{}, []string{"sh", "-c", "ls /sdk/usr/include/stdlib.h  2>/dev/null >/dev/null"})
 				if err != nil {
 					return errors.New("macOSX SDK path is mandatory")
