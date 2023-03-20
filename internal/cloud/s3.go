@@ -7,7 +7,6 @@ import (
 	"fmt"
 	"io"
 	"io/ioutil"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
@@ -372,8 +371,8 @@ func uncompressFile(localRootDirectory string, f archiver.File) error {
 	localFile := filepath.Join(paths...)
 	if f.IsDir() {
 		if !Exists(localFile) {
-			log.Println("Creating directory:", localFile)
-			return os.Mkdir(localFile, f.Mode().Perm())
+			logWrapper("Creating directory: %s\n", localFile)
+			return os.MkdirAll(localFile, f.Mode().Perm())
 		}
 		return nil
 	}
@@ -384,7 +383,7 @@ func uncompressFile(localRootDirectory string, f archiver.File) error {
 	}
 	defer outFile.Close()
 
-	log.Println(header.Name, "->", localFile)
+	logWrapper("%s -> %s\n", header.Name, localFile)
 	_, err = io.Copy(outFile, f)
 
 	return err

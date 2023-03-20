@@ -213,16 +213,16 @@ func (cmd *windows) setupContainerImages(flags *windowsFlags, args []string) err
 		switch arch {
 		case ArchAmd64:
 			image.SetEnv("GOARCH", "amd64")
-			image.SetEnv("CC", "zig cc -target x86_64-windows-gnu -Wdeprecated-non-prototype")
-			image.SetEnv("CXX", "zig c++ -target x86_64-windows-gnu -Wdeprecated-non-prototype")
+			image.SetEnv("CC", "zig cc -target x86_64-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
+			image.SetEnv("CXX", "zig c++ -target x86_64-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
 		case Arch386:
 			image.SetEnv("GOARCH", "386")
-			image.SetEnv("CC", "zig cc -target x86-windows-gnu -Wdeprecated-non-prototype")
-			image.SetEnv("CXX", "zig c++ -target x86-windows-gnu -Wdeprecated-non-prototype")
+			image.SetEnv("CC", "zig cc -target x86-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
+			image.SetEnv("CXX", "zig c++ -target x86-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
 		case ArchArm64:
 			image.SetEnv("GOARCH", "arm64")
-			image.SetEnv("CC", "zig cc -target aarch64-windows-gnu -Wdeprecated-non-prototype")
-			image.SetEnv("CXX", "zig c++ -target aarch64-windows-gnu -Wdeprecated-non-prototype")
+			image.SetEnv("CC", "zig cc -target aarch64-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
+			image.SetEnv("CXX", "zig c++ -target aarch64-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
 		}
 
 		cmd.Images = append(cmd.Images, image)
