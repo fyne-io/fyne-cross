@@ -244,7 +244,7 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 				if err != nil {
 					return errors.New("macOSX SDK path is mandatory")
 				}
-			} else {
+			} else if flags.MacOSXSDKPath != "ignore" {
 				if _, err := os.Stat(flags.MacOSXSDKPath); os.IsNotExist(err) {
 					return errors.New("macOSX SDK path does not exists")
 				}
