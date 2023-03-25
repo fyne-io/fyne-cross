@@ -67,7 +67,7 @@ func (cmd *darwin) Parse(args []string) error {
 	if runtime.GOOS == darwinOS {
 		flagSet.BoolVar(&cmd.localBuild, "local", true, "If set uses the fyne CLI tool installed on the host in place of the docker images")
 	} else {
-		flagSet.StringVar(&flags.MacOSXSDKPath, "macosx-sdk-path", "unset", "Path to macOS SDK (setting it to 'ignore' will skip the in container sdk check) [required]")
+		flagSet.StringVar(&flags.MacOSXSDKPath, "macosx-sdk-path", "unset", "Path to macOS SDK (setting it to 'bundled' indicate that the sdk is expected to be in the container) [required]")
 	}
 
 	// flags used only in release mode
@@ -244,7 +244,7 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 				if err != nil {
 					return errors.New("macOSX SDK path is mandatory")
 				}
-			} else if flags.MacOSXSDKPath != "ignore" {
+			} else if flags.MacOSXSDKPath != "bundled" {
 				if _, err := os.Stat(flags.MacOSXSDKPath); os.IsNotExist(err) {
 					return errors.New("macOSX SDK path does not exists")
 				}
