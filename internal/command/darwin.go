@@ -67,7 +67,7 @@ func (cmd *darwin) Parse(args []string) error {
 	if runtime.GOOS == darwinOS {
 		flagSet.BoolVar(&cmd.localBuild, "local", true, "If set uses the fyne CLI tool installed on the host in place of the docker images")
 	} else {
-		flagSet.StringVar(&flags.MacOSXSDKPath, "macosx-sdk-path", "unset", "Path to macOS SDK [required]")
+		flagSet.StringVar(&flags.MacOSXSDKPath, "macosx-sdk-path", "unset", "Path to macOS SDK (setting it to 'ignore' will skip the in container sdk check) [required]")
 	}
 
 	// flags used only in release mode
