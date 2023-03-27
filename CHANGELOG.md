@@ -11,9 +11,7 @@
 ### Changed
 
 - Pull image from fyne-cross-image repository
-- Simplify `fyne-cross darwin-sdk-extract` by getting from specified Apple SDK
-the needed file to build darwin application. The file are kept on the host in a
-directory and mounted in the darwin image container for each build
+- Simplify `fyne-cross darwin-sdk-extract` by getting the needed files from the Apple SDK and then mounting them in the container image for each build
 - Provide a darwin image and mount the SDK from the host
 - Use `fyne build` for all targets
 
