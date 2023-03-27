@@ -176,13 +176,11 @@ func (cmd *linux) setupContainerImages(flags *linuxFlags, args []string) error {
 			image.SetEnv("GOARM", "7")
 			image.SetEnv("CC", "zig cc -target arm-linux-gnueabihf -isystem /usr/include -L/usr/lib/arm-linux-gnueabihf")
 			image.SetEnv("CXX", "zig c++ -target arm-linux-gnueabihf -isystem /usr/include -L/usr/lib/arm-linux-gnueabihf")
-			image.AppendTag("gles")
 		case ArchArm64:
 			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm64))
 			image.SetEnv("GOARCH", "arm64")
 			image.SetEnv("CC", "zig cc -target aarch64-linux-gnu -isystem /usr/include -L/usr/lib/aarch64-linux-gnu")
 			image.SetEnv("CXX", "zig c++ -target aarch64-linux-gnu -isystem /usr/include -L/usr/lib/aarch64-linux-gnu")
-			image.AppendTag("gles")
 		}
 
 		image.SetEnv("GOOS", "linux")
