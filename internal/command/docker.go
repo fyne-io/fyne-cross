@@ -129,11 +129,14 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 		if runtime.GOOS != "windows" {
 			u, err := user.Current()
 			if err == nil {
-				args = append(args, "-u", fmt.Sprintf("%s:%s", u.Uid, u.Gid))
-				args = append(args, "--entrypoint", "fixuid")
-				if !debugging() {
-					// silent fixuid if not debug mode
-					cmdArgs = append([]string{"-q"}, cmdArgs...)
+				// Container runs as current host UID
+				args = append(args, "--user", u.Uid)
+				// Set HOME to something writable by the user
+				args = append(args, "-e", "HOME=/home/user")
+				// Map host zig cache if host user has a HOME
+				home := os.Getenv("HOME")
+				if home != "" {
+					args = append(args, "-v", fmt.Sprintf("%s/.cache/zig:/home/user/.cache/zig", home))
 				}
 			}
 		}
