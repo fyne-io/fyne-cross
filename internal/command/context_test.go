@@ -103,9 +103,10 @@ func Test_makeDefaultContext(t *testing.T) {
 				CacheEnabled: true,
 				StripDebug:   true,
 				Package:      ".",
-				LdFlags:      []string{"-X main.version=1.2.3"},
 				Engine:       engine,
-				Env:          map[string]string{},
+				Env: map[string]string{
+					"GOFLAGS": "-ldflags=-X -ldflags=main.version=1.2.3",
+				},
 			},
 			wantErr: false,
 		},

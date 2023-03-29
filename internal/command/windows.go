@@ -2,8 +2,6 @@ package command
 
 import (
 	"fmt"
-	"os"
-	"path/filepath"
 	"runtime"
 	"strings"
 
@@ -15,31 +13,42 @@ const (
 	// windowsOS it the windows OS name
 	windowsOS = "windows"
 	// windowsImage is the fyne-cross image for the Windows OS
-	windowsImage = "docker.io/fyneio/fyne-cross:1.3-windows"
+	windowsImage = "fyneio/fyne-cross-images:windows"
 )
 
 var (
 	// windowsArchSupported defines the supported target architectures on windows
-	windowsArchSupported = []Architecture{ArchAmd64, Arch386}
+	windowsArchSupported = []Architecture{ArchAmd64, ArchArm64, Arch386}
 )
 
 // Windows build and package the fyne app for the windows OS
-type Windows struct {
-	CmdContext []Context
+type windows struct {
+	Images         []containerImage
+	defaultContext Context
 }
 
-// Name returns the one word command name
-func (cmd *Windows) Name() string {
+var _ platformBuilder = (*windows)(nil)
+var _ Command = (*windows)(nil)
+
+func NewWindowsCommand() *windows {
+	return &windows{}
+}
+
+func (cmd *windows) Name() string {
 	return "windows"
 }
 
 // Description returns the command description
-func (cmd *Windows) Description() string {
+func (cmd *windows) Description() string {
 	return "Build and package a fyne application for the windows OS"
 }
 
+func (cmd *windows) Run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
+}
+
 // Parse parses the arguments and set the usage for the command
-func (cmd *Windows) Parse(args []string) error {
+func (cmd *windows) Parse(args []string) error {
 	commonFlags, err := newCommonFlags()
 	if err != nil {
 		return err
@@ -66,128 +75,77 @@ func (cmd *Windows) Parse(args []string) error {
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
 
-	ctx, err := makeWindowsContext(flags, flagSet.Args())
-	if err != nil {
-		return err
-	}
-	cmd.CmdContext = ctx
-	return nil
+	err = cmd.setupContainerImages(flags, flagSet.Args())
+	return err
 }
 
 // Run runs the command
-func (cmd *Windows) Run() error {
-
-	for _, ctx := range cmd.CmdContext {
-
-		err := bumpFyneAppBuild(ctx)
-		if err != nil {
-			log.Infof("[i] FyneApp.toml: unable to bump the build number. Error: %s", err)
-		}
-
-		log.Infof("[i] Target: %s/%s", ctx.OS, ctx.Architecture)
-		log.Debugf("%#v", ctx)
-
-		//
-		// pull image, if requested
-		//
-		err = pullImage(ctx)
-		if err != nil {
-			return err
-		}
-
-		//
-		// prepare build
-		//
-		err = cleanTargetDirs(ctx)
-		if err != nil {
-			return err
-		}
-
-		err = goModInit(ctx)
-		if err != nil {
-			return err
-		}
-
-		err = prepareIcon(ctx)
-		if err != nil {
-			return err
-		}
-
-		// Release mode
-		if ctx.Release {
-			if runtime.GOOS != windowsOS {
-				return fmt.Errorf("windows release build is supported only on windows hosts")
-			}
-
-			err = fyneReleaseHost(ctx)
-			if err != nil {
-				return fmt.Errorf("could not package the Fyne app: %v", err)
-			}
-
-			packageName := ctx.Name + ".appx"
-			if pos := strings.LastIndex(ctx.Name, ".exe"); pos > 0 {
-				packageName = ctx.Name[:pos] + ".appx"
-			}
-
-			// move the dist package into the "dist" folder
-			srcFile := volume.JoinPathHost(ctx.WorkDirHost(), packageName)
-			distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, packageName)
-			err = os.MkdirAll(filepath.Dir(distFile), 0755)
-			if err != nil {
-				return fmt.Errorf("could not create the dist package dir: %v", err)
-			}
-
-			err = os.Rename(srcFile, distFile)
-			if err != nil {
-				return err
-			}
-			return nil
-		}
-
-		// Build mode
-		windres, err := WindowsResource(ctx)
-		if err != nil {
-			return err
-		}
-
-		//
-		// build
-		//
-		err = goBuild(ctx)
-		if err != nil {
-			return err
-		}
-
-		//
-		// package
-		//
-
-		log.Info("[i] Packaging app...")
-
-		// remove the windres file under the project root
-		os.Remove(volume.JoinPathHost(ctx.WorkDirHost(), windres))
-
-		// create a zip archive from the compiled binary under the "bin" folder
-		// and place it under the "dist" folder
-		srcFile := volume.JoinPathHost(ctx.BinDirHost(), ctx.ID, ctx.Name)
-		distFile := volume.JoinPathHost(ctx.DistDirHost(), ctx.ID, ctx.Name+".zip")
-		err = os.MkdirAll(filepath.Dir(distFile), 0755)
-		if err != nil {
-			return fmt.Errorf("could not create the dist package dir: %v", err)
-		}
-		err = volume.Zip(srcFile, distFile)
-		if err != nil {
-			return err
-		}
-
-		log.Infof("[✓] Package: %s", distFile)
+func (cmd *windows) Build(image containerImage) (string, error) {
+	err := prepareIcon(cmd.defaultContext, image)
+	if err != nil {
+		return "", err
 	}
 
-	return nil
+	// Release mode
+	if cmd.defaultContext.Release {
+		if runtime.GOOS != windowsOS {
+			return "", fmt.Errorf("windows release build is supported only on windows hosts")
+		}
+
+		packageName, err := fyneReleaseHost(cmd.defaultContext, image)
+		if err != nil {
+			return "", fmt.Errorf("could not package the Fyne app: %v", err)
+		}
+
+		// move the dist package into the expected tmp/$ID/packageName location in the container
+		image.Run(cmd.defaultContext.Volume, options{}, []string{
+			"sh", "-c", fmt.Sprintf("mv %q/*.appx %q",
+				cmd.defaultContext.WorkDirContainer(),
+				volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName)),
+		})
+
+		return packageName, nil
+	}
+
+	//
+	// package
+	//
+	log.Info("[i] Packaging app...")
+	packageName := cmd.defaultContext.Name + ".zip"
+
+	// Build mode
+	err = fynePackage(cmd.defaultContext, image)
+	if err != nil {
+		return "", err
+	}
+
+	executableName := cmd.defaultContext.Name + ".exe"
+	if pos := strings.LastIndex(cmd.defaultContext.Name, ".exe"); pos > 0 {
+		executableName = cmd.defaultContext.Name
+	}
+
+	// create a zip archive from the compiled binary under the "bin" folder
+	// and place it under the tmp folder
+	err = image.Run(cmd.defaultContext.Volume, options{}, []string{
+		"sh", "-c", fmt.Sprintf("cd %q && zip %q *.exe",
+			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), cmd.defaultContext.Package),
+			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName)),
+	})
+	if err != nil {
+		return "", err
+	}
+
+	image.Run(cmd.defaultContext.Volume, options{}, []string{
+		"sh", "-c", fmt.Sprintf("mv %q/*.exe %q",
+			volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), cmd.defaultContext.Package),
+			volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID(), executableName)),
+	})
+
+	return packageName, nil
 }
 
 // Usage displays the command usage
-func (cmd *Windows) Usage() {
+func (cmd *windows) Usage() {
 	data := struct {
 		Name        string
 		Description string
@@ -226,48 +184,49 @@ type windowsFlags struct {
 	Password string
 }
 
-// makeWindowsContext returns the command context for a windows target
-func makeWindowsContext(flags *windowsFlags, args []string) ([]Context, error) {
+// setupContainerImages returns the command ContainerImages for a windows target
+func (cmd *windows) setupContainerImages(flags *windowsFlags, args []string) error {
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, windowsArchSupported)
 	if err != nil {
-		return []Context{}, fmt.Errorf("could not make build context for %s OS: %s", windowsOS, err)
+		return fmt.Errorf("could not make build context for %s OS: %s", windowsOS, err)
 	}
 
-	ctxs := []Context{}
+	ctx, err := makeDefaultContext(flags.CommonFlags, args)
+	if err != nil {
+		return err
+	}
+
+	ctx.Certificate = flags.Certificate
+	ctx.Developer = flags.Developer
+	ctx.Password = flags.Password
+
+	cmd.defaultContext = ctx
+	runner, err := newContainerEngine(ctx)
+	if err != nil {
+		return err
+	}
+
 	for _, arch := range targetArch {
+		image := runner.createContainerImage(arch, windowsOS, overrideDockerImage(flags.CommonFlags, windowsImage))
 
-		ctx, err := makeDefaultContext(flags.CommonFlags, args)
-		if err != nil {
-			return ctxs, err
-		}
-
-		ctx.Architecture = arch
-		ctx.OS = windowsOS
-		ctx.ID = fmt.Sprintf("%s-%s", ctx.OS, ctx.Architecture)
-
-		ctx.Certificate = flags.Certificate
-		ctx.Developer = flags.Developer
-		ctx.Password = flags.Password
-		ctx.Env["GOOS"] = "windows"
+		image.SetEnv("GOOS", "windows")
 		switch arch {
 		case ArchAmd64:
-			ctx.Env["GOARCH"] = "amd64"
-			ctx.Env["CC"] = "x86_64-w64-mingw32-gcc"
+			image.SetEnv("GOARCH", "amd64")
+			image.SetEnv("CC", "zig cc -target x86_64-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
+			image.SetEnv("CXX", "zig c++ -target x86_64-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
 		case Arch386:
-			ctx.Env["GOARCH"] = "386"
-			ctx.Env["CC"] = "i686-w64-mingw32-gcc"
+			image.SetEnv("GOARCH", "386")
+			image.SetEnv("CC", "zig cc -target x86-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
+			image.SetEnv("CXX", "zig c++ -target x86-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
+		case ArchArm64:
+			image.SetEnv("GOARCH", "arm64")
+			image.SetEnv("CC", "zig cc -target aarch64-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
+			image.SetEnv("CXX", "zig c++ -target aarch64-windows-gnu -Wdeprecated-non-prototype -Wl,--subsystem,windows")
 		}
 
-		if !flags.Console {
-			ctx.LdFlags = append(ctx.LdFlags, "-H=windowsgui")
-		}
-
-		if flags.DockerImage == "" {
-			ctx.DockerImage = windowsImage
-		}
-
-		ctxs = append(ctxs, ctx)
+		cmd.Images = append(cmd.Images, image)
 	}
 
-	return ctxs, nil
+	return nil
 }

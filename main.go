@@ -11,14 +11,14 @@ func main() {
 
 	// Define the command to use
 	commands := []command.Command{
-		&command.DarwinImage{},
-		&command.Darwin{},
-		&command.Linux{},
-		&command.Windows{},
-		&command.Android{},
-		&command.IOS{},
-		&command.FreeBSD{},
-		&command.Web{},
+		&command.DarwinSDKExtract{},
+		command.NewDarwinCommand(),
+		command.NewLinuxCommand(),
+		command.NewWindowsCommand(),
+		command.NewAndroidCommand(),
+		command.NewIOSCommand(),
+		command.NewFreeBSD(),
+		command.NewWebCommand(),
 		&command.Version{},
 	}
 

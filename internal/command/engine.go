@@ -12,6 +12,7 @@ const (
 	autodetectEngine = ""
 	dockerEngine     = "docker"
 	podmanEngine     = "podman"
+	kubernetesEngine = "kubernetes"
 )
 
 type Engine struct {
@@ -29,6 +30,10 @@ func (e Engine) IsDocker() bool {
 
 func (e Engine) IsPodman() bool {
 	return e.Name == podmanEngine
+}
+
+func (e Engine) IsKubernetes() bool {
+	return e.Name == kubernetesEngine
 }
 
 // MakeEngine returns a new container engine. Pass empty string to autodetect
@@ -71,6 +76,14 @@ func MakeEngine(e string) (Engine, error) {
 		default:
 			return Engine{}, fmt.Errorf("could not detect engine version: %s", out)
 		}
+	case kubernetesEngine:
+		// Try establishing a connection to Kubernetes cluster
+		err := checkKubernetesClient()
+		if err != nil {
+			return Engine{}, err
+		}
+
+		return Engine{Name: kubernetesEngine, Binary: ""}, nil
 	default:
 		return Engine{}, errors.New("unsupported container engine")
 	}
