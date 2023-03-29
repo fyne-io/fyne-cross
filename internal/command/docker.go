@@ -133,7 +133,7 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 				args = append(args, "-e", "HOME=/home/user")
 				// Map host zig cache if host user has a HOME
 				home := os.Getenv("HOME")
-				if home != "" {
+				if home != "" && i.runner.cacheEnabled {
 					args = append(args, "-v", fmt.Sprintf("%s/.cache/zig:/home/user/.cache/zig", home))
 				}
 			}
