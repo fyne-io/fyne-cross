@@ -60,6 +60,7 @@ type Context struct {
 	Pull             bool   // Pull if true attempts to pull a newer version of the docker image
 	NoProjectUpload  bool   // NoProjectUpload if true, the build will be done with the artifact already stored on S3
 	NoResultDownload bool   // NoResultDownload if true, the result of the build will be left on S3 and not downloaded locally
+	NoNetwork        bool   // NoNetwork if true, the build will be done without network access
 
 	//Build context
 	BuildMode string // The -buildmode argument to pass to go build
@@ -142,6 +143,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		Name:             flags.Name,
 		StripDebug:       !flags.NoStripDebug,
 		Debug:            flags.Debug,
+		NoNetwork:        flags.NoNetwork,
 		Volume:           vol,
 		Pull:             flags.Pull,
 		Release:          flags.Release,
