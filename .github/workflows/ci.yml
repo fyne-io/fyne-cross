@@ -17,7 +17,7 @@ jobs:
       run: go install golang.org/x/tools/cmd/goimports@latest
 
     # Checks-out the repository under $GITHUB_WORKSPACE
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     # Run linters
     - name: Run go vet
@@ -44,7 +44,7 @@ jobs:
         go-version: ${{ matrix.go-version }}
 
     # Checks-out the repository under $GITHUB_WORKSPACE
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     # Run tests
     - run: go test -v -cover -race ./...
@@ -66,7 +66,7 @@ jobs:
         go-version: ${{ matrix.go-version }}
 
     # Checks-out the repository under $GITHUB_WORKSPACE
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v3
 
     # Run tests
     - run: go build -tags k8s
@@ -108,12 +108,12 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: fyne-cross
 
       - name: Checkout fyne-io/calculator
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: fyne-io/calculator
           path: calculator
@@ -190,12 +190,12 @@ jobs:
           go-version: ${{ matrix.go-version }}
 
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           path: fyne-cross
 
       - name: Checkout fyne-io/terminal
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
         with:
           repository: fyne-io/terminal
           path: terminal
