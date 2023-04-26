@@ -33,7 +33,6 @@ func TestCmdEngineDocker(t *testing.T) {
 		mountFlag = ""
 	}
 
-
 	workDir := filepath.Join(os.TempDir(), "fyne-cross-test", "app")
 	cacheDir := filepath.Join(os.TempDir(), "fyne-cross-test", "cache")
 	customWorkDir := filepath.Join(os.TempDir(), "fyne-cross-test", "custom")
