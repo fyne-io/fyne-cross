@@ -55,6 +55,8 @@ type CommonFlags struct {
 	NoResultDownload bool
 	// NoStripDebug if true will not strip debug information from binaries
 	NoStripDebug bool
+	// NoNetwork if true will not setup network inside the container
+	NoNetwork bool
 	// Name represents the application name
 	Name string
 	// Release represents if the package should be prepared for release (disable debug etc)
@@ -133,6 +135,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.BoolVar(&flags.Debug, "debug", false, "Debug mode")
 	flagSet.BoolVar(&flags.Pull, "pull", false, "Attempt to pull a newer version of the docker image")
 	flagSet.StringVar(&flags.DockerRegistry, "docker-registry", "docker.io", "The docker registry to be used instead of dockerhub (only used with defualt docker images)")
+	flagSet.BoolVar(&flags.NoNetwork, "no-network", false, "If set, the build will be done without network access")
 	return flags, nil
 }
 

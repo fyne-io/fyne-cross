@@ -27,6 +27,7 @@ type localContainerEngine struct {
 
 	pull         bool
 	cacheEnabled bool
+	noNetwork    bool
 }
 
 func newLocalContainerEngine(context Context) (containerEngine, error) {
@@ -39,6 +40,7 @@ func newLocalContainerEngine(context Context) (containerEngine, error) {
 		engine:       &context.Engine,
 		pull:         context.Pull,
 		cacheEnabled: context.CacheEnabled,
+		noNetwork:    context.NoNetwork,
 	}, nil
 }
 
@@ -150,6 +152,10 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 		"-e", "CGO_ENABLED=1", // enable CGO
 		"-e", fmt.Sprintf("GOCACHE=%s", vol.GoCacheDirContainer()), // mount GOCACHE to reuse cache between builds
 	)
+
+	if i.runner.noNetwork {
+		args = append(args, "--network=none")
+	}
 
 	// add custom env variables
 	args = AppendEnv(args, i.runner.env, i.env["GOOS"] != freebsdOS)

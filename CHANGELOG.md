@@ -1,6 +1,19 @@
 # Changelog - Fyne.io fyne-cross
 
-## Unreleased
+## 1.4.0 - 13 Mar 2023
+
+### Added
+
+- Add support for Kubernetes
+- Add ability to specify a different registry
+- Support for fyne metadata
+
+### Changed
+
+- Pull image from fyne-cross-image repository
+- Simplify `fyne-cross darwin-sdk-extract` by getting the needed files from the Apple SDK and then mounting them in the container image for each build
+- Provide a darwin image and mount the SDK from the host
+- Use `fyne build` for all targets
 
 ## 1.3.0 - 16 Jul 2022
 
