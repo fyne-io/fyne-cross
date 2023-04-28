@@ -27,6 +27,11 @@ func TestCmdEngineDocker(t *testing.T) {
 	log.Println(expectedCmd)
 
 	uid, _ := user.Current()
+	mountFlag := ":z"
+	if runtime.GOOS == darwinOS && runtime.GOARCH == string(ArchArm64) {
+		// When running on darwin with a Arm64, we rely on going through a VM setup that doesn't allow the :z
+		mountFlag = ""
+	}
 
 	workDir := filepath.Join(os.TempDir(), "fyne-cross-test", "app")
 	cacheDir := filepath.Join(os.TempDir(), "fyne-cross-test", "cache")
@@ -65,7 +70,7 @@ func TestCmdEngineDocker(t *testing.T) {
 				opts:    options{},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z --platform linux/amd64 -u %s:%s --entrypoint fixuid -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s -q command arg", expectedCmd, workDir, uid.Uid, uid.Gid, dockerImage),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app%s --platform linux/%s --user %s -e HOME=/tmp -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, workDir, mountFlag, runtime.GOARCH, uid.Uid, dockerImage),
 			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z --platform linux/amd64 -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, workDir, dockerImage),
 		},
 		{
@@ -83,7 +88,7 @@ func TestCmdEngineDocker(t *testing.T) {
 				},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w %s -v %s:/app:z --platform linux/amd64 -u %s:%s --entrypoint fixuid -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s -q command arg", expectedCmd, customWorkDir, workDir, uid.Uid, uid.Gid, dockerImage),
+			want:        fmt.Sprintf("%s run --rm -t -w %s -v %s:/app%s --platform linux/%s --user %s -e HOME=/tmp -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, customWorkDir, workDir, mountFlag, runtime.GOARCH, uid.Uid, dockerImage),
 			wantWindows: fmt.Sprintf("%s run --rm -t -w %s -v %s:/app:z --platform linux/amd64 -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, customWorkDir, workDir, dockerImage),
 		},
 		{
@@ -100,7 +105,7 @@ func TestCmdEngineDocker(t *testing.T) {
 				opts:    options{},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -v %s:/go:z --platform linux/amd64 -u %s:%s --entrypoint fixuid -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s -q command arg", expectedCmd, workDir, cacheDir, uid.Uid, uid.Gid, dockerImage),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app%s -v %s:/go%s --platform linux/%s --user %s -e HOME=/tmp -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, workDir, mountFlag, cacheDir, mountFlag, runtime.GOARCH, uid.Uid, dockerImage),
 			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z -v %s:/go:z --platform linux/amd64 -e CGO_ENABLED=1 -e GOCACHE=/go/go-build %s command arg", expectedCmd, workDir, cacheDir, dockerImage),
 		},
 		{
@@ -118,7 +123,7 @@ func TestCmdEngineDocker(t *testing.T) {
 				opts:    options{},
 				cmdArgs: []string{"command", "arg"},
 			},
-			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z --platform linux/amd64 -u %s:%s --entrypoint fixuid -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com %s -q command arg", expectedCmd, workDir, uid.Uid, uid.Gid, dockerImage),
+			want:        fmt.Sprintf("%s run --rm -t -w /app -v %s:/app%s --platform linux/%s --user %s -e HOME=/tmp -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com %s command arg", expectedCmd, workDir, mountFlag, runtime.GOARCH, uid.Uid, dockerImage),
 			wantWindows: fmt.Sprintf("%s run --rm -t -w /app -v %s:/app:z --platform linux/amd64 -e CGO_ENABLED=1 -e GOCACHE=/go/go-build -e GOPROXY=proxy.example.com %s command arg", expectedCmd, workDir, dockerImage),
 		},
 	}
