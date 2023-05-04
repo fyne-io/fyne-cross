@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -171,6 +172,10 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 	ctx.Package, err = packageFromArgs(args, vol)
 	if err != nil {
 		return ctx, err
+	}
+
+	if os.Getenv("GOFLAGS") != "" {
+		ctx.Env["GOFLAGS"] = os.Getenv("GOFLAGS")
 	}
 
 	if len(flags.Ldflags) > 0 {
