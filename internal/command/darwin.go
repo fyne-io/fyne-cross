@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
@@ -249,6 +250,12 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 					return errors.New("macOSX SDK path does not exists")
 				}
 				image.SetMount("sdk", flags.MacOSXSDKPath, "/sdk")
+			}
+		} else {
+			if v, ok := ctx.Env["GOFLAGS"]; ok {
+				ctx.Env["GOFLAGS"] = strings.TrimSpace(v + " -ldflags=-extldflags -ldflags=-lresolv")
+			} else {
+				ctx.Env["GOFLAGS"] = "-ldflags=-extldflags -ldflags=-lresolv"
 			}
 		}
 
