@@ -234,7 +234,7 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 		zigCXX := fmt.Sprintf("zig c++ -v -target %s -isysroot /sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks", zigTarget)
 		image.SetEnv("CC", zigCC)
 		image.SetEnv("CXX", zigCXX)
-		image.SetEnv("CGO_LDFLAGS", "--sysroot /sdk -F/System/Library/Frameworks -L/usr/lib")
+		image.SetEnv("CGO_LDFLAGS", "--sysroot /sdk -F/System/Library/Frameworks -L/usr/lib -lresolv")
 		image.SetEnv("GOOS", "darwin")
 
 		if !cmd.localBuild {
