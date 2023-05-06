@@ -235,8 +235,14 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 		zigCXX := fmt.Sprintf("zig c++ -v -target %s -isysroot /sdk -iwithsysroot /usr/include -iframeworkwithsysroot /System/Library/Frameworks", zigTarget)
 		image.SetEnv("CC", zigCC)
 		image.SetEnv("CXX", zigCXX)
-		image.SetEnv("CGO_LDFLAGS", "--sysroot /sdk -F/System/Library/Frameworks -L/usr/lib -lresolv")
+		image.SetEnv("CGO_LDFLAGS", "--sysroot /sdk -F/System/Library/Frameworks -L/usr/lib")
 		image.SetEnv("GOOS", "darwin")
+
+		if v, ok := ctx.Env["GOFLAGS"]; ok {
+			ctx.Env["GOFLAGS"] = strings.TrimSpace(v + " -ldflags=-extldflags -ldflags=-lresolv")
+		} else {
+			ctx.Env["GOFLAGS"] = "-ldflags=-extldflags -ldflags=-lresolv"
+		}
 
 		if !cmd.localBuild {
 			if flags.MacOSXSDKPath == "unset" {
@@ -250,12 +256,6 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 					return errors.New("macOSX SDK path does not exists")
 				}
 				image.SetMount("sdk", flags.MacOSXSDKPath, "/sdk")
-			}
-		} else {
-			if v, ok := ctx.Env["GOFLAGS"]; ok {
-				ctx.Env["GOFLAGS"] = strings.TrimSpace(v + " -ldflags=-extldflags -ldflags=-lresolv")
-			} else {
-				ctx.Env["GOFLAGS"] = "-ldflags=-extldflags -ldflags=-lresolv"
 			}
 		}
 
