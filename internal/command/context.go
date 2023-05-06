@@ -174,8 +174,8 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		return ctx, err
 	}
 
-	if os.Getenv("GOFLAGS") != "" {
-		ctx.Env["GOFLAGS"] = os.Getenv("GOFLAGS")
+	if env := os.Getenv("GOFLAGS"); env != "" {
+		ctx.Env["GOFLAGS"] = env
 	}
 
 	if len(flags.Ldflags) > 0 {
