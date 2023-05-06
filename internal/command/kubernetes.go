@@ -151,6 +151,7 @@ func (i *kubernetesContainerImage) close() error {
 }
 
 func (i *kubernetesContainerImage) Run(vol volume.Volume, opts options, cmdArgs []string) error {
+	log.Debug(opts.WorkDir, cmdArgs)
 	return i.pod.Run(opts.WorkDir, cmdArgs)
 }
 
@@ -227,6 +228,8 @@ func (i *kubernetesContainerImage) Prepare() error {
 
 	name := fmt.Sprintf("fyne-cross-%s-%x", i.ID(), unique)
 	namespace := i.runner.namespace
+
+	log.Debug("Creating pod", name, namespace, i.DockerImage, mount, env)
 
 	i.pod, err = i.runner.client.NewPod(context.Background(),
 		name, i.DockerImage, namespace,
