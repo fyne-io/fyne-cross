@@ -104,7 +104,7 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 	}
 
 	mountFormat := "%s:%s:z"
-	if runtime.GOOS == darwinOS && runtime.GOARCH == string(ArchArm64) {
+	if runtime.GOOS == darwinOS {
 		// When running on darwin with a Arm64, we rely on going through a VM setup that doesn't allow the :z
 		mountFormat = "%s:%s"
 	}
