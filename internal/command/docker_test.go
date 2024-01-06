@@ -268,6 +268,109 @@ func TestCmdEnginePodman(t *testing.T) {
 	}
 }
 
+func TestAppendEnv(t *testing.T) {
+	type args struct {
+		args        []string
+		env         map[string]string
+		quoteNeeded bool
+	}
+	tests := []struct {
+		name      string
+		args      args
+		wantStart []string
+		wantEnd   [][2]string
+	}{
+		{
+			name: "empty",
+			args: args{
+				args:        []string{},
+				env:         map[string]string{},
+				quoteNeeded: true,
+			},
+			wantStart: []string{},
+			wantEnd:   [][2]string{},
+		},
+		{
+			name: "quote needed",
+			args: args{
+				args:        []string{},
+				env:         map[string]string{"VAR": "value"},
+				quoteNeeded: true,
+			},
+			wantStart: []string{},
+			wantEnd:   [][2]string{{"-e", "VAR=value"}},
+		},
+		{
+			name: "quote not needed",
+			args: args{
+				args:        []string{},
+				env:         map[string]string{"VAR": "value"},
+				quoteNeeded: false,
+			},
+			wantStart: []string{},
+			wantEnd:   [][2]string{{"-e", "VAR=value"}},
+		},
+		{
+			name: "multiple",
+			args: args{
+				args:        []string{},
+				env:         map[string]string{"VAR": "value", "VAR2": "value2"},
+				quoteNeeded: true,
+			},
+			wantStart: []string{},
+			wantEnd:   [][2]string{{"-e", "VAR=value"}, {"-e", "VAR2=value2"}},
+		},
+		{
+			name: "multiple with args",
+			args: args{
+				args:        []string{"arg1", "arg2"},
+				env:         map[string]string{"VAR": "value", "VAR2": "value2"},
+				quoteNeeded: true,
+			},
+			wantStart: []string{"arg1", "arg2"},
+			wantEnd:   [][2]string{{"-e", "VAR=value"}, {"-e", "VAR2=value2"}},
+		},
+		{
+			name: "multiple with args and equal sign require quoting values",
+			args: args{
+				args:        []string{"arg1", "arg2"},
+				env:         map[string]string{"VAR": "value", "VAR2": "value2=2"},
+				quoteNeeded: true,
+			},
+			wantStart: []string{"arg1", "arg2"},
+			wantEnd:   [][2]string{{"-e", "VAR=value"}, {"-e", "VAR2=\"value2=2\""}},
+		},
+		{
+			name: "multiple with args and equal sign do not require quoting values",
+			args: args{
+				args:        []string{"arg1", "arg2"},
+				env:         map[string]string{"VAR": "value", "VAR2": "value2=2"},
+				quoteNeeded: false,
+			},
+			wantStart: []string{"arg1", "arg2"},
+			wantEnd:   [][2]string{{"-e", "VAR=value"}, {"-e", "VAR2=value2=2"}},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := AppendEnv(tt.args.args, tt.args.env, tt.args.quoteNeeded)
+			for i, v := range tt.wantStart {
+				assert.Equal(t, v, got[i])
+			}
+			for i := len(tt.wantStart); i < len(got); i += 2 {
+				found := false
+				for _, v := range tt.wantEnd {
+					if v[0] == got[i] && v[1] == got[i+1] {
+						found = true
+						break
+					}
+				}
+				assert.Equal(t, true, found)
+			}
+		})
+	}
+}
+
 func TestMain(m *testing.M) {
 	os.Unsetenv("SSH_AUTH_SOCK")
 	os.Exit(m.Run())
