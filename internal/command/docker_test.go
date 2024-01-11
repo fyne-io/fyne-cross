@@ -364,14 +364,16 @@ func TestAppendEnv(t *testing.T) {
 			}
 			for i := len(tt.wantStart); i < len(got); i += 2 {
 				found := false
-				for _, v := range tt.wantEnd {
+				for k, v := range tt.wantEnd {
 					if v[0] == got[i] && v[1] == got[i+1] {
+						tt.wantEnd = append(tt.wantEnd[:k], tt.wantEnd[k+1:]...)
 						found = true
 						break
 					}
 				}
 				assert.Equal(t, true, found)
 			}
+			assert.Equal(t, 0, len(tt.wantEnd))
 		})
 	}
 }
