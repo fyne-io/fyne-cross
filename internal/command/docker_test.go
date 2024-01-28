@@ -359,10 +359,12 @@ func TestAppendEnv(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := AppendEnv(tt.args.args, tt.args.env, tt.args.quoteNeeded)
-			for i, v := range tt.wantStart {
+			var i int
+			for _, v := range tt.wantStart {
 				assert.Equal(t, v, got[i])
+				i++
 			}
-			for i := len(tt.wantStart); i < len(got); i += 2 {
+			for ; i < len(got); i += 2 {
 				found := false
 				for k, v := range tt.wantEnd {
 					if v[0] == got[i] && v[1] == got[i+1] {
