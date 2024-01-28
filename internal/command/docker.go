@@ -77,9 +77,9 @@ func AppendEnv(args []string, environs map[string]string, quoteNeeded bool) []st
 	for k, v := range environs {
 		env := k + "=" + v
 		if quoteNeeded && strings.Contains(v, "=") {
-			// engine requires to double quote the env var when value contains
+			// engine requires to double quote the value when it contains
 			// the `=` char
-			env = fmt.Sprintf("%q", env)
+			env = fmt.Sprintf("%s=%q", k, v)
 		}
 		args = append(args, "-e", env)
 	}
