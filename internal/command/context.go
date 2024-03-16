@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -72,6 +73,7 @@ type Context struct {
 	Keystore     string //Keystore represents the location of .keystore file containing signing information [Android]
 	KeystorePass string //KeystorePass represents the password for the .keystore file [Android]
 	KeyPass      string //KeyPass represents the assword for the signer's private key, which is needed if the private key is password-protected [Android]
+	KeyName      string //KeyName represents the name of the key to sign the build [Android]
 	Password     string //Password represents the password for the certificate used to sign the build [Windows]
 	Profile      string //Profile represents the name of the provisioning profile for this release build [iOS]
 }
@@ -171,6 +173,10 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 	ctx.Package, err = packageFromArgs(args, vol)
 	if err != nil {
 		return ctx, err
+	}
+
+	if env := os.Getenv("GOFLAGS"); env != "" {
+		ctx.Env["GOFLAGS"] = env
 	}
 
 	if len(flags.Ldflags) > 0 {

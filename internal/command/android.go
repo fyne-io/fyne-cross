@@ -63,6 +63,7 @@ func (cmd *android) Parse(args []string) error {
 	flagSet.StringVar(&flags.Keystore, "keystore", "", "The location of .keystore file containing signing information")
 	flagSet.StringVar(&flags.KeystorePass, "keystore-pass", "", "Password for the .keystore file")
 	flagSet.StringVar(&flags.KeyPass, "key-pass", "", "Password for the signer's private key, which is needed if the private key is password-protected")
+	flagSet.StringVar(&flags.KeyName, "key-name", "", "Name of the key to use for signing")
 
 	flagSet.Usage = cmd.Usage
 	flagSet.Parse(args)
@@ -147,6 +148,7 @@ type androidFlags struct {
 	Keystore     string //Keystore represents the location of .keystore file containing signing information
 	KeystorePass string //Password for the .keystore file
 	KeyPass      string //Password for the signer's private key, which is needed if the private key is password-protected
+	KeyName      string //Name of the key to use for signing
 
 	// TargetArch represents a list of target architecture to build on separated by comma
 	TargetArch *targetArchFlag
@@ -196,6 +198,7 @@ func (cmd *android) setupContainerImages(flags *androidFlags, args []string) err
 		cmd.defaultContext.Keystore = volume.JoinPathContainer(cmd.defaultContext.Volume.WorkDirContainer(), flags.Keystore)
 		cmd.defaultContext.KeystorePass = flags.KeystorePass
 		cmd.defaultContext.KeyPass = flags.KeyPass
+		cmd.defaultContext.KeyName = flags.KeyName
 
 		cmd.Images = append(cmd.Images, image)
 	}

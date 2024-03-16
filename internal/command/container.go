@@ -247,6 +247,9 @@ func fyneRelease(ctx Context, image containerImage) error {
 		if ctx.KeyPass != "" {
 			args = append(args, "-keyPass", ctx.KeyPass)
 		}
+		if ctx.KeyName != "" {
+			args = append(args, "-keyName", ctx.KeyName)
+		}
 	case iosOS:
 		if ctx.Certificate != "" {
 			args = append(args, "-certificate", ctx.Certificate)
