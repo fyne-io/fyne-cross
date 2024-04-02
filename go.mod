@@ -10,7 +10,7 @@ require (
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.7.0
 	github.com/urfave/cli/v2 v2.11.1
-	golang.org/x/sync v0.1.0
+	golang.org/x/sync v0.6.0
 	golang.org/x/sys v0.0.0-20220722155257-8c9f86f7a55f
 	k8s.io/api v0.18.19
 	k8s.io/apimachinery v0.18.19
