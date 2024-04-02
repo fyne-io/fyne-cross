@@ -191,7 +191,7 @@ func fyneCommand(binary, command, icon string, ctx Context, image containerImage
 	// add tags to command, if any
 	tags := image.Tags()
 	if len(tags) > 0 {
-		args = append(args, "-tags", fmt.Sprintf("%q", strings.Join(tags, ",")))
+		args = append(args, "-tags", strings.Join(tags, ","))
 	}
 
 	if ctx.Metadata != nil {
