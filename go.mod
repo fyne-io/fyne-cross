@@ -9,7 +9,7 @@ require (
 	github.com/klauspost/compress v1.13.4
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.9.0
-	github.com/urfave/cli/v2 v2.11.1
+	github.com/urfave/cli/v2 v2.27.1
 	golang.org/x/sync v0.6.0
 	golang.org/x/sys v0.13.0
 	k8s.io/api v0.18.19
