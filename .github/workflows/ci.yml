@@ -131,11 +131,9 @@ jobs:
         working-directory: fyne-cross
         run: go install
 
-        # attempt to use "go install" but fallback to "go get"
       - name: Install Fyne
         run: |
-          go install fyne.io/fyne/v2/cmd/fyne@latest ||
-          go get fyne.io/fyne/v2/cmd/fyne@latest
+          go install fyne.io/fyne/v2/cmd/fyne@latest
 
       - name: Install Podman
         if: ${{ runner.os == 'macos' }}
@@ -213,11 +211,9 @@ jobs:
         working-directory: fyne-cross
         run: go install
 
-        # attempt to use "go install" but fallback to "go get"
       - name: Install Fyne
         run: |
-          go install fyne.io/fyne/v2/cmd/fyne@latest ||
-          go get fyne.io/fyne/v2/cmd/fyne@latest
+          go install fyne.io/fyne/v2/cmd/fyne@latest
 
       - name: Install Podman
         if: ${{ runner.os == 'macos' }}
