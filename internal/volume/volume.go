@@ -65,12 +65,22 @@ func Mount(workDirHost string, cacheDirHost string) (Volume, error) {
 		if err != nil {
 			return Volume{}, err
 		}
+	} else {
+		workDirHost, err = filepath.Abs(workDirHost)
+		if err != nil {
+			return Volume{}, fmt.Errorf("could not make the root directory %s an absolute path: %w", workDirHost, err)
+		}
 	}
 
 	if cacheDirHost == "" {
 		cacheDirHost, err = DefaultCacheDirHost()
 		if err != nil {
 			return Volume{}, err
+		}
+	} else {
+		cacheDirHost, err = filepath.Abs(cacheDirHost)
+		if err != nil {
+			return Volume{}, fmt.Errorf("could not make the cache directory %s an absolute path: %w", cacheDirHost, err)
 		}
 	}
 
