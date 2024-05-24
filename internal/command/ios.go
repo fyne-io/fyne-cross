@@ -3,6 +3,7 @@ package command
 import (
 	"fmt"
 	"runtime"
+	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
@@ -156,6 +157,12 @@ func (cmd *iOS) setupContainerImages(flags *iosFlags, args []string) error {
 	runner, err := newContainerEngine(ctx)
 	if err != nil {
 		return err
+	}
+
+	if v, ok := ctx.Env["GOFLAGS"]; ok {
+		ctx.Env["GOFLAGS"] = strings.TrimSpace(v + " -ldflags=-extldflags -ldflags=-lresolv")
+	} else {
+		ctx.Env["GOFLAGS"] = "-ldflags=-extldflags -ldflags=-lresolv"
 	}
 
 	cmd.Images = append(cmd.Images, runner.createContainerImage("", iosOS, overrideDockerImage(flags.CommonFlags, iosImage)))
