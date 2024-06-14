@@ -80,6 +80,7 @@ func (cmd *android) Build(image containerImage) (string, error) {
 	log.Info("[i] Packaging app...")
 
 	packageName := fmt.Sprintf("%s.apk", cmd.defaultContext.Name)
+	pattern := "*.apk"
 
 	err := prepareIcon(cmd.defaultContext, image)
 	if err != nil {
@@ -88,6 +89,8 @@ func (cmd *android) Build(image containerImage) (string, error) {
 
 	if cmd.defaultContext.Release {
 		err = fyneRelease(cmd.defaultContext, image)
+		packageName = fmt.Sprintf("%s.aab", cmd.defaultContext.Name)
+		pattern = "*.aab"
 	} else {
 		err = fynePackage(cmd.defaultContext, image)
 	}
@@ -101,8 +104,9 @@ func (cmd *android) Build(image containerImage) (string, error) {
 	// https://github.com/fyne-io/fyne/blob/v1.4.0/cmd/fyne/internal/mobile/build_androidapp.go#L297
 	// To avoid to duplicate the fyne tool sanitize logic here, the location of
 	// the dist package to move will be detected using a matching pattern
-	command := fmt.Sprintf("mv %q/*.apk %q",
+	command := fmt.Sprintf("mv %q/%s %q",
 		volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), cmd.defaultContext.Package),
+		pattern,
 		volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
 	)
 
