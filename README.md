@@ -17,6 +17,7 @@ Supported targets are:
   -  linux/arm
   -  linux/arm64
   -  windows/amd64
+  -  windows/arm64
   -  windows/386
   -  android ([multiple architectures](https://developer.android.com/ndk/guides/abis))
   -  android/386
@@ -27,8 +28,8 @@ Supported targets are:
 
 > Note: 
 > - iOS compilation is supported only on darwin hosts. See [fyne pre-requisites](https://developer.fyne.io/started/#prerequisites) for details.
-> - macOS packaging for public distrubution (release mode) is supported only on darwin hosts.
-> - windows packaging for public distrubution (release mode) is supported only on windows hosts.
+> - macOS packaging for public distribution (release mode) is supported only on darwin hosts.
+> - windows packaging for public distribution (release mode) is supported only on windows hosts.
 > - starting from v1.1.0:
 >   - cross-compile from NOT `darwin` (i.e. linux) to `darwin`: requires a copy of the macOS SDK on the host. The fyne-cross `darwin-sdk-extractor` command can be used to extract the SDK from the XCode CLI Tool file, see the [Extract the macOS SDK](#extract_macos_sdk) section below.
 >   - cross-compile from `darwin` to `darwin` by default will use under the hood the fyne CLI tool and requires Go and the macOS SDK installed on the host.
@@ -140,6 +141,8 @@ The fyne-cross `darwin-sdk-extractor` command can be used to extract the SDK fro
 To extract the SDKs:
 1. [Download Command Line Tools for Xcode](https://developer.apple.com/download/all/?q=Command%20Line%20Tools) >= 12.4 (macOS SDK 11.x)
 2. Run: `fyne-cross darwin-sdk-extract --xcode-path /path/to/Command_Line_Tools_for_Xcode_12.5.dmg`
+  * Once extraction has been done, you should have a SDKs directory created. This directory contains at least 2 SDKs (ex. `SDKs/MacOSX12.3.sdk/` and `SDKs/MacOSX13.3.sdk/` in Command_Line_Tools_for_Xcode_14.3.1.dmg)
+3. Specify explicitly which SDK you want to use in your fyne-cross command with --macosx-sdk-path: `fyne-cross darwin --macosx-sdk-path /full/path/to/SDKs/MacOSX12.3.sdk -app-id your.app.id`
 
 ## Contribute
 
