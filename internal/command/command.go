@@ -2,7 +2,6 @@ package command
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -132,7 +131,7 @@ func prepareIcon(ctx Context, image containerImage) error {
 			}
 
 			log.Infof("[!] Default icon not found at %q", ctx.Icon)
-			err = ioutil.WriteFile(volume.JoinPathHost(ctx.WorkDirHost(), ctx.Icon), icon.FyneLogo, 0644)
+			err = os.WriteFile(volume.JoinPathHost(ctx.WorkDirHost(), ctx.Icon), icon.FyneLogo, 0644)
 			if err != nil {
 				return fmt.Errorf("could not create the temporary icon: %s", err)
 			}

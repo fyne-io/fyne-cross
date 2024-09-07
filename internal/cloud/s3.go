@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
@@ -20,7 +19,7 @@ import (
 	"github.com/klauspost/compress/zstd"
 	"golang.org/x/sync/errgroup"
 
-	archiver "github.com/mholt/archiver/v3"
+	"github.com/mholt/archiver/v3"
 )
 
 type AWSSession struct {
@@ -104,7 +103,7 @@ func (a *AWSSession) UploadFile(localFile string, s3FilePath string) error {
 }
 
 func (a *AWSSession) UploadCompressedDirectory(localDirectoy string, s3FilePath string) error {
-	file, err := ioutil.TempFile("", "fyne-cross-s3")
+	file, err := os.CreateTemp("", "fyne-cross-s3")
 	if err != nil {
 		return err
 	}
@@ -255,7 +254,7 @@ func (a *AWSSession) DownloadFile(s3FilePath string, localFile string) error {
 }
 
 func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDirectory string) error {
-	file, err := ioutil.TempFile("", "fyne-cross-s3")
+	file, err := os.CreateTemp("", "fyne-cross-s3")
 	if err != nil {
 		return err
 	}
