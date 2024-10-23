@@ -119,7 +119,7 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 		paths := strings.Split(i.runner.baseEngine.extraMount, ",")
 
 		for _, m := range paths {
-			parts := strings.Split(m, "|")
+			parts := strings.Split(m, ":")
 			args = append(args, "-v", fmt.Sprintf(mountFormat, parts[0], parts[1]))
 		}
 	}

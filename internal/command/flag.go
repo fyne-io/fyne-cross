@@ -138,7 +138,7 @@ func newCommonFlags() (*CommonFlags, error) {
 	flagSet.BoolVar(&flags.Pull, "pull", false, "Attempt to pull a newer version of the docker image")
 	flagSet.StringVar(&flags.DockerRegistry, "docker-registry", "docker.io", "The docker registry to be used instead of dockerhub (only used with defualt docker images)")
 	flagSet.BoolVar(&flags.NoNetwork, "no-network", false, "If set, the build will be done without network access")
-	flagSet.StringVar(&flags.ExtraMount, "extra-mount", "", "If set, mount extra directories on docker")
+	flagSet.StringVar(&flags.ExtraMount, "extra-mount", "", "If set, mount extra volumes on docker")
 	return flags, nil
 }
 
