@@ -62,7 +62,7 @@ type Context struct {
 	NoProjectUpload  bool   // NoProjectUpload if true, the build will be done with the artifact already stored on S3
 	NoResultDownload bool   // NoResultDownload if true, the result of the build will be left on S3 and not downloaded locally
 	NoNetwork        bool   // NoNetwork if true, the build will be done without network access
-
+	ExtraMount       string //ExtraMount if is set, mount this directories Ex: FROM|TO,FROM2|TO2
 	//Build context
 	BuildMode string // The -buildmode argument to pass to go build
 
@@ -149,6 +149,7 @@ func makeDefaultContext(flags *CommonFlags, args []string) (Context, error) {
 		Volume:           vol,
 		Pull:             flags.Pull,
 		Release:          flags.Release,
+		ExtraMount:       flags.ExtraMount,
 	}
 
 	if flags.AppBuild <= 0 {

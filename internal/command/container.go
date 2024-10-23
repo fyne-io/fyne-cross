@@ -24,7 +24,8 @@ type baseEngine struct {
 	env  map[string]string // Env is the list of custom env variable to set. Specified as "KEY=VALUE"
 	tags []string          // Tags defines the tags to use
 
-	vol volume.Volume
+	vol        volume.Volume
+	extraMount string
 }
 
 type containerImage interface {
