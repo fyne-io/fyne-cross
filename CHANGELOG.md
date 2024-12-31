@@ -1,6 +1,6 @@
 # Changelog - Fyne.io fyne-cross
 
-## 1.6.0 - 28 Dec 2024
+## 1.6.0 - 31 Dec 2024
 
 ### Changed
 - Bump github.com/stretchr/testify from 1.7.0 to 1.9.0 by @dependabot in https://github.com/fyne-io/fyne-cross/pull/233
