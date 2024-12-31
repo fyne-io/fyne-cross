@@ -77,9 +77,9 @@ func AppendEnv(args []string, environs map[string]string, quoteNeeded bool) []st
 	for k, v := range environs {
 		env := k + "=" + v
 		if quoteNeeded && strings.Contains(v, "=") {
-			// engine requires to double quote the env var when value contains
+			// engine requires to double quote the value when it contains
 			// the `=` char
-			env = fmt.Sprintf("%q", env)
+			env = fmt.Sprintf("%s=%q", k, v)
 		}
 		args = append(args, "-e", env)
 	}
@@ -104,8 +104,8 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 	}
 
 	mountFormat := "%s:%s:z"
-	if runtime.GOOS == darwinOS && runtime.GOARCH == string(ArchArm64) {
-		// When running on darwin with a Arm64, we rely on going through a VM setup that doesn't allow the :z
+	if runtime.GOOS == darwinOS {
+		// When running on darwin with an Arm64 or Amd64, we rely on going through a VM setup that doesn't allow the :z
 		mountFormat = "%s:%s"
 	}
 
@@ -114,7 +114,7 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 	}
 
 	arch := "amd64"
-	if runtime.GOARCH == "arm64" {
+	if runtime.GOARCH == "arm64" && (runtime.GOOS != "darwin" || i.os != "android") {
 		// If we are running on arm64, we should have arm64 image to avoid using emulation
 		arch = runtime.GOARCH
 	}
@@ -140,10 +140,13 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 	// detect ssh-agent socket for private repositories access
 	if sshAuthSock := os.Getenv("SSH_AUTH_SOCK"); sshAuthSock != "" {
 		if runtime.GOOS == "darwin" {
-			// on macOS, the SSH_AUTH_SOCK is not available in the container directly,
-			// but instead we need to the magic path "/run/host-services/ssh-auth.sock"
-			args = append(args, "-v", "/run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock")
-			args = append(args, "-e", "SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock")
+			// Podman doesn't yet support sshagent forwarding on macOS
+			if !i.runner.engine.IsPodman() {
+				// on macOS, the SSH_AUTH_SOCK is not available in the container directly,
+				// but instead we need to the magic path "/run/host-services/ssh-auth.sock"
+				args = append(args, "-v", "/run/host-services/ssh-auth.sock:/run/host-services/ssh-auth.sock")
+				args = append(args, "-e", "SSH_AUTH_SOCK=/run/host-services/ssh-auth.sock")
+			}
 		} else if realSshAuthSock, err := filepath.EvalSymlinks(sshAuthSock); err == nil {
 			args = append(args, "-v", fmt.Sprintf("%s:/tmp/ssh-agent", realSshAuthSock))
 			args = append(args, "-e", "SSH_AUTH_SOCK=/tmp/ssh-agent")
