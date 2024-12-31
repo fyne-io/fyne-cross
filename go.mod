@@ -6,13 +6,13 @@ require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/Kodeworks/golang-image-ico v0.0.0-20141118225523-73f0f4cfade9
 	github.com/aws/aws-sdk-go v1.51.13
-	github.com/klauspost/compress v1.13.4
+	github.com/klauspost/compress v1.17.9
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.11.1
 	golang.org/x/sync v0.6.0
 	golang.org/x/sys v0.18.0
-	k8s.io/api v0.18.19
+	k8s.io/api v0.30.2
 	k8s.io/apimachinery v0.30.2
 	k8s.io/client-go v0.18.17
 	k8s.io/kubectl v0.18.17
