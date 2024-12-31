@@ -139,10 +139,12 @@ The fyne-cross `darwin-sdk-extractor` command can be used to extract the SDK fro
    terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
 
 To extract the SDKs:
-1. [Download Command Line Tools for Xcode](https://developer.apple.com/download/all/?q=Command%20Line%20Tools) >= 12.4 (macOS SDK 11.x)
+1. [Download Command Line Tools for Xcode](https://developer.apple.com/download/all/?q=Command%20Line%20Tools) 12.4 (macOS SDK 11.x)
 2. Run: `fyne-cross darwin-sdk-extract --xcode-path /path/to/Command_Line_Tools_for_Xcode_12.5.dmg`
   * Once extraction has been done, you should have a SDKs directory created. This directory contains at least 2 SDKs (ex. `SDKs/MacOSX12.3.sdk/` and `SDKs/MacOSX13.3.sdk/` in Command_Line_Tools_for_Xcode_14.3.1.dmg)
 3. Specify explicitly which SDK you want to use in your fyne-cross command with --macosx-sdk-path: `fyne-cross darwin --macosx-sdk-path /full/path/to/SDKs/MacOSX12.3.sdk -app-id your.app.id`
+
+> Note: current version supports only MacOS SDK 11.3
 
 ## Contribute
 
