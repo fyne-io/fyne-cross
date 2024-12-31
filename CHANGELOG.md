@@ -1,5 +1,22 @@
 # Changelog - Fyne.io fyne-cross
 
+## 1.6.0 - 31 Dec 2024
+
+### Changed
+- Bump github.com/stretchr/testify from 1.7.0 to 1.9.0 by @dependabot in https://github.com/fyne-io/fyne-cross/pull/233
+- Ldflags where only needed with older version of zig which we have updated since then. by @Bluebugs in https://github.com/fyne-io/fyne-cross/pull/246
+
+## 1.5.0 - 13 Apr 2024
+
+### Changed
+
+- Improve Docker Darwin support when using it has a host for fyne-cross (ssh-agent detection, documentation, arm64)
+- Support Podman on Darwin
+- Improve Android signature support
+- Propagate GOFLAGS correctly
+- Adjust supported Go version to match Fyne
+- Update dependencies
+
 ## 1.4.0 - 13 Mar 2023
 
 ### Added

@@ -187,8 +187,6 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 		return fmt.Errorf("could not make command context for %s OS: %s", darwinOS, err)
 	}
 
-	flags.Ldflags += " -s -w"
-
 	ctx, err := makeDefaultContext(flags.CommonFlags, args)
 	if err != nil {
 		return err
@@ -200,7 +198,7 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 
 	ctx.Category = flags.Category
 
-	// Following settings are needed to cross compile with zig 0.9.1
+	// Following settings are needed to cross compile with zig
 	ctx.BuildMode = "pie"
 
 	cmd.defaultContext = ctx
