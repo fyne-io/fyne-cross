@@ -33,9 +33,10 @@ type localContainerEngine struct {
 func newLocalContainerEngine(context Context) (containerEngine, error) {
 	return &localContainerEngine{
 		baseEngine: baseEngine{
-			env:  context.Env,
-			tags: context.Tags,
-			vol:  context.Volume,
+			env:        context.Env,
+			tags:       context.Tags,
+			vol:        context.Volume,
+			extraMount: context.ExtraMount,
 		},
 		engine:       &context.Engine,
 		pull:         context.Pull,
@@ -111,6 +112,16 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 
 	for _, mountPoint := range i.mount {
 		args = append(args, "-v", fmt.Sprintf(mountFormat, mountPoint.localHost, mountPoint.inContainer))
+	}
+
+	//Apply extra mount if is set.
+	if i.runner.baseEngine.extraMount != "" {
+		paths := strings.Split(i.runner.baseEngine.extraMount, ",")
+
+		for _, m := range paths {
+			parts := strings.Split(m, ":")
+			args = append(args, "-v", fmt.Sprintf(mountFormat, parts[0], parts[1]))
+		}
 	}
 
 	arch := "amd64"
