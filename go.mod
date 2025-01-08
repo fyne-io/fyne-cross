@@ -6,7 +6,7 @@ require (
 	github.com/BurntSushi/toml v1.3.2
 	github.com/Kodeworks/golang-image-ico v0.0.0-20141118225523-73f0f4cfade9
 	github.com/aws/aws-sdk-go v1.51.13
-	github.com/klauspost/compress v1.17.9
+	github.com/klauspost/compress v1.17.7
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.27.2
