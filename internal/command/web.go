@@ -20,8 +20,10 @@ type web struct {
 	defaultContext Context
 }
 
-var _ platformBuilder = (*web)(nil)
-var _ Command = (*web)(nil)
+var (
+	_ platformBuilder = (*web)(nil)
+	_ Command         = (*web)(nil)
+)
 
 func NewWebCommand() *web {
 	return &web{}
@@ -79,7 +81,7 @@ func (cmd *web) Build(image containerImage) (string, error) {
 	}
 
 	// move the dist package into the "tmp" folder
-	srcFile := volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), "web")
+	srcFile := volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), "wasm")
 	dstFile := volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID())
 	return "", image.Run(cmd.defaultContext.Volume, options{}, []string{"mv", srcFile, dstFile})
 }
