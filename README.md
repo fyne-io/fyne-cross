@@ -139,19 +139,21 @@ fyne-cross linux -output bugs ./cmd/bugs
 ## <a name="extract_macos_sdk"></a>Extract the macOS SDK for OSX/Darwin/Apple cross-compiling
 
 cross-compile from NOT `darwin` (i.e. linux) to `darwin` requires a copy of the macOS SDK on the host.
+
 The fyne-cross `darwin-sdk-extractor` command can be used to extract the SDK from the XCode CLI Tool file.
 
-**[Please ensure you have read and understood the Xcode license
-   terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
+**[Please ensure you have read and understood the Xcode license terms before continuing.](https://www.apple.com/legal/sla/docs/xcode.pdf)**
 
 To extract the SDKs:
 
 1. [Download Command Line Tools for Xcode](https://developer.apple.com/download/all/?q=Command%20Line%20Tools) 12.5.1 (macOS SDK 11.3)
-2. Run: `fyne-cross darwin-sdk-extract --xcode-path /path/to/Command_Line_Tools_for_Xcode_12.5.dmg`
+2. Run: `fyne-cross darwin-sdk-extract --xcode-path /path/to/Command_Line_Tools_for_Xcode_12.5.1.dmg`
 
-- Once extraction has been done, you should have a SDKs directory created. This directory contains at least 2 SDKs (ex. `SDKs/MacOSX12.3.sdk/` and `SDKs/MacOSX13.3.sdk/` in Command_Line_Tools_for_Xcode_14.3.1.dmg)
+- Once extraction has been done, you should have a SDKs directory created.
+  This directory should contains at least 2 SDKs (ex. `SDKs/MacOSX11.3.sdk/` and `SDKs/MacOSX10.15.sdk/`)
 
-3. Specify explicitly which SDK you want to use in your fyne-cross command with --macosx-sdk-path: `fyne-cross darwin --macosx-sdk-path /full/path/to/SDKs/MacOSX12.3.sdk -app-id your.app.id`
+3. Specify explicitly which SDK you want to use in your fyne-cross command with --macosx-sdk-path:
+   `fyne-cross darwin --macosx-sdk-path /full/path/to/SDKs/MacOSX11.3.sdk -app-id your.app.id`
 
 > Note: current version supports only MacOS SDK 11.3
 
