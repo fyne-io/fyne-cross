@@ -39,12 +39,10 @@ Supported targets are:
 
 ## Requirements
 
-- go >= 1.14
+- go >= 1.19
 - docker
 
 ### Installation
-
-For go >= 1.16:
 
 ```sh
 go install github.com/fyne-io/fyne-cross@latest
@@ -54,12 +52,6 @@ To install a fyne-cross with kubernetes engine support:
 
 ```sh
 go install -tags k8s github.com/fyne-io/fyne-cross@latest
-```
-
-For older go:
-
-```sh
-GO111MODULE=on go get -u github.com/fyne-io/fyne-cross
 ```
 
 > `fyne-cross` will be installed in GOPATH/bin, unless GOBIN is set.
