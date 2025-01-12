@@ -1,10 +1,26 @@
 # Changelog - Fyne.io fyne-cross
 
+## 1.6.1 - 12 Jan 2025
+
+### Changed
+
+- fix: update install suggestion for missing `fyne` command by @nobe4 in <https://github.com/fyne-io/fyne-cross/pull/248>
+- Performance improvement by avoiding running commands in docker by @williambrode in <https://github.com/fyne-io/fyne-cross/pull/254>
+- Fixing so we don't seek a missing android image for darwin by @andydotxyz in <https://github.com/fyne-io/fyne-cross/pull/268>
+- Fix Android release that generates a .aab file by @metal3d in <https://github.com/fyne-io/fyne-cross/pull/206>
+- readme: update the requirements and the macos SDK extract section  by @lucor in <https://github.com/fyne-io/fyne-cross/pull/287>
+- metadata: update Fyne metadata to v2.5.3 by @lucor in <https://github.com/fyne-io/fyne-cross/pull/286>
+- web: update destination folder by @lucor in <https://github.com/fyne-io/fyne-cross/pull/285>
+- Bump k8s.io/api from 0.18.19 to 0.30.2 by @dependabot in <https://github.com/fyne-io/fyne-cross/pull/264>
+- Bump github.com/klauspost/compress from 1.13.4 to 1.17.9 by @dependabot in <https://github.com/fyne-io/fyne-cross/pull/263>
+- Bump github.com/urfave/cli/v2 from 2.11.1 to 2.27.2 by @dependabot in <https://github.com/fyne-io/fyne-cross/pull/247>
+
 ## 1.6.0 - 31 Dec 2024
 
 ### Changed
-- Bump github.com/stretchr/testify from 1.7.0 to 1.9.0 by @dependabot in https://github.com/fyne-io/fyne-cross/pull/233
-- Ldflags where only needed with older version of zig which we have updated since then. by @Bluebugs in https://github.com/fyne-io/fyne-cross/pull/246
+
+- Bump github.com/stretchr/testify from 1.7.0 to 1.9.0 by @dependabot in <https://github.com/fyne-io/fyne-cross/pull/233>
+- Ldflags where only needed with older version of zig which we have updated since then. by @Bluebugs in <https://github.com/fyne-io/fyne-cross/pull/246>
 
 ## 1.5.0 - 13 Apr 2024
 
@@ -53,7 +69,7 @@
   between docker and podman. The default behavior is not changed, if the flag is
   not specified fyne-cross will auto detect the engine.
 
-### Fixed 
+### Fixed
 
 - Windows builds no longer pass "-H windowsgui" #97
 - Multiple tags cannot be specified using the `-tags` flag #96  
@@ -70,8 +86,8 @@
 
 ### Fixed
 
--  Building for windows fails to add icon #66
--  Fixes darwin image creation (SDK extraction) #80
+- Building for windows fails to add icon #66
+- Fixes darwin image creation (SDK extraction) #80
 
 ## 1.1.2 - 05 Oct 2021
 
@@ -83,7 +99,7 @@
 
 ### Added
 
--  Support specifying target architectures for Android #52
+- Support specifying target architectures for Android #52
 
 ### Changed
 
@@ -122,6 +138,7 @@
 - Remove the dependency from the docker/golang-cross image for the base image
 
 ## 1.0.0 - 13 December 2020
+
 - Add support for "fyne release" #3
 - Add support for creating packaged .tar.gz bundles on freebsd #6
 - Add support for Linux Wayland #10
@@ -132,49 +149,59 @@
 - Update Go to v1.14.13
 
 ## 0.9.0 - 17 October 2020
-- Releaseing under project namespace with previous 2.2.1 becoming 0.9.0 in fyne-io namespace
 
+- Releaseing under project namespace with previous 2.2.1 becoming 0.9.0 in fyne-io namespace
 
 # Archive - lucor/fyne-cross
 
 ## [2.2.1] - 2020-09-16
+
 - Fix iOS fails with "only on darwin" when on mac #78
 - Update README installation when module-aware mode is not enabled
 
 ## [2.2.0] - 2020-09-01
+
 - Add `--pull` option to attempt to pull a newer version of the docker image #75
 
 ## [2.1.2] - 2020-08-13
+
 - Update base image to dockercore/golang-cross@1.13.15 (Go v1.13.15)
 - fyne cli updated to v1.3.3
 
 ## [2.1.1] - 2020-07-17
+
 - Update base image to dockercore/golang-cross@1.13.14 (Go v1.13.14)
 
 ## [2.1.0] - 2020-07-16
+
 - Add support for build flags #69
 - Base image is based on dockercore/golang-cross@1.13.13 (Go v1.13.13)
 - fyne cli updated to v1.3.2
 
 ## [2.0.0] - 2020-06-07
+
 - Base image is based on dockercore/golang-cross@1.13.12 (Go v1.13.12)
 - fyne cli updated to v1.3.0
 
 ## [2.0.0-beta4] - 2020-05-21
+
 - Print fyne cli version in debug mode
 - Update unit tests to work on windows
 - Fix some minor linter suggestions
 - Update docker base image to go v1.13.11
 
 ## [2.0.0-beta3] - 2020-05-13
+
 - Remove package option. Package can be now specified as argument
 - Fix android build when the package is not into the root dir
 
 ## [2.0.0-beta2] - 2020-05-13
+
 - Fix build for packages not in root dir
 - Fix ldflags flag not honored #62
 
 ## [2.0.0-beta1] - 2020-05-10
+
 - Add subcommand support
 - Add a flag to build as "console binary" for Windows #57
 - Add support for custom env variables #59
@@ -182,6 +209,7 @@
 - Add support for FreeBSD #23
 
 ## [1.5.0] - 2020-04-13
+
 - Add android support #37
 - Add iOS support on Darwin hosts
 - Issue cross compiling from Windows 10 #54
@@ -189,32 +217,38 @@
 - Update to fyne cli v1.2.4
 
 ## [1.4.0] - 2020-03-04
+
 - Add ability to package with an icon using fyne/cmd #14
 - Update to golang-cross:1.13.8 image (go v1.13.8) #46
 - Disable android build. See #34
 - Add support for passing appID to dist packaging #45
-- Introduce a root folder and layout for fyne-cross output #38 
+- Introduce a root folder and layout for fyne-cross output #38
 - Remove OS and Arch info from output #48
 - GOCACHE folder is now mounted under $HOME/.cache/fyne-cross/go-build to cache build outputs for reuse in future builds.
 
 ## [1.3.2] - 2020-01-08
+
 - Update to golang-cross:1.12.14 image (go v1.12.14)
 
 ## [1.3.1] - 2019-12-26
+
 - Default binary name should be folder if none is provided [#29](https://github.com/lucor/fyne-cross/issues/29)
 - Cannot build android app when not using go modules [#30](https://github.com/lucor/fyne-cross/issues/30)
 
 ## [1.3.0] - 2019-11-02
+
 - Add Android support [#10](https://github.com/lucor/fyne-cross/issues/10)
 - GOOS is not set for go get when project do not use go modules [#22](https://github.com/lucor/fyne-cross/issues/22)
 - linux/386 does not work with 1.2.x [#24](https://github.com/lucor/fyne-cross/issues/24)
 
 ## [1.2.2] - 2019-10-29
+
 - Add wildcard support for goarch [#15](https://github.com/lucor/fyne-cross/issues/15)
 - Fix misleading error message when docker daemon is not available [#19](https://github.com/lucor/fyne-cross/issues/19)
 - Fix build for windows/386 is failing
 
 ## [1.2.1] - 2019-10-26
+
 - Fix fyne-cross docker image build tag
 
 ## [1.2.0] - 2019-10-26
