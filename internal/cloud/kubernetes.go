@@ -155,8 +155,8 @@ func (k8s *K8sClient) NewPod(ctx context.Context, name string, image string, nam
 	}
 
 	logWrapper("Waiting for pod to be ready")
-	err = wait.PollImmediate(time.Second, time.Duration(10)*time.Minute, func() (bool, error) {
-		pod, err := api.Pods(namespace).Get(context.Background(), name, meta.GetOptions{})
+	err = wait.PollUntilContextTimeout(ctx, time.Second, time.Duration(10)*time.Minute, true, func(ctx context.Context) (bool, error) {
+		pod, err := api.Pods(namespace).Get(ctx, name, meta.GetOptions{})
 		if err != nil {
 			return false, err
 		}
@@ -182,7 +182,7 @@ func (k8s *K8sClient) NewPod(ctx context.Context, name string, image string, nam
 	}, nil
 }
 
-func (p *Pod) Run(workDir string, cmdArgs []string) error {
+func (p *Pod) Run(ctx context.Context, workDir string, cmdArgs []string) error {
 	api := p.client.kubectl.CoreV1()
 
 	if workDir != "" && workDir != p.workDir {
@@ -218,7 +218,7 @@ func (p *Pod) Run(workDir string, cmdArgs []string) error {
 	}
 
 	logWrapper("Executing command %v", cmdArgs)
-	err = exec.Stream(remotecommand.StreamOptions{
+	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
 		Stdin:  os.Stdin,
 		Stdout: os.Stderr,
 		Stderr: os.Stderr,
