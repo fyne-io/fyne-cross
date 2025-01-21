@@ -114,7 +114,7 @@ func (i *localContainerImage) cmd(vol volume.Volume, opts options, cmdArgs []str
 	}
 
 	arch := "amd64"
-	if runtime.GOARCH == "arm64" {
+	if runtime.GOARCH == "arm64" && (runtime.GOOS != "darwin" || i.os != "android") {
 		// If we are running on arm64, we should have arm64 image to avoid using emulation
 		arch = runtime.GOARCH
 	}

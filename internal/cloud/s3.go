@@ -19,7 +19,7 @@ import (
 	"github.com/klauspost/compress/zstd"
 	"golang.org/x/sync/errgroup"
 
-	archiver "github.com/mholt/archiver/v3"
+	"github.com/mholt/archiver/v3"
 )
 
 type AWSSession struct {
