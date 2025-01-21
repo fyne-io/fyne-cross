@@ -1,5 +1,11 @@
 name: "CI"
-on: [push, pull_request]
+on:
+  push:
+    branches:
+      - master
+      - develop
+  pull_request:
+  workflow_dispatch:
 
 jobs:
   lint:
@@ -88,10 +94,10 @@ jobs:
           - os: freebsd
           - os: android
             args: -app-id calc.sha${{ github.sha }}
-          ## Not shared darwin image is available at the moment
-          # - os: darwin
-          #  args: -app-id calc.sha${{ github.sha }}
-          #  host: macos-latest
+          - os: darwin
+            args: -app-id calc.sha${{ github.sha }}
+          # Only macos-13 is supported as macos-14 is running in a VM on Mac M1 which are incompatible with docker/podman
+            host: macos-13
           - os: web
           
           ## Currently not easily supported from GitHub actions.
@@ -135,13 +141,10 @@ jobs:
         run: |
           go install fyne.io/fyne/v2/cmd/fyne@latest
 
-      - name: Install Podman
+      - name: Install Docker
         if: ${{ runner.os == 'macos' }}
-        run: |
-          brew install podman
-          podman machine init
-          podman machine start
-            
+        uses: douglascamata/setup-docker-macos-action@v1-alpha
+    
       - name: Build
         working-directory: calculator
         run: |
@@ -168,11 +171,10 @@ jobs:
           - os: freebsd
           - os: android
             args: -app-id calc.sha${{ github.sha }}
-          ## Not shared darwin image is available at the moment
-          # - os: darwin
-          #  args: -app-id calc.sha${{ github.sha }}
-          #  host: macos-latest
-          # - os: web
+          - os: darwin
+            args: -app-id calc.sha${{ github.sha }}
+          # Only macos-13 is supported as macos-14 is running in a VM on Mac M1 which are incompatible with docker/podman
+            host: macos-13
           
           ## Currently not easily supported from GitHub actions.
           ## https://github.com/fyne-io/fyne-cross/pull/104#issuecomment-1099494308
@@ -215,13 +217,10 @@ jobs:
         run: |
           go install fyne.io/fyne/v2/cmd/fyne@latest
 
-      - name: Install Podman
+      - name: Install Docker
         if: ${{ runner.os == 'macos' }}
-        run: |
-          brew install podman
-          podman machine init
-          podman machine start
-
+        uses: douglascamata/setup-docker-macos-action@v1-alpha
+ 
       - name: Build
         working-directory: terminal
         run: |

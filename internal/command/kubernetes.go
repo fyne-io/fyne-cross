@@ -151,7 +151,7 @@ func (i *kubernetesContainerImage) close() error {
 }
 
 func (i *kubernetesContainerImage) Run(vol volume.Volume, opts options, cmdArgs []string) error {
-	return i.pod.Run(opts.WorkDir, cmdArgs)
+	return i.pod.Run(context.Background(), opts.WorkDir, cmdArgs)
 }
 
 func AddAWSParameters(aws *cloud.AWSSession, command string, s ...string) []string {
