@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strings"
 
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
@@ -66,9 +67,8 @@ func (cmd *darwin) Parse(args []string) error {
 	// Add flags to use only on darwin host
 	if runtime.GOOS == darwinOS {
 		flagSet.BoolVar(&cmd.localBuild, "local", true, "If set uses the fyne CLI tool installed on the host in place of the docker images")
-	} else {
-		flagSet.StringVar(&flags.MacOSXSDKPath, "macosx-sdk-path", "unset", "Path to macOS SDK (setting it to 'bundled' indicates that the sdk is expected to be in the container) [required]")
 	}
+	flagSet.StringVar(&flags.MacOSXSDKPath, "macosx-sdk-path", "unset", "Path to macOS SDK (setting it to 'bundled' indicates that the sdk is expected to be in the container) [required]")
 
 	// flags used only in release mode
 	flagSet.StringVar(&flags.Category, "category", "", "The category of the app for store listing")
@@ -234,6 +234,12 @@ func (cmd *darwin) setupContainerImages(flags *darwinFlags, args []string) error
 		image.SetEnv("CXX", zigCXX)
 		image.SetEnv("CGO_LDFLAGS", "--sysroot /sdk -F/System/Library/Frameworks -L/usr/lib")
 		image.SetEnv("GOOS", "darwin")
+
+		if v, ok := ctx.Env["GOFLAGS"]; ok {
+			ctx.Env["GOFLAGS"] = strings.TrimSpace(v + " -ldflags=-extldflags -ldflags=-lresolv")
+		} else {
+			ctx.Env["GOFLAGS"] = "-ldflags=-extldflags -ldflags=-lresolv"
+		}
 
 		if !cmd.localBuild {
 			if flags.MacOSXSDKPath == "unset" {
