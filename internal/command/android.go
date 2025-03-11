@@ -199,7 +199,9 @@ func (cmd *android) setupContainerImages(flags *androidFlags, args []string) err
 			}
 		}
 
-		cmd.defaultContext.Keystore = volume.JoinPathContainer(cmd.defaultContext.Volume.WorkDirContainer(), flags.Keystore)
+		if flags.Keystore != "" {
+			cmd.defaultContext.Keystore = volume.JoinPathContainer(cmd.defaultContext.Volume.WorkDirContainer(), flags.Keystore)
+		}
 		cmd.defaultContext.KeystorePass = flags.KeystorePass
 		cmd.defaultContext.KeyPass = flags.KeyPass
 		cmd.defaultContext.KeyName = flags.KeyName
