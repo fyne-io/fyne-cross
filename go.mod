@@ -3,7 +3,7 @@ module github.com/fyne-io/fyne-cross
 go 1.19
 
 require (
-	github.com/BurntSushi/toml v1.3.2
+	github.com/BurntSushi/toml v1.5.0
 	github.com/Kodeworks/golang-image-ico v0.0.0-20141118225523-73f0f4cfade9
 	github.com/aws/aws-sdk-go v1.51.13
 	github.com/klauspost/compress v1.13.4
