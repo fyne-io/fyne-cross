@@ -240,6 +240,9 @@ func fynePackageHost(ctx Context, image containerImage) (string, error) {
 	if ctx.CacheDirHost() != "" {
 		image.SetEnv("GOCACHE", ctx.CacheDirHost())
 	}
+	if image.OS() == webOS {
+		image.SetEnv("CGO_ENABLED", "0")
+	}
 
 	// run the command from the host
 	fyneCmd := execabs.Command(args[0], args[1:]...)
@@ -315,6 +318,9 @@ func fyneReleaseHost(ctx Context, image containerImage) (string, error) {
 
 	if ctx.CacheDirHost() != "" {
 		image.SetEnv("GOCACHE", ctx.CacheDirHost())
+	}
+	if image.OS() == webOS {
+		image.SetEnv("CGO_ENABLED", "0")
 	}
 
 	// run the command from the host
