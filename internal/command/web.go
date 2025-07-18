@@ -69,6 +69,7 @@ func (cmd *web) Build(image containerImage) (string, error) {
 		return "", err
 	}
 
+	image.SetEnv("CGO_ENABLED", "0")
 	if cmd.defaultContext.Release {
 		// Release mode
 		err = fyneRelease(cmd.defaultContext, image)
