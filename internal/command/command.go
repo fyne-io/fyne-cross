@@ -96,18 +96,20 @@ Use "fyne-cross <command> -help" for more information about a command.
 func cleanTargetDirs(ctx Context, image containerImage) error {
 
 	dirs := map[string]string{
-		"bin":  volume.JoinPathHost(ctx.Volume.BinDirHost(), image.ID()),
-		"dist": volume.JoinPathHost(ctx.Volume.DistDirHost(), image.ID()),
-		"temp": volume.JoinPathHost(ctx.Volume.TmpDirHost(), image.ID()),
+		"bin":  volume.JoinPathContainer(ctx.BinDirContainer(), image.ID()),
+		"dist": volume.JoinPathContainer(ctx.DistDirContainer(), image.ID()),
+		"temp": volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID()),
 	}
 
 	log.Infof("[i] Cleaning target directories...")
 	for k, v := range dirs {
-		if err := os.RemoveAll(v); err != nil {
+		err := image.Run(ctx.Volume, options{}, []string{"rm", "-rf", v})
+		if err != nil {
 			return fmt.Errorf("could not clean the %q dir %s: %v", k, v, err)
 		}
 
-		if err := os.MkdirAll(v, os.ModePerm); err != nil {
+		err = image.Run(ctx.Volume, options{}, []string{"mkdir", "-p", v})
+		if err != nil {
 			return fmt.Errorf("could not create the %q dir %s: %v", k, v, err)
 		}
 
@@ -139,12 +141,10 @@ func prepareIcon(ctx Context, image containerImage) error {
 		}
 	}
 
-	if data, err := os.ReadFile(volume.JoinPathHost(ctx.Volume.WorkDirHost(), ctx.Icon)); err != nil {
-		return fmt.Errorf("could not read in icon %s: %w", ctx.Icon, err)
-	} else if err := os.WriteFile(volume.JoinPathHost(ctx.TmpDirHost(), image.ID(), icon.Default), data, 0644); err != nil {
-		return fmt.Errorf("could not copy icon %s to tmp folder: %w", ctx.Icon, err)
+	err := image.Run(ctx.Volume, options{}, []string{"cp", volume.JoinPathContainer(ctx.WorkDirContainer(), ctx.Icon), volume.JoinPathContainer(ctx.TmpDirContainer(), image.ID(), icon.Default)})
+	if err != nil {
+		return fmt.Errorf("could not copy the icon to temp folder: %v", err)
 	}
-
 	return nil
 }
 
