@@ -1,6 +1,6 @@
 module github.com/fyne-io/fyne-cross
 
-go 1.19
+go 1.23.0
 
 require (
 	github.com/BurntSushi/toml v1.5.0
@@ -11,7 +11,7 @@ require (
 	github.com/stretchr/testify v1.9.0
 	github.com/urfave/cli/v2 v2.27.7
 	golang.org/x/sync v0.6.0
-	golang.org/x/sys v0.18.0
+	golang.org/x/sys v0.34.0
 	k8s.io/api v0.28.15
 	k8s.io/apimachinery v0.28.15
 	k8s.io/client-go v0.28.15
