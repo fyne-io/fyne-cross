@@ -213,9 +213,9 @@ jobs:
         working-directory: fyne-cross
         run: go install
 
-      - name: Install Fyne
+      - name: Install Fyne CLI tools
         run: |
-          go install fyne.io/fyne/v2/cmd/fyne@latest
+          go install fyne.io/tools/cmd/fyne@latest
 
       - name: Install Docker
         if: ${{ runner.os == 'macos' }}
