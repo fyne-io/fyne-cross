@@ -178,13 +178,13 @@ func fyneCommand(binary, command, icon string, ctx Context, image containerImage
 		"-os", target,
 		"-name", ctx.Name,
 		"-icon", icon,
-		"-appBuild", ctx.AppBuild,
-		"-appVersion", ctx.AppVersion,
+		"-app-build", ctx.AppBuild,
+		"-app-version", ctx.AppVersion,
 	}
 
 	// add appID to command, if any
 	if ctx.AppID != "" {
-		args = append(args, "-appID", ctx.AppID)
+		args = append(args, "-app-id", ctx.AppID)
 	}
 
 	// add tags to command, if any
