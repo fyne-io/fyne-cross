@@ -98,13 +98,10 @@ jobs:
             args: -app-id calc.sha${{ github.sha }}
           # macos versions running in a VM on Mac M1 are incompatible with docker/podman
             host: macos-15-intel
+          - os: iossimulator
+            args: -app-id calc.sha${{ github.sha }}
+            host: macos-15-intel
           - os: web
-          
-          ## Currently not easily supported from GitHub actions.
-          ## https://github.com/fyne-io/fyne-cross/pull/104#issuecomment-1099494308
-          # - os: ios
-          #   args: -app-id calc.sha${{ github.sha }}
-          #   host: macos-latest
 
     steps:
       - name: Setup Go environment
@@ -175,12 +172,6 @@ jobs:
             args: -app-id calc.sha${{ github.sha }}
           # macos versions running in a VM on Mac M1 are incompatible with docker/podman
             host: macos-15-intel
-          
-          ## Currently not easily supported from GitHub actions.
-          ## https://github.com/fyne-io/fyne-cross/pull/104#issuecomment-1099494308
-          # - os: ios
-          #   args: -app-id calc.sha${{ github.sha }}
-          #   host: macos-latest
 
     steps:
       - name: Setup Go environment
