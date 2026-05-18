@@ -1,12 +1,12 @@
 module github.com/fyne-io/fyne-cross
 
-go 1.19
+go 1.24
 
 require (
 	github.com/BurntSushi/toml v1.5.0
 	github.com/Kodeworks/golang-image-ico v0.0.0-20141118225523-73f0f4cfade9
 	github.com/aws/aws-sdk-go v1.55.8
-	github.com/klauspost/compress v1.13.4
+	github.com/klauspost/compress v1.18.6
 	github.com/mholt/archiver/v3 v3.5.1
 	github.com/stretchr/testify v1.10.0
 	github.com/urfave/cli/v2 v2.27.7
