@@ -33,8 +33,8 @@ func main() {
 			commands.IOS(),
 			commands.FreeBSD(),
 			commands.Web(),
-			commands.Version(),
 */
+			command.Version(),
 		},
 	}
 
