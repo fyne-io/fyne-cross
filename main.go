@@ -1,59 +1,49 @@
 package main
 
 import (
+	//"fmt"
 	"os"
+	"runtime/debug"
+
+	"github.com/urfave/cli/v2"
 
 	"github.com/fyne-io/fyne-cross/internal/command"
 	"github.com/fyne-io/fyne-cross/internal/log"
 )
 
 func main() {
+	//flags := &commands.CommonFlags{}
 
-	// Define the command to use
-	commands := []command.Command{
-		&command.DarwinSDKExtract{},
-		command.NewDarwinCommand(),
-		command.NewLinuxCommand(),
-		command.NewWindowsCommand(),
-		command.NewAndroidCommand(),
-		command.NewIOSCommand(),
-		command.NewFreeBSD(),
-		command.NewWebCommand(),
-		&command.Version{},
+	app := &cli.App{
+		Name:  "fyne-cross",
+		Usage: "A simple tool to cross compile Fyne applications.",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:        "app-build",
+				//Destination: &flags.AppBuild,
+			},
+		},
+		Commands: []*cli.Command{
+			command.DarwinSDKExtract(),
+/*
+			commands.Darwin(),
+			commands.Linux(),
+			commands.Windows(),
+			commands.Android(),
+			commands.IOS(),
+			commands.FreeBSD(),
+			commands.Web(),
+			commands.Version(),
+*/
+		},
 	}
 
-	// display fyne-cross usage if no command is specified
-	if len(os.Args) == 1 {
-		command.Usage(commands)
-		os.Exit(1)
+	info, ok := debug.ReadBuildInfo()
+	if ok {
+		app.Version = info.Main.Version
 	}
 
-	// check for valid command
-	var cmd command.Command
-	for _, v := range commands {
-		if os.Args[1] == v.Name() {
-			cmd = v
-			break
-		}
-	}
-
-	// If no valid command is specified display the usage
-	if cmd == nil {
-		command.Usage(commands)
-		os.Exit(1)
-	}
-
-	// Parse the arguments for the command
-	// It will display the command usage if -help is specified
-	// and will exit in case of error
-	err := cmd.Parse(os.Args[2:])
-	if err != nil {
-		log.Fatalf("[✗] %s", err)
-	}
-
-	// Finally run the command
-	err = cmd.Run()
-	if err != nil {
+	if err := app.Run(os.Args); err != nil {
 		log.Fatalf("[✗] %s", err)
 	}
 }

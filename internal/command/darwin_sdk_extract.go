@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
@@ -18,34 +20,53 @@ const (
 )
 
 // DarwinSDKExtract extracts the macOS SDK from the Command Line Tools for Xcode package
-type DarwinSDKExtract struct {
+type darwinSDKExtract struct {
 	pull            bool
 	sdkPath         string
 	containerEngine string
 }
 
 // Name returns the one word command name
-func (cmd *DarwinSDKExtract) Name() string {
-	return "darwin-sdk-extract"
-}
-
-// Description returns the command description
-func (cmd *DarwinSDKExtract) Description() string {
-	return "Extracts the macOS SDK from the Command Line Tools for Xcode package"
+func DarwinSDKExtract() *cli.Command {
+	cmd := &darwinSDKExtract{}
+	return &cli.Command{
+		Name:  "darwin-sdk-extract",
+		Usage: "Extracts the macOS SDK from the Command Line Tools for Xcode package",
+		Flags:  []cli.Flag{
+			&cli.StringFlag{
+				Name:        "xcode-path",
+				Usage:       "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.5.dmg)",
+				Destination: &cmd.sdkPath,
+			},
+			&cli.StringFlag{
+				Name:        "engine",
+				Usage:       "The container engine to use. Supported engines: [docker, podman]. Default to autodetect.",
+				Destination: &cmd.containerEngine,
+			},
+			&cli.BoolFlag{
+				Name:        "pull",
+				Usage:       "Attempt to pull a newer version of the docker base image",
+				Value:       true,
+				Destination: &cmd.pull,
+			},
+		},
+		Action: func(ctx *cli.Context) error {
+			if err := cmd.parse(ctx); err != nil {
+				return err
+			}
+			return cmd.run(ctx)
+		},
+	}
 }
 
 // Parse parses the arguments and set the usage for the command
-func (cmd *DarwinSDKExtract) Parse(args []string) error {
-	flagSet.StringVar(&cmd.sdkPath, "xcode-path", "", "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.5.dmg)")
-	// flagSet.StringVar(&cmd.sdkVersion, "sdk-version", "", "SDK version to use. Default to automatic detection")
-	flagSet.StringVar(&cmd.containerEngine, "engine", "", "The container engine to use. Supported engines: [docker, podman]. Default to autodetect.")
-	flagSet.BoolVar(&cmd.pull, "pull", true, "Attempt to pull a newer version of the docker base image")
-
-	flagSet.Usage = cmd.Usage
-	flagSet.Parse(args)
+func (cmd *darwinSDKExtract) parse(ctx *cli.Context) error {
+	cmd.sdkPath = ctx.String("xcode-path")
+	cmd.containerEngine = ctx.String("engine")
+	cmd.pull = ctx.Bool("pull")
 
 	if cmd.sdkPath == "" {
-		return fmt.Errorf("path to the Command Line Tools for Xcode using the 'xcode-path' is required.\nRun 'fyne-cross %s --help' for details", cmd.Name())
+		return fmt.Errorf("path to the Command Line Tools for Xcode using the 'xcode-path' is required.\nRun 'fyne-cross %s --help' for details", ctx.Command.Name)
 	}
 
 	i, err := os.Stat(cmd.sdkPath)
@@ -66,8 +87,7 @@ func (cmd *DarwinSDKExtract) Parse(args []string) error {
 }
 
 // Run runs the command
-func (cmd *DarwinSDKExtract) Run() error {
-
+func (cmd *darwinSDKExtract) run(cCtx *cli.Context) error {
 	sdkDir := filepath.Dir(cmd.sdkPath)
 	dmg := filepath.Base(cmd.sdkPath)
 	outDir := filepath.Join(sdkDir, darwinSDKExtractOutDir)
@@ -77,7 +97,7 @@ func (cmd *DarwinSDKExtract) Run() error {
 	}
 
 	// mount the fyne-cross volume
-	workDir, err := os.MkdirTemp("", cmd.Name())
+	workDir, err := os.MkdirTemp("", cCtx.Command.Name)
 	if err != nil {
 		return err
 	}
@@ -119,26 +139,4 @@ func (cmd *DarwinSDKExtract) Run() error {
 	}
 	log.Infof("[✓] SDKs extracted to: %s", outDir)
 	return nil
-}
-
-// Usage displays the command usage
-func (cmd *DarwinSDKExtract) Usage() {
-	data := struct {
-		Name        string
-		Description string
-	}{
-		Name:        cmd.Name(),
-		Description: cmd.Description(),
-	}
-
-	template := `
-Usage: fyne-cross {{ .Name }} [options]
-
-{{ .Description }}
-
-Options:
-`
-
-	printUsage(template, data)
-	flagSet.PrintDefaults()
 }
