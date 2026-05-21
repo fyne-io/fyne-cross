@@ -2,18 +2,17 @@ package command
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"os"
 	"path/filepath"
 	"strings"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/metadata"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
-
-var flagSet = flag.NewFlagSet("fyne-cross", flag.ExitOnError)
 
 // CommonFlags holds the flags shared between all commands
 type CommonFlags struct {
@@ -74,18 +73,18 @@ type CommonFlags struct {
 }
 
 // newCommonFlags defines all the flags for the shared options
-func newCommonFlags() (*CommonFlags, error) {
+func newCommonFlags() (*CommonFlags, []cli.Flag, error) {
 	name, err := defaultName()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	rootDir, err := volume.DefaultWorkDirHost()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 	cacheDir, err := volume.DefaultCacheDirHost()
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
 
 	defaultIcon := icon.Default
@@ -113,30 +112,32 @@ func newCommonFlags() (*CommonFlags, error) {
 	}
 
 	flags := &CommonFlags{}
-	kubernetesFlagSet(flagSet, flags)
-	flagSet.IntVar(&flags.AppBuild, "app-build", appBuild, "Build number, should be greater than 0 and incremented for each build")
-	flagSet.StringVar(&flags.AppID, "app-id", appID, "Application ID used for distribution")
-	flagSet.StringVar(&flags.AppVersion, "app-version", appVersion, "Version number in the form x, x.y or x.y.z semantic version")
-	flagSet.StringVar(&flags.CacheDir, "cache", cacheDir, "Directory used to share/cache sources and dependencies")
-	flagSet.BoolVar(&flags.NoCache, "no-cache", false, "Do not use the go build cache")
-	flagSet.Var(&flags.Engine, "engine", "The container engine to use. Supported engines: [docker, podman, kubernetes]. Default to autodetect.")
-	flagSet.Var(&flags.Env, "env", "List of additional env variables specified as KEY=VALUE")
-	flagSet.StringVar(&flags.Icon, "icon", defaultIcon, "Application icon used for distribution")
-	flagSet.StringVar(&flags.DockerImage, "image", "", "Custom docker image to use for build")
-	flagSet.StringVar(&flags.Ldflags, "ldflags", "", "Additional flags to pass to the external linker")
-	flagSet.Var(&flags.Tags, "tags", "List of additional build tags separated by comma")
-	flagSet.Var(&flags.Metadata, "metadata", "Additional metadata `key=value` passed to fyne package")
-	flagSet.BoolVar(&flags.NoStripDebug, "no-strip-debug", false, "Do not strip debug information from binaries")
-	flagSet.StringVar(&flags.Name, "name", name, "The name of the application")
-	flagSet.StringVar(&flags.Name, "output", name, "Named output file. Deprecated in favour of 'name'")
-	flagSet.BoolVar(&flags.Release, "release", false, "Release mode. Prepares the application for public distribution")
-	flagSet.StringVar(&flags.RootDir, "dir", rootDir, "Fyne app root directory")
-	flagSet.BoolVar(&flags.Silent, "silent", false, "Silent mode")
-	flagSet.BoolVar(&flags.Debug, "debug", false, "Debug mode")
-	flagSet.BoolVar(&flags.Pull, "pull", false, "Attempt to pull a newer version of the docker image")
-	flagSet.StringVar(&flags.DockerRegistry, "docker-registry", "docker.io", "The docker registry to be used instead of dockerhub (only used with defualt docker images)")
-	flagSet.BoolVar(&flags.NoNetwork, "no-network", false, "If set, the build will be done without network access")
-	return flags, nil
+	cliflags := append(kubernetesFlags(flags),
+		&cli.IntFlag{Destination: &flags.AppBuild, Name: "app-build", Value: appBuild, Usage: "Build number, should be greater than 0 and incremented for each build"},
+		&cli.StringFlag{Destination: &flags.AppID, Name: "app-id", Value: appID, Usage: "Application ID used for distribution"},
+		&cli.StringFlag{Destination: &flags.AppVersion, Name: "app-version", Value: appVersion, Usage: "Version number in the form x, x.y or x.y.z semantic version"},
+		&cli.StringFlag{Destination: &flags.CacheDir, Name: "cache", Value: cacheDir, Usage: "Directory used to share/cache sources and dependencies"},
+		&cli.BoolFlag{Destination: &flags.NoCache, Name: "no-cache", Usage: "Do not use the go build cache"},
+		&cli.GenericFlag{Destination: &flags.Engine, Name: "engine", Usage: "The container engine to use. Supported engines: [docker, podman, kubernetes]. Default to autodetect."},
+		&cli.GenericFlag{Destination: &flags.Env, Name: "env", Usage: "List of additional env variables specified as KEY=VALUE"},
+		&cli.StringFlag{Destination: &flags.Icon, Name: "icon", Value: defaultIcon, Usage: "Application icon used for distribution"},
+		&cli.StringFlag{Destination: &flags.DockerImage, Name: "image", Usage: "Custom docker image to use for build"},
+		&cli.StringFlag{Destination: &flags.Ldflags, Name: "ldflags", Usage: "Additional flags to pass to the external linker"},
+		&cli.GenericFlag{Destination: &flags.Tags, Name: "tags", Usage: "List of additional build tags separated by comma"},
+		&cli.GenericFlag{Destination: &flags.Metadata, Name: "metadata", Usage: "Additional metadata `key=value` passed to fyne package"},
+		&cli.BoolFlag{Destination: &flags.NoStripDebug, Name: "no-strip-debug", Usage: "Do not strip debug information from binaries"},
+		&cli.StringFlag{Destination: &flags.Name, Name: "name", Value: name, Usage: "The name of the application"},
+		&cli.StringFlag{Destination: &flags.Name, Name: "output", Value: name, Usage: "Named output file. Deprecated in favour of 'name'"},
+		&cli.BoolFlag{Destination: &flags.Release, Name: "release", Usage: "Release mode. Prepares the application for public distribution"},
+		&cli.StringFlag{Destination: &flags.RootDir, Name: "dir", Value: rootDir, Usage: "Fyne app root directory"},
+		&cli.BoolFlag{Destination: &flags.Silent, Name: "silent", Usage: "Silent mode"},
+		&cli.BoolFlag{Destination: &flags.Debug, Name: "debug", Usage: "Debug mode"},
+		&cli.BoolFlag{Destination: &flags.Pull, Name: "pull", Usage: "Attempt to pull a newer version of the docker image"},
+		&cli.StringFlag{Destination: &flags.DockerRegistry, Name: "docker-registry", Value: "docker.io", Usage: "The docker registry to be used instead of dockerhub (only used with defualt docker images},"},
+		&cli.BoolFlag{Destination: &flags.NoNetwork, Name: "no-network", Usage: "If set, the build will be done without network access"},
+	)
+
+	return flags, cliflags, nil
 }
 
 func defaultName() (string, error) {

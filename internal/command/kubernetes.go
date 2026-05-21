@@ -39,12 +39,14 @@ type kubernetesContainerEngine struct {
 
 var client *cloud.K8sClient
 
-func kubernetesFlagSet(flagSet *flag.FlagSet, flags *CommonFlags) {
-	flagSet.BoolVar(&flags.NoProjectUpload, "no-project-upload", false, "Will reuse the project data available in S3, used by the kubernetes engine.")
-	flagSet.BoolVar(&flags.NoResultDownload, "no-result-download", false, "Will not download the result of the compilation from S3 automatically, used by the kubernetes engine.")
-	flagSet.StringVar(&flags.Namespace, "namespace", "default", "The namespace the kubernetes engine will use to run the pods in, used by and imply the kubernetes engine.")
-	flagSet.StringVar(&flags.S3Path, "S3-path", "/", "The path to push to and pull data from, used by the kubernetes engine.")
-	flagSet.StringVar(&flags.SizeLimit, "size-limit", "2Gi", "The size limit of mounted filesystem inside the container, used by the kubernetes engine.")
+func kubernetesFlags(flags *CommonFlags) []cli.Flag {
+	return []cli.Flag{
+		&cli.BoolFlag{Destination: &flags.NoProjectUpload, Name: "no-project-upload", Value: false, Usage: "Will reuse the project data available in S3, used by the kubernetes engine."},
+		&cli.BoolFlag{Destination: &flags.NoResultDownload, Name: "no-result-download", Value: false, Usage: "Will not download the result of the compilation from S3 automatically, used by the kubernetes engine."},
+		&cli.StringFlag{Destination: &flags.Namespace, Name: "namespace", Value: "default", Usage: "The namespace the kubernetes engine will use to run the pods in, used by and imply the kubernetes engine."},
+		&cli.StringFlag{Destination: &flags.S3Path, Name: "S3-path", Value: "/", Usage: "The path to push to and pull data from, used by the kubernetes engine."},
+		&cli.StringFlag{Destination: &flags.SizeLimit, Name: "size-limit", Value: "2Gi", Usage: "The size limit of mounted filesystem inside the container, used by the kubernetes engine."},
+	}
 }
 
 func checkKubernetesClient() (err error) {
@@ -101,8 +103,10 @@ type kubernetesContainerImage struct {
 	runner *kubernetesContainerEngine
 }
 
-var _ containerEngine = (*kubernetesContainerEngine)(nil)
-var _ closer = (*kubernetesContainerImage)(nil)
+var (
+	_ containerEngine = (*kubernetesContainerEngine)(nil)
+	_ closer          = (*kubernetesContainerImage)(nil)
+)
 
 func (r *kubernetesContainerEngine) createContainerImage(arch Architecture, OS string, image string) containerImage {
 	noProjectUpload := r.noProjectUpload
@@ -322,7 +326,7 @@ func (i *kubernetesContainerImage) Finalize(packageName string) (ret error) {
 	if !i.runner.noResultDownload {
 		// Download package result from S3 locally
 		distFile := volume.JoinPathHost(i.runner.vol.DistDirHost(), i.ID(), packageName)
-		err := os.MkdirAll(filepath.Dir(distFile), 0755)
+		err := os.MkdirAll(filepath.Dir(distFile), 0o755)
 		if err != nil {
 			ret = fmt.Errorf("could not create the dist package dir: %v", err)
 			return

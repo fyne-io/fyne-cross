@@ -1,7 +1,6 @@
 package main
 
 import (
-	//"fmt"
 	"os"
 	"runtime/debug"
 
@@ -12,28 +11,19 @@ import (
 )
 
 func main() {
-	//flags := &commands.CommonFlags{}
-
 	app := &cli.App{
-		Name:  "fyne-cross",
-		Usage: "A simple tool to cross compile Fyne applications.",
-		Flags: []cli.Flag{
-			&cli.StringFlag{
-				Name:        "app-build",
-				//Destination: &flags.AppBuild,
-			},
-		},
+		Name:        "fyne-cross",
+		Usage:       "A simple tool to cross compile Fyne applications.",
+		HideVersion: true,
 		Commands: []*cli.Command{
 			command.DarwinSDKExtract(),
-/*
-			commands.Darwin(),
-			commands.Linux(),
-			commands.Windows(),
-			commands.Android(),
-			commands.IOS(),
-			commands.FreeBSD(),
-			commands.Web(),
-*/
+			command.Darwin(),
+			command.Linux(),
+			command.Windows(),
+			command.Android(),
+			command.IOS(),
+			command.FreeBSD(),
+			command.Web(),
 			command.Version(),
 		},
 	}

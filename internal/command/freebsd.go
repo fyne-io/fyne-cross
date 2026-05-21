@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
@@ -17,10 +19,8 @@ const (
 	freebsdImageArm64 = "fyneio/fyne-cross-images:freebsd-arm64"
 )
 
-var (
-	// freebsdArchSupported defines the supported target architectures on freebsd
-	freebsdArchSupported = []Architecture{ArchAmd64, ArchArm64}
-)
+// freebsdArchSupported defines the supported target architectures on freebsd
+var freebsdArchSupported = []Architecture{ArchAmd64, ArchArm64}
 
 // FreeBSD build and package the fyne app for the freebsd OS
 type freeBSD struct {
@@ -29,43 +29,41 @@ type freeBSD struct {
 }
 
 var _ platformBuilder = (*freeBSD)(nil)
-var _ Command = (*freeBSD)(nil)
 
-func NewFreeBSD() *freeBSD {
-	return &freeBSD{}
-}
+func FreeBSD() *cli.Command {
+	cmd := &freeBSD{}
 
-func (cmd *freeBSD) Name() string {
-	return "freebsd"
-}
-
-// Description returns the command description
-func (cmd *freeBSD) Description() string {
-	return "Build and package a fyne application for the freebsd OS"
-}
-
-func (cmd *freeBSD) Run() error {
-	return commonRun(cmd.defaultContext, cmd.Images, cmd)
-}
-
-// Parse parses the arguments and set the usage for the command
-func (cmd *freeBSD) Parse(args []string) error {
-	commonFlags, err := newCommonFlags()
+	commonFlags, cliFlags, err := newCommonFlags()
 	if err != nil {
-		return err
+		return nil
 	}
 
 	flags := &freebsdFlags{
 		CommonFlags: commonFlags,
 		TargetArch:  &targetArchFlag{runtime.GOARCH},
 	}
-	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, freebsdArchSupported))
 
-	flagSet.Usage = cmd.Usage
-	flagSet.Parse(args)
+	return &cli.Command{
+		Name:  "freebsd",
+		Usage: "Builds and packages a fyne application for the freebsd OS",
+		Flags: append(cliFlags,
+			&cli.GenericFlag{
+				Destination: flags.TargetArch,
+				Name:        "arch",
+				Usage:       fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, freebsdArchSupported),
+			},
+		),
+		Action: func(ctx *cli.Context) error {
+			if err := cmd.setupContainerImages(flags, ctx.Args().Slice()); err != nil {
+				return err
+			}
+			return cmd.run()
+		},
+	}
+}
 
-	err = cmd.setupContainerImages(flags, flagSet.Args())
-	return err
+func (cmd *freeBSD) run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
 }
 
 // Run runs the command
@@ -100,33 +98,13 @@ func (cmd *freeBSD) Build(image containerImage) (string, error) {
 	// Extract the resulting executable from the tarball
 	image.Run(cmd.defaultContext.Volume,
 		options{WorkDir: volume.JoinPathContainer(cmd.defaultContext.BinDirContainer(), image.ID())},
-		[]string{"tar", "-xf",
+		[]string{
+			"tar", "-xf",
 			volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID(), packageName),
-			"--strip-components=3", "usr/local/bin"})
+			"--strip-components=3", "usr/local/bin",
+		})
 
 	return packageName, nil
-}
-
-// Usage displays the command usage
-func (cmd *freeBSD) Usage() {
-	data := struct {
-		Name        string
-		Description string
-	}{
-		Name:        cmd.Name(),
-		Description: cmd.Description(),
-	}
-
-	template := `
-Usage: fyne-cross {{ .Name }} [options] [package]
-
-{{ .Description }}
-
-Options:
-`
-
-	printUsage(template, data)
-	flagSet.PrintDefaults()
 }
 
 // freebsdFlags defines the command-line flags for the freebsd command

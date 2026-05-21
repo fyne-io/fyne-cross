@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"runtime"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
@@ -22,48 +24,37 @@ type iOS struct {
 }
 
 var _ platformBuilder = (*iOS)(nil)
-var _ Command = (*iOS)(nil)
 
-func NewIOSCommand() *iOS {
-	return &iOS{}
-}
+func IOS() *cli.Command {
+	cmd := &iOS{}
 
-func (cmd *iOS) Name() string {
-	return "ios"
-}
-
-// Description returns the command description
-func (cmd *iOS) Description() string {
-	return "Build and package a fyne application for the iOS OS"
-}
-
-func (cmd *iOS) Run() error {
-	return commonRun(cmd.defaultContext, cmd.Images, cmd)
-}
-
-// Parse parses the arguments and set the usage for the command
-func (cmd *iOS) Parse(args []string) error {
-	commonFlags, err := newCommonFlags()
+	commonFlags, cliFlags, err := newCommonFlags()
 	if err != nil {
-		return err
+		return nil
 	}
 
 	flags := &iosFlags{
 		CommonFlags: commonFlags,
 	}
 
-	// flags used only in release mode
-	flagSet.StringVar(&flags.Certificate, "certificate", "", "The name of the certificate to sign the build")
-	flagSet.StringVar(&flags.Profile, "profile", "", "The name of the provisioning profile for this release build")
+	return &cli.Command{
+		Name:  "ios",
+		Usage: "Builds and packages a fyne application for the iOS OS",
+		Flags: append(cliFlags,
+			&cli.StringFlag{Destination: &flags.Certificate, Name: "certificate", Usage: "The name of the certificate to sign the build"},
+			&cli.StringFlag{Destination: &flags.Profile, Name: "profile", Usage: "The name of the provisioning profile for this release build"},
+		),
+		Action: func(ctx *cli.Context) error {
+			if err := cmd.setupContainerImages(flags, ctx.Args().Slice()); err != nil {
+				return err
+			}
+			return cmd.run()
+		},
+	}
+}
 
-	flagAppID := flagSet.Lookup("app-id")
-	flagAppID.Usage = fmt.Sprintf("%s. Must match a valid provisioning profile [required]", flagAppID.Usage)
-
-	flagSet.Usage = cmd.Usage
-	flagSet.Parse(args)
-
-	err = cmd.setupContainerImages(flags, flagSet.Args())
-	return err
+func (cmd *iOS) run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
 }
 
 // Run runs the command
@@ -98,38 +89,14 @@ func (cmd *iOS) Build(image containerImage) (string, error) {
 	return packageName, nil
 }
 
-// Usage displays the command usage
-func (cmd *iOS) Usage() {
-	data := struct {
-		Name        string
-		Description string
-	}{
-		Name:        cmd.Name(),
-		Description: cmd.Description(),
-	}
-
-	template := `
-Usage: fyne-cross {{ .Name }} [options] [package]
-
-{{ .Description }}
-
-Note: available only on darwin hosts
-
-Options:
-`
-
-	printUsage(template, data)
-	flagSet.PrintDefaults()
-}
-
 // iosFlags defines the command-line flags for the ios command
 type iosFlags struct {
 	*CommonFlags
 
-	//Certificate represents the name of the certificate to sign the build
+	// Certificate represents the name of the certificate to sign the build
 	Certificate string
 
-	//Profile represents the name of the provisioning profile for this release build
+	// Profile represents the name of the provisioning profile for this release build
 	Profile string
 }
 

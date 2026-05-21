@@ -3,6 +3,8 @@ package command
 import (
 	"fmt"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
@@ -20,44 +22,35 @@ type web struct {
 	defaultContext Context
 }
 
-var (
-	_ platformBuilder = (*web)(nil)
-	_ Command         = (*web)(nil)
-)
+var _ platformBuilder = (*web)(nil)
 
-func NewWebCommand() *web {
-	return &web{}
-}
+func Web() *cli.Command {
+	cmd := &web{}
 
-// Name returns the one word command name
-func (cmd *web) Name() string {
-	return "web"
-}
-
-// Description returns the command description
-func (cmd *web) Description() string {
-	return "Build and package a fyne application for the web"
-}
-
-func (cmd *web) Run() error {
-	return commonRun(cmd.defaultContext, cmd.Images, cmd)
-}
-
-// Parse parses the arguments and set the usage for the command
-func (cmd *web) Parse(args []string) error {
-	commonFlags, err := newCommonFlags()
+	commonFlags, cliFlags, err := newCommonFlags()
 	if err != nil {
-		return err
+		return nil
 	}
 
 	flags := &webFlags{
 		CommonFlags: commonFlags,
 	}
 
-	flagSet.Usage = cmd.Usage
-	flagSet.Parse(args)
+	return &cli.Command{
+		Name:  "web",
+		Usage: "Builds and packages a fyne application for the web",
+		Flags: cliFlags,
+		Action: func(ctx *cli.Context) error {
+			if err := cmd.setupContainerImages(flags, ctx.Args().Slice()); err != nil {
+				return err
+			}
+			return cmd.run()
+		},
+	}
+}
 
-	return cmd.setupContainerImages(flags, flagSet.Args())
+func (cmd *web) run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
 }
 
 // Run runs the command
@@ -85,30 +78,6 @@ func (cmd *web) Build(image containerImage) (string, error) {
 	srcFile := volume.JoinPathContainer(cmd.defaultContext.WorkDirContainer(), "wasm")
 	dstFile := volume.JoinPathContainer(cmd.defaultContext.TmpDirContainer(), image.ID())
 	return "", image.Run(cmd.defaultContext.Volume, options{}, []string{"mv", srcFile, dstFile})
-}
-
-// Usage displays the command usage
-func (cmd *web) Usage() {
-	data := struct {
-		Name        string
-		Description string
-	}{
-		Name:        cmd.Name(),
-		Description: cmd.Description(),
-	}
-
-	template := `
-Usage: fyne-cross {{ .Name }} [options] [package]
-
-{{ .Description }}
-
-Note: available only on darwin hosts
-
-Options:
-`
-
-	printUsage(template, data)
-	flagSet.PrintDefaults()
 }
 
 // webFlags defines the command-line flags for the web command

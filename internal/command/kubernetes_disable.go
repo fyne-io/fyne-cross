@@ -5,12 +5,14 @@ package command
 
 import (
 	"errors"
-	"flag"
+
+	"github.com/urfave/cli/v2"
 )
 
 var errNotImplemented error = errors.New("kubernetes support not built in. Compile fyne-cross with `-tag k8s` to enable it")
 
-func kubernetesFlagSet(_ *flag.FlagSet, _ *CommonFlags) {
+func kubernetesFlags(_ *CommonFlags) []cli.Flag {
+	return nil
 }
 
 func checkKubernetesClient() (err error) {

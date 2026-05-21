@@ -5,6 +5,8 @@ import (
 	"os"
 	"path"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
@@ -16,10 +18,8 @@ const (
 	androidImage = "fyneio/fyne-cross-images:android"
 )
 
-var (
-	// androidArchSupported defines the supported target architectures for the android OS
-	androidArchSupported = []Architecture{ArchMultiple, ArchAmd64, Arch386, ArchArm, ArchArm64}
-)
+// androidArchSupported defines the supported target architectures for the android OS
+var androidArchSupported = []Architecture{ArchMultiple, ArchAmd64, Arch386, ArchArm, ArchArm64}
 
 // Android build and package the fyne app for the android OS
 type android struct {
@@ -28,30 +28,13 @@ type android struct {
 }
 
 var _ platformBuilder = (*android)(nil)
-var _ Command = (*android)(nil)
 
-func NewAndroidCommand() *android {
-	return &android{}
-}
+func Android() *cli.Command {
+	cmd := &android{}
 
-func (cmd *android) Name() string {
-	return "android"
-}
-
-// Description returns the command description
-func (cmd *android) Description() string {
-	return "Build and package a fyne application for the android OS"
-}
-
-func (cmd *android) Run() error {
-	return commonRun(cmd.defaultContext, cmd.Images, cmd)
-}
-
-// Parse parses the arguments and set the usage for the command
-func (cmd *android) Parse(args []string) error {
-	commonFlags, err := newCommonFlags()
+	commonFlags, cliFlags, err := newCommonFlags()
 	if err != nil {
-		return err
+		return nil
 	}
 
 	flags := &androidFlags{
@@ -59,17 +42,29 @@ func (cmd *android) Parse(args []string) error {
 		TargetArch:  &targetArchFlag{string(ArchMultiple)},
 	}
 
-	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s.`, androidArchSupported))
-	flagSet.StringVar(&flags.Keystore, "keystore", "", "The location of .keystore file containing signing information")
-	flagSet.StringVar(&flags.KeystorePass, "keystore-pass", "", "Password for the .keystore file")
-	flagSet.StringVar(&flags.KeyPass, "key-pass", "", "Password for the signer's private key, which is needed if the private key is password-protected")
-	flagSet.StringVar(&flags.KeyName, "key-name", "", "Name of the key to use for signing")
+	cliFlags = append(cliFlags,
+		&cli.GenericFlag{Destination: flags.TargetArch, Name: "arch", Usage: fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s.`, androidArchSupported)},
+		&cli.StringFlag{Destination: &flags.Keystore, Name: "keystore", Usage: "The location of .keystore file containing signing information"},
+		&cli.StringFlag{Destination: &flags.KeystorePass, Name: "keystore-pass", Usage: "Password for the .keystore file"},
+		&cli.StringFlag{Destination: &flags.KeyPass, Name: "key-pass", Usage: "Password for the signer's private key, which is needed if the private key is password-protected"},
+		&cli.StringFlag{Destination: &flags.KeyName, Name: "key-name", Usage: "Name of the key to use for signing"},
+	)
 
-	flagSet.Usage = cmd.Usage
-	flagSet.Parse(args)
+	return &cli.Command{
+		Name:  "android",
+		Usage: "Builds and packages a fyne application for the android OS",
+		Flags: cliFlags,
+		Action: func(ctx *cli.Context) error {
+			if err := cmd.setupContainerImages(flags, ctx.Args().Slice()); err != nil {
+				return err
+			}
+			return cmd.run()
+		},
+	}
+}
 
-	err = cmd.setupContainerImages(flags, flagSet.Args())
-	return err
+func (cmd *android) run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
 }
 
 // Run runs the command
@@ -115,7 +110,6 @@ func (cmd *android) Build(image containerImage) (string, error) {
 	err = image.Run(cmd.defaultContext.Volume, options{}, []string{
 		"sh", "-c", command,
 	})
-
 	if err != nil {
 		return "", fmt.Errorf("could not retrieve the packaged apk")
 	}
@@ -123,36 +117,14 @@ func (cmd *android) Build(image containerImage) (string, error) {
 	return packageName, nil
 }
 
-// Usage displays the command usage
-func (cmd *android) Usage() {
-	data := struct {
-		Name        string
-		Description string
-	}{
-		Name:        cmd.Name(),
-		Description: cmd.Description(),
-	}
-
-	template := `
-Usage: fyne-cross {{ .Name }} [options] [package]
-
-{{ .Description }}
-
-Options:
-`
-
-	printUsage(template, data)
-	flagSet.PrintDefaults()
-}
-
 // androidFlags defines the command-line flags for the android command
 type androidFlags struct {
 	*CommonFlags
 
-	Keystore     string //Keystore represents the location of .keystore file containing signing information
-	KeystorePass string //Password for the .keystore file
-	KeyPass      string //Password for the signer's private key, which is needed if the private key is password-protected
-	KeyName      string //Name of the key to use for signing
+	Keystore     string // Keystore represents the location of .keystore file containing signing information
+	KeystorePass string // Password for the .keystore file
+	KeyPass      string // Password for the signer's private key, which is needed if the private key is password-protected
+	KeyName      string // Name of the key to use for signing
 
 	// TargetArch represents a list of target architecture to build on separated by comma
 	TargetArch *targetArchFlag
@@ -160,7 +132,6 @@ type androidFlags struct {
 
 // setupContainerImages returns the command context for an android target
 func (cmd *android) setupContainerImages(flags *androidFlags, args []string) error {
-
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, androidArchSupported)
 	if err != nil {
 		return fmt.Errorf("could not make build context for %s OS: %s", androidOS, err)

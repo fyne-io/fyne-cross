@@ -16,15 +16,6 @@ import (
 	"golang.org/x/sys/execabs"
 )
 
-// Command wraps the methods for a fyne-cross command
-type Command interface {
-	Name() string              // Name returns the one word command name
-	Description() string       // Description returns the command description
-	Parse(args []string) error // Parse parses the cli arguments
-	Usage()                    // Usage displays the command usage
-	Run() error                // Run runs the command
-}
-
 type platformBuilder interface {
 	Build(image containerImage) (string, error) // Called to build each possible architecture/OS combination
 }
@@ -70,34 +61,16 @@ func commonRun(defaultContext Context, images []containerImage, builder platform
 
 			return nil
 		}()
-
 		if err != nil {
 			return err
 		}
 	}
 
 	return nil
-
-}
-
-// Usage prints the fyne-cross command usage
-func Usage(commands []Command) {
-	template := `fyne-cross is a simple tool to cross compile Fyne applications
-
-Usage: fyne-cross <command> [arguments]
-
-The commands are:
-
-{{ range $k, $cmd := . }}	{{ printf "%-13s %s\n" $cmd.Name $cmd.Description }}{{ end }}
-Use "fyne-cross <command> -help" for more information about a command.
-`
-
-	printUsage(template, commands)
 }
 
 // cleanTargetDirs cleans the temp dir for the target context
 func cleanTargetDirs(ctx Context, image containerImage) error {
-
 	dirs := map[string]string{
 		"bin":  volume.JoinPathContainer(ctx.BinDirContainer(), image.ID()),
 		"dist": volume.JoinPathContainer(ctx.DistDirContainer(), image.ID()),
@@ -136,7 +109,7 @@ func prepareIcon(ctx Context, image containerImage) error {
 			}
 
 			log.Infof("[!] Default icon not found at %q", ctx.Icon)
-			err = os.WriteFile(volume.JoinPathHost(ctx.WorkDirHost(), ctx.Icon), icon.FyneLogo, 0644)
+			err = os.WriteFile(volume.JoinPathHost(ctx.WorkDirHost(), ctx.Icon), icon.FyneLogo, 0o644)
 			if err != nil {
 				return fmt.Errorf("could not create the temporary icon: %s", err)
 			}
