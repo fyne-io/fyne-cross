@@ -48,28 +48,28 @@ func Windows() *cli.Command {
 		Flags: append(cliFlags,
 			&cli.GenericFlag{
 				Name:        "arch",
-				Usage:       fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, windowsArchSupported),
+				Usage:       fmt.Sprintf("set list of target architectures to build separated by comma; supported: %s", windowsArchSupported),
 				Destination: flags.TargetArch,
 			},
 			&cli.BoolFlag{
 				Name:        "console",
-				Usage:       "If set writes a 'console binary' instead of 'GUI binary'",
+				Usage:       "set to write a 'console binary' instead of 'GUI binary'",
 				Destination: &flags.Console,
 			},
 
 			&cli.StringFlag{
 				Name:        "certificate",
-				Usage:       "The name of the certificate to sign the build",
+				Usage:       "set the name of the certificate to sign the build",
 				Destination: &flags.Certificate,
 			},
 			&cli.StringFlag{
 				Name:        "developer",
-				Usage:       "The developer identity for your Microsoft store account",
+				Usage:       "set the developer identity for your Microsoft store account",
 				Destination: &flags.Developer,
 			},
 			&cli.StringFlag{
 				Name:        "password",
-				Usage:       "The password for the certificate used to sign the build",
+				Usage:       "set the password for the certificate used to sign the build",
 				Destination: &flags.Password,
 			},
 		),
