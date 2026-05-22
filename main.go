@@ -2,7 +2,6 @@ package main
 
 import (
 	"os"
-	"runtime/debug"
 
 	"github.com/urfave/cli/v2"
 
@@ -26,11 +25,6 @@ func main() {
 			command.Web(),
 			command.Version(),
 		},
-	}
-
-	info, ok := debug.ReadBuildInfo()
-	if ok {
-		app.Version = info.Main.Version
 	}
 
 	if err := app.Run(os.Args); err != nil {
