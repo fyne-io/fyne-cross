@@ -51,11 +51,27 @@ func Windows() *cli.Command {
 				Usage:       fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, windowsArchSupported),
 				Destination: flags.TargetArch,
 			},
-			&cli.BoolFlag{Destination: &flags.Console, Name: "console", Usage: "If set writes a 'console binary' instead of 'GUI binary'"},
+			&cli.BoolFlag{
+				Name:        "console",
+				Usage:       "If set writes a 'console binary' instead of 'GUI binary'",
+				Destination: &flags.Console,
+			},
 
-			&cli.StringFlag{Destination: &flags.Certificate, Name: "certificate", Usage: "The name of the certificate to sign the build"},
-			&cli.StringFlag{Destination: &flags.Developer, Name: "developer", Usage: "The developer identity for your Microsoft store account"},
-			&cli.StringFlag{Destination: &flags.Password, Name: "password", Usage: "The password for the certificate used to sign the build"},
+			&cli.StringFlag{
+				Name:        "certificate",
+				Usage:       "The name of the certificate to sign the build",
+				Destination: &flags.Certificate,
+			},
+			&cli.StringFlag{
+				Name:        "developer",
+				Usage:       "The developer identity for your Microsoft store account",
+				Destination: &flags.Developer,
+			},
+			&cli.StringFlag{
+				Name:        "password",
+				Usage:       "The password for the certificate used to sign the build",
+				Destination: &flags.Password,
+			},
 		),
 		Action: func(ctx *cli.Context) error {
 			// XXX: flagName.DefValue = fmt.Sprintf("%s.exe", flagName.DefValue)

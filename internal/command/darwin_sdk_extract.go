@@ -32,7 +32,7 @@ func DarwinSDKExtract() *cli.Command {
 	return &cli.Command{
 		Name:  "darwin-sdk-extract",
 		Usage: "Extracts the macOS SDK from the Command Line Tools for Xcode package",
-		Flags:  []cli.Flag{
+		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "xcode-path",
 				Usage:       "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.5.dmg)",

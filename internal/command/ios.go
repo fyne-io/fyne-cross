@@ -41,8 +41,16 @@ func IOS() *cli.Command {
 		Name:  "ios",
 		Usage: "Builds and packages a fyne application for the iOS OS",
 		Flags: append(cliFlags,
-			&cli.StringFlag{Destination: &flags.Certificate, Name: "certificate", Usage: "The name of the certificate to sign the build"},
-			&cli.StringFlag{Destination: &flags.Profile, Name: "profile", Usage: "The name of the provisioning profile for this release build"},
+			&cli.StringFlag{
+				Name:        "certificate",
+				Usage:       "The name of the certificate to sign the build",
+				Destination: &flags.Certificate,
+			},
+			&cli.StringFlag{
+				Name:        "profile",
+				Usage:       "The name of the provisioning profile for this release build",
+				Destination: &flags.Profile,
+			},
 		),
 		Action: func(ctx *cli.Context) error {
 			if err := cmd.setupContainerImages(flags, ctx.Args().Slice()); err != nil {

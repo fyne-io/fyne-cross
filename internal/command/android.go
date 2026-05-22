@@ -43,11 +43,31 @@ func Android() *cli.Command {
 	}
 
 	cliFlags = append(cliFlags,
-		&cli.GenericFlag{Destination: flags.TargetArch, Name: "arch", Usage: fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s.`, androidArchSupported)},
-		&cli.StringFlag{Destination: &flags.Keystore, Name: "keystore", Usage: "The location of .keystore file containing signing information"},
-		&cli.StringFlag{Destination: &flags.KeystorePass, Name: "keystore-pass", Usage: "Password for the .keystore file"},
-		&cli.StringFlag{Destination: &flags.KeyPass, Name: "key-pass", Usage: "Password for the signer's private key, which is needed if the private key is password-protected"},
-		&cli.StringFlag{Destination: &flags.KeyName, Name: "key-name", Usage: "Name of the key to use for signing"},
+		&cli.GenericFlag{
+			Name:        "arch",
+			Usage:       fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s.`, androidArchSupported),
+			Destination: flags.TargetArch,
+		},
+		&cli.StringFlag{
+			Name:        "keystore",
+			Usage:       "The location of .keystore file containing signing information",
+			Destination: &flags.Keystore,
+		},
+		&cli.StringFlag{
+			Name:        "keystore-pass",
+			Usage:       "Password for the .keystore file",
+			Destination: &flags.KeystorePass,
+		},
+		&cli.StringFlag{
+			Name:        "key-pass",
+			Usage:       "Password for the signer's private key, which is needed if the private key is password-protected",
+			Destination: &flags.KeyPass,
+		},
+		&cli.StringFlag{
+			Name:        "key-name",
+			Usage:       "Name of the key to use for signing",
+			Destination: &flags.KeyName,
+		},
 	)
 
 	return &cli.Command{
