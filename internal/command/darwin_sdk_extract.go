@@ -35,55 +35,45 @@ func DarwinSDKExtract() *cli.Command {
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "xcode-path",
-				Usage:       "Path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.5.dmg)",
+				Usage:       "set path to the Command Line Tools for Xcode (i.e. /tmp/Command_Line_Tools_for_Xcode_12.5.dmg)",
 				Destination: &cmd.sdkPath,
 			},
 			&cli.StringFlag{
 				Name:        "engine",
-				Usage:       "The container engine to use. Supported engines: [docker, podman]. Default to autodetect.",
+				Usage:       "set container engine to use, supported engines: [docker, podman]",
+				DefaultText: "autodetect",
 				Destination: &cmd.containerEngine,
 			},
 			&cli.BoolFlag{
 				Name:        "pull",
-				Usage:       "Attempt to pull a newer version of the docker base image",
+				Usage:       "attempt to pull a newer version of the docker base image",
 				Value:       true,
 				Destination: &cmd.pull,
 			},
 		},
 		Action: func(ctx *cli.Context) error {
-			if err := cmd.parse(ctx); err != nil {
-				return err
+			if cmd.sdkPath == "" {
+				return fmt.Errorf("path to the Command Line Tools for Xcode using the 'xcode-path' is required.\nRun 'fyne-cross %s --help' for details", ctx.Command.Name)
 			}
+
+			if !strings.HasSuffix(cmd.sdkPath, ".dmg") {
+				return fmt.Errorf("Command Line Tools for Xcode file must be in dmg format")
+			}
+
+			fi, err := os.Stat(cmd.sdkPath)
+			if os.IsNotExist(err) {
+				return fmt.Errorf("Command Line Tools for Xcode file %q does not exists", cmd.sdkPath)
+			}
+			if err != nil {
+				return fmt.Errorf("Command Line Tools for Xcode file %q error: %s", cmd.sdkPath, err)
+			}
+			if fi.IsDir() {
+				return fmt.Errorf("Command Line Tools for Xcode file %q is a directory", cmd.sdkPath)
+			}
+
 			return cmd.run(ctx)
 		},
 	}
-}
-
-// Parse parses the arguments and set the usage for the command
-func (cmd *darwinSDKExtract) parse(ctx *cli.Context) error {
-	cmd.sdkPath = ctx.String("xcode-path")
-	cmd.containerEngine = ctx.String("engine")
-	cmd.pull = ctx.Bool("pull")
-
-	if cmd.sdkPath == "" {
-		return fmt.Errorf("path to the Command Line Tools for Xcode using the 'xcode-path' is required.\nRun 'fyne-cross %s --help' for details", ctx.Command.Name)
-	}
-
-	i, err := os.Stat(cmd.sdkPath)
-	if os.IsNotExist(err) {
-		return fmt.Errorf("Command Line Tools for Xcode file %q does not exists", cmd.sdkPath)
-	}
-	if err != nil {
-		return fmt.Errorf("Command Line Tools for Xcode file %q error: %s", cmd.sdkPath, err)
-	}
-	if i.IsDir() {
-		return fmt.Errorf("Command Line Tools for Xcode file %q is a directory", cmd.sdkPath)
-	}
-	if !strings.HasSuffix(cmd.sdkPath, ".dmg") {
-		return fmt.Errorf("Command Line Tools for Xcode file must be in dmg format")
-	}
-
-	return nil
 }
 
 // Run runs the command
