@@ -50,17 +50,17 @@ func Darwin() *cli.Command {
 	cliFlags = append(cliFlags,
 		&cli.GenericFlag{
 			Name:        "arch",
-			Usage:       fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, darwinArchSupported),
+			Usage:       fmt.Sprintf("set list of target architectures to build separated by comma; supported: %s", darwinArchSupported),
 			Destination: flags.TargetArch,
 		},
 		&cli.StringFlag{
 			Name:        "category",
-			Usage:       "The category of the app for store listing",
+			Usage:       "set the category of the app for store listing",
 			Destination: &flags.Category,
 		},
 		&cli.StringFlag{
 			Name:        "macosx-version-min",
-			Usage:       "Specify the minimum version that the SDK you used to create the Darwin image support",
+			Usage:       "specify the minimum version of the SDK used to create the Darwin image supports",
 			Destination: &flags.MacOSXVersionMin,
 		},
 	)
@@ -70,14 +70,15 @@ func Darwin() *cli.Command {
 		cliFlags = append(cliFlags, &cli.BoolFlag{
 			Name:        "local",
 			Value:       true,
-			Usage:       "If set uses the fyne CLI tool installed on the host in place of the docker images",
+			Usage:       "set to use the fyne CLI tool installed on the host in place of the docker images",
 			Destination: &cmd.localBuild,
 		})
 	} else {
 		cliFlags = append(cliFlags, &cli.StringFlag{
 			Name:        "macosx-sdk-path",
-			Usage:       "Path to macOS SDK (setting it to 'bundled' indicates that the sdk is expected to be in the container) [required]",
+			Usage:       "set path to macOS SDK (setting it to 'bundled' indicates that the sdk is expected to be in the container)",
 			Destination: &flags.MacOSXSDKPath,
+			Required:    true,
 		})
 	}
 

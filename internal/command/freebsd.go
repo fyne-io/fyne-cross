@@ -50,7 +50,7 @@ func FreeBSD() *cli.Command {
 			&cli.GenericFlag{
 				Destination: flags.TargetArch,
 				Name:        "arch",
-				Usage:       fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, freebsdArchSupported),
+				Usage:       fmt.Sprintf(`set list of target architecture to build separated by comma; supported: %s`, freebsdArchSupported),
 			},
 		),
 		Action: func(ctx *cli.Context) error {

@@ -45,27 +45,27 @@ func Android() *cli.Command {
 	cliFlags = append(cliFlags,
 		&cli.GenericFlag{
 			Name:        "arch",
-			Usage:       fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s.`, androidArchSupported),
+			Usage:       fmt.Sprintf(`set list of target architectures to build separated by comma; supported: %s`, androidArchSupported),
 			Destination: flags.TargetArch,
 		},
 		&cli.StringFlag{
 			Name:        "keystore",
-			Usage:       "The location of .keystore file containing signing information",
+			Usage:       "set location of .keystore file containing signing information",
 			Destination: &flags.Keystore,
 		},
 		&cli.StringFlag{
 			Name:        "keystore-pass",
-			Usage:       "Password for the .keystore file",
+			Usage:       "set password for the .keystore file",
 			Destination: &flags.KeystorePass,
 		},
 		&cli.StringFlag{
 			Name:        "key-pass",
-			Usage:       "Password for the signer's private key, which is needed if the private key is password-protected",
+			Usage:       "set password for the signer's private key, which is needed if the private key is password-protected",
 			Destination: &flags.KeyPass,
 		},
 		&cli.StringFlag{
 			Name:        "key-name",
-			Usage:       "Name of the key to use for signing",
+			Usage:       "set name of the key to use for signing",
 			Destination: &flags.KeyName,
 		},
 	)

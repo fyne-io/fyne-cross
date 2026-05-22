@@ -50,7 +50,7 @@ func Linux() *cli.Command {
 		Flags: append(cliFlags,
 			&cli.GenericFlag{
 				Name:        "arch",
-				Usage:       fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, linuxArchSupported),
+				Usage:       fmt.Sprintf("set list of target architecture to build separated by comma; supported: %s", linuxArchSupported),
 				Destination: flags.TargetArch,
 			},
 		),
