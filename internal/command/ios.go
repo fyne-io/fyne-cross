@@ -43,12 +43,12 @@ func IOS() *cli.Command {
 		Flags: append(cliFlags,
 			&cli.StringFlag{
 				Name:        "certificate",
-				Usage:       "The name of the certificate to sign the build",
+				Usage:       "set the name of the certificate to sign the build",
 				Destination: &flags.Certificate,
 			},
 			&cli.StringFlag{
 				Name:        "profile",
-				Usage:       "The name of the provisioning profile for this release build",
+				Usage:       "set the name of the provisioning profile for this release build",
 				Destination: &flags.Profile,
 			},
 		),

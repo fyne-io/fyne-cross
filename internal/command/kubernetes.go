@@ -44,31 +44,31 @@ func kubernetesFlags(flags *CommonFlags) []cli.Flag {
 		&cli.BoolFlag{
 			Name:        "no-project-upload",
 			Value:       false,
-			Usage:       "Will reuse the project data available in S3, used by the kubernetes engine.",
+			Usage:       "set to reuse the project data available in S3, used by the kubernetes engine",
 			Destination: &flags.NoProjectUpload,
 		},
 		&cli.BoolFlag{
 			Name:        "no-result-download",
 			Value:       false,
-			Usage:       "Will not download the result of the compilation from S3 automatically, used by the kubernetes engine.",
+			Usage:       "set to not download the result of the compilation from S3 automatically, used by the kubernetes engine",
 			Destination: &flags.NoResultDownload,
 		},
 		&cli.StringFlag{
 			Name:        "namespace",
 			Value:       "default",
-			Usage:       "The namespace the kubernetes engine will use to run the pods in, used by and imply the kubernetes engine.",
+			Usage:       "set the namespace the kubernetes engine will use to run the pods in, used by and imply the kubernetes engine",
 			Destination: &flags.Namespace,
 		},
 		&cli.StringFlag{
 			Name:        "S3-path",
 			Value:       "/",
-			Usage:       "The path to push to and pull data from, used by the kubernetes engine.",
+			Usage:       "set the path to push to and pull data from, used by the kubernetes engine",
 			Destination: &flags.S3Path,
 		},
 		&cli.StringFlag{
 			Name:        "size-limit",
 			Value:       "2Gi",
-			Usage:       "The size limit of mounted filesystem inside the container, used by the kubernetes engine.",
+			Usage:       "set the size limit of mounted filesystem inside the container, used by the kubernetes engine",
 			Destination: &flags.SizeLimit,
 		},
 	}
