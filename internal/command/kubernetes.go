@@ -6,7 +6,6 @@ package command
 import (
 	"context"
 	"crypto/rand"
-	"flag"
 	"fmt"
 	"os"
 	"os/signal"
