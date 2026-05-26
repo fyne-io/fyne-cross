@@ -157,7 +157,7 @@ func Test_makeAndroidContext(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			android := NewAndroidCommand()
+			android := &android{}
 
 			err := android.setupContainerImages(tt.args.flags, tt.args.args)
 
