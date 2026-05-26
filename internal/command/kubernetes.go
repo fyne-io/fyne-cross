@@ -14,6 +14,8 @@ import (
 	"sync"
 	"syscall"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/fyne-io/fyne-cross/internal/cloud"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
