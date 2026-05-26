@@ -124,10 +124,6 @@ func prepareIcon(ctx Context, image containerImage) error {
 	return nil
 }
 
-func printUsage(template string, data interface{}) {
-	log.PrintTemplate(os.Stderr, template, data)
-}
-
 // checkFyneBinHost checks if the fyne cli tool is installed on the host
 func checkFyneBinHost(ctx Context) (string, error) {
 	fyne, err := execabs.LookPath("fyne")
