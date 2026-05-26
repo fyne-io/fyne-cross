@@ -38,8 +38,10 @@ func IOS() *cli.Command {
 	}
 
 	return &cli.Command{
-		Name:  "ios",
-		Usage: "Builds and packages a fyne application for the ios OS",
+		Name:      "ios",
+		Usage:     "Builds and packages a fyne application for the ios OS",
+		Args:      true,
+		ArgsUsage: "[package]",
 		Flags: append(cliFlags,
 			&cli.StringFlag{
 				Name:        "certificate",

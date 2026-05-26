@@ -45,8 +45,10 @@ func Linux() *cli.Command {
 	}
 
 	return &cli.Command{
-		Name:  "linux",
-		Usage: "Builds and packages a fyne application for the linux OS",
+		Name:      "linux",
+		Usage:     "Builds and packages a fyne application for the linux OS",
+		Args:      true,
+		ArgsUsage: "[package]",
 		Flags: append(cliFlags,
 			&cli.GenericFlag{
 				Name:        "arch",

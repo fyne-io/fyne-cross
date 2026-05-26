@@ -71,9 +71,11 @@ func Android() *cli.Command {
 	)
 
 	return &cli.Command{
-		Name:  "android",
-		Usage: "Builds and packages a fyne application for the android OS",
-		Flags: cliFlags,
+		Name:      "android",
+		Usage:     "Builds and packages a fyne application for the android OS",
+		Args:      true,
+		ArgsUsage: "[package]",
+		Flags:     cliFlags,
 		Action: func(ctx *cli.Context) error {
 			if err := cmd.setupContainerImages(flags, ctx.Args().Slice()); err != nil {
 				return err

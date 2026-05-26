@@ -43,8 +43,10 @@ func Windows() *cli.Command {
 	}
 
 	return &cli.Command{
-		Name:  "windows",
-		Usage: "Builds and packages a fyne application for the windows OS",
+		Name:      "windows",
+		Usage:     "Builds and packages a fyne application for the windows OS",
+		Args:      true,
+		ArgsUsage: "[package]",
 		Flags: append(cliFlags,
 			&cli.GenericFlag{
 				Name:        "arch",

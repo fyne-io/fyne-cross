@@ -83,9 +83,11 @@ func Darwin() *cli.Command {
 	}
 
 	return &cli.Command{
-		Name:  "darwin",
-		Usage: "Builds and packages a fyne application for the darwin OS",
-		Flags: cliFlags,
+		Name:      "darwin",
+		Usage:     "Builds and packages a fyne application for the darwin OS",
+		Flags:     cliFlags,
+		Args:      true,
+		ArgsUsage: "[package]",
 		Action: func(ctx *cli.Context) error {
 			if err := cmd.setupContainerImages(flags, ctx.Args().Slice()); err != nil {
 				return err

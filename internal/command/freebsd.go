@@ -44,8 +44,10 @@ func FreeBSD() *cli.Command {
 	}
 
 	return &cli.Command{
-		Name:  "freebsd",
-		Usage: "Builds and packages a fyne application for the freebsd OS",
+		Name:      "freebsd",
+		Usage:     "Builds and packages a fyne application for the freebsd OS",
+		Args:      true,
+		ArgsUsage: "[package]",
 		Flags: append(cliFlags,
 			&cli.GenericFlag{
 				Destination: flags.TargetArch,

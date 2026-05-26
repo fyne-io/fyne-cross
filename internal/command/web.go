@@ -37,9 +37,11 @@ func Web() *cli.Command {
 	}
 
 	return &cli.Command{
-		Name:  "web",
-		Usage: "Builds and packages a fyne application for the web",
-		Flags: cliFlags,
+		Name:      "web",
+		Usage:     "Builds and packages a fyne application for the web",
+		Args:      true,
+		ArgsUsage: "[package]",
+		Flags:     cliFlags,
 		Action: func(ctx *cli.Context) error {
 			if err := cmd.setupContainerImages(flags, ctx.Args().Slice()); err != nil {
 				return err
