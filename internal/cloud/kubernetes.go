@@ -1,6 +1,7 @@
 package cloud
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"os"
@@ -182,7 +183,7 @@ func (k8s *K8sClient) NewPod(ctx context.Context, name string, image string, nam
 	}, nil
 }
 
-func (p *Pod) Run(ctx context.Context, workDir string, cmdArgs []string) error {
+func (p *Pod) exec(ctx context.Context, workDir string, cmdArgs []string) (remotecommand.Executor, error) {
 	api := p.client.kubectl.CoreV1()
 
 	if workDir != "" && workDir != p.workDir {
@@ -212,19 +213,40 @@ func (p *Pod) Run(ctx context.Context, workDir string, cmdArgs []string) error {
 		option,
 		scheme.ParameterCodec,
 	)
-	exec, err := remotecommand.NewSPDYExecutor(p.client.config, "POST", req.URL())
+
+	return remotecommand.NewSPDYExecutor(p.client.config, "POST", req.URL())
+}
+
+func (p *Pod) Run(ctx context.Context, workDir string, cmdArgs []string) error {
+	exec, err := p.exec(ctx, workDir, cmdArgs)
 	if err != nil {
 		return err
 	}
 
 	logWrapper("Executing command %v", cmdArgs)
-	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
+	return exec.StreamWithContext(ctx, remotecommand.StreamOptions{
 		Stdin:  os.Stdin,
 		Stdout: os.Stderr,
 		Stderr: os.Stderr,
 		Tty:    false,
 	})
-	return err
+}
+
+func (p *Pod) Command(ctx context.Context, workDir string, cmdArgs []string) (string, error) {
+	exec, err := p.exec(ctx, workDir, cmdArgs)
+	if err != nil {
+		return "", err
+	}
+
+	logWrapper("Executing command %v", cmdArgs)
+	buf := &bytes.Buffer{}
+	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
+		Stdin:  os.Stdin,
+		Stdout: buf,
+		Stderr: os.Stderr,
+		Tty:    false,
+	})
+	return buf.String(), err
 }
 
 func (p *Pod) Close() error {

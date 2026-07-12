@@ -154,6 +154,10 @@ func (i *kubernetesContainerImage) Run(vol volume.Volume, opts options, cmdArgs 
 	return i.pod.Run(context.Background(), opts.WorkDir, cmdArgs)
 }
 
+func (i *kubernetesContainerImage) Command(vol volume.Volume, opts options, cmdArgs []string) (string, error) {
+	return i.pod.Command(context.Background(), opts.WorkDir, cmdArgs)
+}
+
 func AddAWSParameters(aws *cloud.AWSSession, command string, s ...string) []string {
 	r := []string{command}
 

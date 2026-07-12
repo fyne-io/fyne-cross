@@ -187,6 +187,14 @@ func (i *localContainerImage) Run(vol volume.Volume, opts options, cmdArgs []str
 	return cmd.Run()
 }
 
+func (i *localContainerImage) Command(vol volume.Volume, opts options, cmdArgs []string) (string, error) {
+	cmd := i.cmd(vol, opts, cmdArgs)
+	cmd.Stdout = nil
+	log.Debug(cmd)
+	out, err := cmd.Output()
+	return string(out), err
+}
+
 // pullImage attempts to pull a newer version of the docker image
 func (i *localContainerImage) Prepare() error {
 	if !i.runner.pull {

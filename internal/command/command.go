@@ -1,8 +1,10 @@
 package command
 
 import (
+	"bytes"
 	"fmt"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"strings"
 	"time"
@@ -10,6 +12,7 @@ import (
 	"github.com/fyne-io/fyne-cross/internal/icon"
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
+	"golang.org/x/mod/semver"
 	"golang.org/x/sys/execabs"
 )
 
@@ -159,32 +162,58 @@ func checkFyneBinHost(ctx Context) (string, error) {
 		return "", fmt.Errorf("missed requirement: fyne. To install: `go install fyne.io/fyne/v2/cmd/fyne@latest` and add $GOPATH/bin to $PATH")
 	}
 
-	if debugging() {
-		out, err := execabs.Command(fyne, "version").Output()
-		if err != nil {
-			return fyne, fmt.Errorf("could not get fyne cli %s version: %v", fyne, err)
-		}
-		log.Debugf("%s", out)
-	}
-
 	return fyne, nil
+}
+
+func fyneCommandVersion(fyne string, ctx Context, image containerImage) string {
+	var out string
+	if image.OS() == "darwin" {
+		buf := &bytes.Buffer{}
+		cmd := exec.Command(fyne, "version")
+		cmd.Stdout = buf
+		if err := cmd.Run(); err != nil {
+			return ""
+		}
+		out = buf.String()
+	} else {
+		out, _ = image.Command(ctx.Volume, options{}, []string{fyne, "version"})
+	}
+	for _, line := range strings.Split(out, "\n") {
+		_, ver, found := strings.Cut(line, "fyne cli version: ")
+		if found {
+			return strings.TrimSuffix(ver, "\r")
+		}
+	}
+	return ""
+}
+
+func fyneCommandVersionCompare(fyne, ver string, ctx Context, image containerImage) int {
+	return semver.Compare(fyneCommandVersion(fyne, ctx, image), ver)
 }
 
 func fyneCommand(binary, command, icon string, ctx Context, image containerImage) []string {
 	target := image.Target()
+
+	appBuildOpt := "-app-build"
+	appVersionOpt := "-app-version"
+
+	if fyneCommandVersionCompare(binary, "v2.0.0", ctx, image) >= 0 {
+		appBuildOpt = "-appBuild"
+		appVersionOpt = "-appVersion"
+	}
 
 	args := []string{
 		binary, command,
 		"-os", target,
 		"-name", ctx.Name,
 		"-icon", icon,
-		"-appBuild", ctx.AppBuild,
-		"-appVersion", ctx.AppVersion,
+		appBuildOpt, ctx.AppBuild,
+		appVersionOpt, ctx.AppVersion,
 	}
 
 	// add appID to command, if any
 	if ctx.AppID != "" {
-		args = append(args, "-appID", ctx.AppID)
+		args = append(args, "-id", ctx.AppID)
 	}
 
 	// add tags to command, if any

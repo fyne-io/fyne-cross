@@ -96,8 +96,8 @@ jobs:
             args: -app-id calc.sha${{ github.sha }}
           - os: darwin
             args: -app-id calc.sha${{ github.sha }}
-          # Only macos-13 is supported as macos-14 is running in a VM on Mac M1 which are incompatible with docker/podman
-            host: macos-13
+          # macos versions running in a VM on Mac M1 are incompatible with docker/podman
+            host: macos-15-intel
           - os: web
           
           ## Currently not easily supported from GitHub actions.
@@ -143,7 +143,7 @@ jobs:
 
       - name: Install Docker
         if: ${{ runner.os == 'macos' }}
-        uses: douglascamata/setup-docker-macos-action@v1-alpha
+        uses: douglascamata/setup-docker-macos-action@v1.1.0
     
       - name: Build
         working-directory: calculator
@@ -173,8 +173,8 @@ jobs:
             args: -app-id calc.sha${{ github.sha }}
           - os: darwin
             args: -app-id calc.sha${{ github.sha }}
-          # Only macos-13 is supported as macos-14 is running in a VM on Mac M1 which are incompatible with docker/podman
-            host: macos-13
+          # macos versions running in a VM on Mac M1 are incompatible with docker/podman
+            host: macos-15-intel
           
           ## Currently not easily supported from GitHub actions.
           ## https://github.com/fyne-io/fyne-cross/pull/104#issuecomment-1099494308
@@ -219,7 +219,7 @@ jobs:
 
       - name: Install Docker
         if: ${{ runner.os == 'macos' }}
-        uses: douglascamata/setup-docker-macos-action@v1-alpha
+        uses: douglascamata/setup-docker-macos-action@v1.1.0
  
       - name: Build
         working-directory: terminal

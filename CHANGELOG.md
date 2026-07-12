@@ -1,5 +1,15 @@
 # Changelog - Fyne.io fyne-cross
 
+## 1.6.2 - 19 May 2026
+
+### Changed
+
+- [#250] Make -cache work with relative path. <https://github.com/fyne-io/fyne-cross/pull/252>
+- fix: Use correct flags after Fyne tools change <https://github.com/fyne-io/fyne-cross/pull/334>
+- Forcing CGO off for web builds to work around a Go issue <https://github.com/fyne-io/fyne-cross/pull/307>
+- [#290] keystore parameter is sometimes ignored for Android build <https://github.com/fyne-io/fyne-cross/pull/302>
+- fix: App icon can be missing when uploading to kubernetes
+
 ## 1.6.1 - 12 Jan 2025
 
 ### Changed
