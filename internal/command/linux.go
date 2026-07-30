@@ -138,6 +138,9 @@ type linuxFlags struct {
 	TargetArch *targetArchFlag
 }
 
+// some libraries linked elsewhere rely on specific glibc versions
+const glibcTargetVersion = "2.38"
+
 // setupContainerImages returns the command ContainerImages for a linux target
 func (cmd *linux) setupContainerImages(flags *linuxFlags, args []string) error {
 	targetArch, err := targetArchFromFlag(*flags.TargetArch, linuxArchSupported)
@@ -158,29 +161,35 @@ func (cmd *linux) setupContainerImages(flags *linuxFlags, args []string) error {
 
 	for _, arch := range targetArch {
 		var image containerImage
+		var zigTarget, libDir string
 
 		switch arch {
 		case ArchAmd64:
 			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageAmd64))
 			image.SetEnv("GOARCH", "amd64")
-			image.SetEnv("CC", "zig cc -target x86_64-linux-gnu -isystem /usr/include -L/usr/lib/x86_64-linux-gnu")
-			image.SetEnv("CXX", "zig c++ -target x86_64-linux-gnu -isystem /usr/include -L/usr/lib/x86_64-linux-gnu")
+			zigTarget = "x86_64-linux-gnu." + glibcTargetVersion
+			libDir = "/usr/lib/x86_64-linux-gnu"
 		case Arch386:
 			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImage386))
 			image.SetEnv("GOARCH", "386")
-			image.SetEnv("CC", "zig cc -target x86-linux-gnu -isystem /usr/include -L/usr/lib/i386-linux-gnu")
-			image.SetEnv("CXX", "zig c++ -target x86-linux-gnu -isystem /usr/include -L/usr/lib/i386-linux-gnu")
+			zigTarget = "x86-linux-gnu." + glibcTargetVersion
+			libDir = "/usr/lib/i386-linux-gnu"
 		case ArchArm:
 			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm))
 			image.SetEnv("GOARCH", "arm")
 			image.SetEnv("GOARM", "7")
-			image.SetEnv("CC", "zig cc -target arm-linux-gnueabihf -isystem /usr/include -L/usr/lib/arm-linux-gnueabihf")
-			image.SetEnv("CXX", "zig c++ -target arm-linux-gnueabihf -isystem /usr/include -L/usr/lib/arm-linux-gnueabihf")
+			zigTarget = "arm-linux-gnueabihf." + glibcTargetVersion
+			libDir = "/usr/lib/arm-linux-gnueabihf"
 		case ArchArm64:
 			image = runner.createContainerImage(arch, linuxOS, overrideDockerImage(flags.CommonFlags, linuxImageArm64))
 			image.SetEnv("GOARCH", "arm64")
-			image.SetEnv("CC", "zig cc -target aarch64-linux-gnu -isystem /usr/include -L/usr/lib/aarch64-linux-gnu")
-			image.SetEnv("CXX", "zig c++ -target aarch64-linux-gnu -isystem /usr/include -L/usr/lib/aarch64-linux-gnu")
+			zigTarget = "aarch64-linux-gnu." + glibcTargetVersion
+			libDir = "/usr/lib/aarch64-linux-gnu"
+		}
+
+		if zigTarget != "" && libDir != "" {
+			image.SetEnv("CC", "zig cc -target "+zigTarget+" -isystem /usr/include -L"+libDir)
+			image.SetEnv("CXX", "zig c++ -target "+zigTarget+" -isystem /usr/include -L"+libDir)
 		}
 
 		image.SetEnv("GOOS", "linux")
