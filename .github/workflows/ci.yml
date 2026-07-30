@@ -215,7 +215,7 @@ jobs:
 
       - name: Install Fyne
         run: |
-          go install fyne.io/fyne/v2/cmd/fyne@latest
+          go install fyne.io/tools/cmd/fyne@latest
 
       - name: Install Docker
         if: ${{ runner.os == 'macos' }}
