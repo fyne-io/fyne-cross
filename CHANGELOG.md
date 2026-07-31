@@ -1,5 +1,14 @@
 # Changelog - Fyne.io fyne-cross
 
+## 1.6.3 - 31 Jul 2026
+
+### Changed
+
+- Switch CI to Fyne CLI tools repository
+- Ensure glibc version compatible with libraries linked elsewhere
+- Use correct keystore parameter names
+- Dependency updates
+
 ## 1.6.2 - 19 May 2026
 
 ### Changed
