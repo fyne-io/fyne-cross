@@ -245,8 +245,8 @@ func fyneRelease(ctx Context, image containerImage) error {
 		return err
 	}
 
-	keyStoreOpt := "-key-store"
-	keyStorePassOpt := "-key-store-pass"
+	keyStoreOpt := "-keystore"
+	keyStorePassOpt := "-keystore-pass"
 	keyPassOpt := "-key-pass"
 	keyNameOpt := "-key-name"
 
