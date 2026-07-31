@@ -2,6 +2,8 @@
 
 ## 1.6.3 - 31 Jul 2026
 
+### Changed
+
 - Switch CI to Fyne CLI tools repository
 - Ensure glibc version compatible with libraries linked elsewhere
 - Use correct keystore parameter names
