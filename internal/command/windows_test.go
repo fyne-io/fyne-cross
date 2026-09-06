@@ -176,7 +176,7 @@ func Test_makeWindowsContext(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			t.Run(tt.name, func(t *testing.T) {
-				windows := NewWindowsCommand()
+				windows := &windows{}
 
 				err := windows.setupContainerImages(tt.args.flags, tt.args.args)
 				if tt.wantErr {

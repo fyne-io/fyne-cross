@@ -6,6 +6,8 @@ import (
 	"os"
 	"runtime"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
@@ -31,58 +33,72 @@ type darwin struct {
 }
 
 var _ platformBuilder = (*darwin)(nil)
-var _ Command = (*darwin)(nil)
 
-func NewDarwinCommand() *darwin {
-	return &darwin{localBuild: false}
-}
+func Darwin() *cli.Command {
+	cmd := &darwin{}
 
-func (cmd *darwin) Name() string {
-	return "darwin"
-}
-
-// Description returns the command description
-func (cmd *darwin) Description() string {
-	return "Build and package a fyne application for the darwin OS"
-}
-
-func (cmd *darwin) Run() error {
-	return commonRun(cmd.defaultContext, cmd.Images, cmd)
-}
-
-// Parse parses the arguments and set the usage for the command
-func (cmd *darwin) Parse(args []string) error {
-	commonFlags, err := newCommonFlags()
+	commonFlags, cliFlags, err := newCommonFlags()
 	if err != nil {
-		return err
+		return nil
 	}
 
 	flags := &darwinFlags{
 		CommonFlags: commonFlags,
 		TargetArch:  &targetArchFlag{runtime.GOARCH},
 	}
-	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, darwinArchSupported))
+
+	cliFlags = append(cliFlags,
+		&cli.GenericFlag{
+			Name:        "arch",
+			Usage:       fmt.Sprintf("set list of target architectures to build separated by comma; supported: %s", darwinArchSupported),
+			Destination: flags.TargetArch,
+		},
+		&cli.StringFlag{
+			Name:        "category",
+			Usage:       "set the category of the app for store listing",
+			Destination: &flags.Category,
+		},
+		&cli.StringFlag{
+			Name:        "macosx-version-min",
+			Usage:       "specify the minimum version of the SDK used to create the Darwin image supports",
+			Destination: &flags.MacOSXVersionMin,
+		},
+	)
 
 	// Add flags to use only on darwin host
 	if runtime.GOOS == darwinOS {
-		flagSet.BoolVar(&cmd.localBuild, "local", true, "If set uses the fyne CLI tool installed on the host in place of the docker images")
+		cliFlags = append(cliFlags, &cli.BoolFlag{
+			Name:        "local",
+			Value:       true,
+			Usage:       "set to use the fyne CLI tool installed on the host in place of the docker images",
+			Destination: &cmd.localBuild,
+		})
 	} else {
-		flagSet.StringVar(&flags.MacOSXSDKPath, "macosx-sdk-path", "unset", "Path to macOS SDK (setting it to 'bundled' indicates that the sdk is expected to be in the container) [required]")
+		cliFlags = append(cliFlags, &cli.StringFlag{
+			Name:        "macosx-sdk-path",
+			Usage:       "set path to macOS SDK (setting it to 'bundled' indicates that the sdk is expected to be in the container)",
+			Destination: &flags.MacOSXSDKPath,
+			Required:    true,
+		})
 	}
 
-	// flags used only in release mode
-	flagSet.StringVar(&flags.Category, "category", "", "The category of the app for store listing")
+	return &cli.Command{
+		Name:      "darwin",
+		Usage:     "Builds and packages a fyne application for the darwin OS",
+		Flags:     cliFlags,
+		Args:      true,
+		ArgsUsage: "[package]",
+		Action: func(ctx *cli.Context) error {
+			if err := cmd.setupContainerImages(flags, ctx.Args().Slice()); err != nil {
+				return err
+			}
+			return cmd.run()
+		},
+	}
+}
 
-	flagSet.StringVar(&flags.MacOSXVersionMin, "macosx-version-min", "unset", "Specify the minimum version that the SDK you used to create the Darwin image support")
-
-	flagAppID := flagSet.Lookup("app-id")
-	flagAppID.Usage = fmt.Sprintf("%s [required]", flagAppID.Usage)
-
-	flagSet.Usage = cmd.Usage
-	flagSet.Parse(args)
-
-	err = cmd.setupContainerImages(flags, flagSet.Args())
-	return err
+func (cmd *darwin) run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
 }
 
 // Run runs the command
@@ -141,33 +157,11 @@ func (cmd *darwin) Build(image containerImage) (string, error) {
 	return packageName, nil
 }
 
-// Usage displays the command usage
-func (cmd *darwin) Usage() {
-	data := struct {
-		Name        string
-		Description string
-	}{
-		Name:        cmd.Name(),
-		Description: cmd.Description(),
-	}
-
-	template := `
-Usage: fyne-cross {{ .Name }} [options] [package]
-
-{{ .Description }}
-
-Options:
-`
-
-	printUsage(template, data)
-	flagSet.PrintDefaults()
-}
-
 // darwinFlags defines the command-line flags for the darwin command
 type darwinFlags struct {
 	*CommonFlags
 
-	//Category represents the category of the app for store listing
+	// Category represents the category of the app for store listing
 	Category string
 
 	// TargetArch represents a list of target architecture to build on separated by comma

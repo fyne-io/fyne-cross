@@ -5,6 +5,8 @@ import (
 	"runtime"
 	"strings"
 
+	"github.com/urfave/cli/v2"
+
 	"github.com/fyne-io/fyne-cross/internal/log"
 	"github.com/fyne-io/fyne-cross/internal/volume"
 )
@@ -16,10 +18,8 @@ const (
 	windowsImage = "fyneio/fyne-cross-images:windows"
 )
 
-var (
-	// windowsArchSupported defines the supported target architectures on windows
-	windowsArchSupported = []Architecture{ArchAmd64, ArchArm64, Arch386}
-)
+// windowsArchSupported defines the supported target architectures on windows
+var windowsArchSupported = []Architecture{ArchAmd64, ArchArm64, Arch386}
 
 // Windows build and package the fyne app for the windows OS
 type windows struct {
@@ -28,30 +28,13 @@ type windows struct {
 }
 
 var _ platformBuilder = (*windows)(nil)
-var _ Command = (*windows)(nil)
 
-func NewWindowsCommand() *windows {
-	return &windows{}
-}
+func Windows() *cli.Command {
+	cmd := &windows{}
 
-func (cmd *windows) Name() string {
-	return "windows"
-}
-
-// Description returns the command description
-func (cmd *windows) Description() string {
-	return "Build and package a fyne application for the windows OS"
-}
-
-func (cmd *windows) Run() error {
-	return commonRun(cmd.defaultContext, cmd.Images, cmd)
-}
-
-// Parse parses the arguments and set the usage for the command
-func (cmd *windows) Parse(args []string) error {
-	commonFlags, err := newCommonFlags()
+	commonFlags, cliFlags, err := newCommonFlags()
 	if err != nil {
-		return err
+		return nil
 	}
 
 	flags := &windowsFlags{
@@ -59,24 +42,51 @@ func (cmd *windows) Parse(args []string) error {
 		TargetArch:  &targetArchFlag{runtime.GOARCH},
 	}
 
-	flagSet.Var(flags.TargetArch, "arch", fmt.Sprintf(`List of target architecture to build separated by comma. Supported arch: %s`, windowsArchSupported))
-	flagSet.BoolVar(&flags.Console, "console", false, "If set writes a 'console binary' instead of 'GUI binary'")
+	return &cli.Command{
+		Name:      "windows",
+		Usage:     "Builds and packages a fyne application for the windows OS",
+		Args:      true,
+		ArgsUsage: "[package]",
+		Flags: append(cliFlags,
+			&cli.GenericFlag{
+				Name:        "arch",
+				Usage:       fmt.Sprintf("set list of target architectures to build separated by comma; supported: %s", windowsArchSupported),
+				Destination: flags.TargetArch,
+			},
+			&cli.BoolFlag{
+				Name:        "console",
+				Usage:       "set to write a 'console binary' instead of 'GUI binary'",
+				Destination: &flags.Console,
+			},
 
-	// flags used only in release mode
-	flagSet.StringVar(&flags.Certificate, "certificate", "", "The name of the certificate to sign the build")
-	flagSet.StringVar(&flags.Developer, "developer", "", "The developer identity for your Microsoft store account")
-	flagSet.StringVar(&flags.Password, "password", "", "The password for the certificate used to sign the build")
+			&cli.StringFlag{
+				Name:        "certificate",
+				Usage:       "set the name of the certificate to sign the build",
+				Destination: &flags.Certificate,
+			},
+			&cli.StringFlag{
+				Name:        "developer",
+				Usage:       "set the developer identity for your Microsoft store account",
+				Destination: &flags.Developer,
+			},
+			&cli.StringFlag{
+				Name:        "password",
+				Usage:       "set the password for the certificate used to sign the build",
+				Destination: &flags.Password,
+			},
+		),
+		Action: func(ctx *cli.Context) error {
+			// XXX: flagName.DefValue = fmt.Sprintf("%s.exe", flagName.DefValue)
+			if err := cmd.setupContainerImages(flags, ctx.Args().Slice()); err != nil {
+				return err
+			}
+			return cmd.run()
+		},
+	}
+}
 
-	// Add exe extension to default output
-	flagName := flagSet.Lookup("name")
-	flagName.DefValue = fmt.Sprintf("%s.exe", flagName.DefValue)
-	flagName.Value.Set(flagName.DefValue)
-
-	flagSet.Usage = cmd.Usage
-	flagSet.Parse(args)
-
-	err = cmd.setupContainerImages(flags, flagSet.Args())
-	return err
+func (cmd *windows) run() error {
+	return commonRun(cmd.defaultContext, cmd.Images, cmd)
 }
 
 // Run runs the command
@@ -144,28 +154,6 @@ func (cmd *windows) Build(image containerImage) (string, error) {
 	return packageName, nil
 }
 
-// Usage displays the command usage
-func (cmd *windows) Usage() {
-	data := struct {
-		Name        string
-		Description string
-	}{
-		Name:        cmd.Name(),
-		Description: cmd.Description(),
-	}
-
-	template := `
-Usage: fyne-cross {{ .Name }} [options] [package]
-
-{{ .Description }}
-
-Options:
-`
-
-	printUsage(template, data)
-	flagSet.PrintDefaults()
-}
-
 // windowsFlags defines the command-line flags for the windows command
 type windowsFlags struct {
 	*CommonFlags
@@ -176,11 +164,11 @@ type windowsFlags struct {
 	// Console defines if the Windows app will build as "console binary" instead of "GUI binary"
 	Console bool
 
-	//Certificate represents the name of the certificate to sign the build
+	// Certificate represents the name of the certificate to sign the build
 	Certificate string
-	//Developer represents the developer identity for your Microsoft store account
+	// Developer represents the developer identity for your Microsoft store account
 	Developer string
-	//Password represents the password for the certificate used to sign the build [Windows]
+	// Password represents the password for the certificate used to sign the build [Windows]
 	Password string
 }
 

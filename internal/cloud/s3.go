@@ -11,11 +11,11 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/aws/aws-sdk-go/aws"
-	"github.com/aws/aws-sdk-go/aws/credentials"
-	"github.com/aws/aws-sdk-go/aws/session"
-	"github.com/aws/aws-sdk-go/service/s3"
-	"github.com/aws/aws-sdk-go/service/s3/s3manager"
+	"github.com/aws/aws-sdk-go/aws"                  //lint:ignore SA1019 keep deprecated version as new ones would force an incompatible go version
+	"github.com/aws/aws-sdk-go/aws/credentials"      //lint:ignore SA1019 see above
+	"github.com/aws/aws-sdk-go/aws/session"          //lint:ignore SA1019 see above
+	"github.com/aws/aws-sdk-go/service/s3"           //lint:ignore SA1019 see above
+	"github.com/aws/aws-sdk-go/service/s3/s3manager" //lint:ignore SA1019 see above
 	"github.com/klauspost/compress/zstd"
 	"golang.org/x/sync/errgroup"
 
@@ -336,7 +336,6 @@ func (a *AWSSession) DownloadCompressedDirectory(s3FilePath string, localRootDir
 
 	in.Close()
 	return eg.Wait()
-
 }
 
 func (a *AWSSession) Cancel() {
