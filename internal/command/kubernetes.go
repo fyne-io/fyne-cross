@@ -316,9 +316,9 @@ func (i *kubernetesContainerImage) Finalize(packageName string) (ret error) {
 	// Upload package result to S3
 	uploadPath := i.runner.s3Path + "/" + i.ID() + "/" + packageName
 	log.Infof("Uploading package %s to S3", packageName)
-	// Darwin application are actually directory and we need
-	// to compress it in a format that Darwin understand by default
-	if strings.ToLower(filepath.Ext(packageName)) == ".app" {
+	// Darwin applications and web builds output a directory and we need
+	// to compress it in a format that can be uploaded.
+	if strings.ToLower(filepath.Ext(packageName)) == ".app" || i.os == webOS {
 		uploadPath += ".tar.xz"
 		ret = i.Run(i.runner.vol, options{},
 			AddAWSParameters(i.runner.aws,
